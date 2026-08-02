@@ -91,6 +91,13 @@ public struct HeroBackdrop<Overlay: View>: View {
           endPoint: .bottom
         )
       }
+      .overlay(alignment: .top) {
+        // Keep titlebar labels legible while artwork still visibly extends beneath the glass.
+        LinearGradient(colors: [Color.black.opacity(0.48), Color.black.opacity(0.16), .clear],
+                       startPoint: .top,
+                       endPoint: .bottom)
+          .frame(height: 120)
+      }
       .overlay(alignment: .topTrailing) { carouselControls }
       .overlay(alignment: .bottomLeading) {
         overlay
@@ -228,7 +235,9 @@ private final class BackdropVideoView: NSView {
   override init(frame frameRect: NSRect) {
     super.init(frame: frameRect)
     wantsLayer = true
-    playerLayer.videoGravity = .resizeAspectFill
+    // Trailers are usually 16:9 while the hero is much wider. Preserve the authored frame—burned-in
+    // titles and faces near the top/bottom otherwise get visibly chopped by aspect-fill cropping.
+    playerLayer.videoGravity = .resizeAspect
     playerLayer.backgroundColor = NSColor.clear.cgColor
     layer?.addSublayer(playerLayer)
   }
