@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 import KinoPubBackend
 import KinoPubKit
 import KinoPubUI
@@ -20,12 +21,13 @@ struct Sidebar: View {
   @ObservedObject private var visibility = SectionVisibilityStore.shared
   @State private var isEditingSections = false
   @State private var isHoveringLibraryHeader = false
+  @State private var draggedItem: SidebarItem?
 
   var body: some View {
     List(selection: selectionBinding) {
       Section {
         row(.new)
-        ForEach(SectionVisibilityStore.editableDiscover) { item in
+        ForEach(visibility.discoverItems) { item in
           if isEditingSections || visibility.isVisible(item) { row(item) }
         }
       } header: {
@@ -33,34 +35,36 @@ struct Sidebar: View {
       }
 
       Section {
-        ForEach(SidebarItem.libraryCategories, id: \.self) { type in
-          if isEditingSections || visibility.isVisible(.category(type)) { row(.category(type)) }
+        ForEach(visibility.libraryItems) { item in
+          if isEditingSections || visibility.isVisible(item) { row(item) }
         }
-        ForEach(CatalogPreset.visible) { preset in
-          if isEditingSections || visibility.isVisible(.preset(preset)) { row(.preset(preset)) }
-        }
-        if isEditingSections || visibility.isVisible(.sport) { row(.sport) }
-        row(.collections)
       } header: {
         libraryHeader
       }
 
-      if isEditingSections || visibility.isVisible(.bookmarks) {
+      if isEditingSections || visibility.personalItems.contains(where: visibility.isVisible) {
         Section {
-          row(.bookmarks)
-          if !isEditingSections {
-            ForEach(libraryState.bookmarkFolders) { folder in
-              bookmarkFolderRow(folder)
+          ForEach(visibility.personalItems) { item in
+            if isEditingSections || visibility.isVisible(item) {
+              row(item)
+              if item == .bookmarks, !isEditingSections, visibility.isVisible(.bookmarks) {
+                ForEach(libraryState.bookmarkFolders) { folder in
+                  bookmarkFolderRow(folder)
+                }
+              }
             }
           }
         } header: {
-          sectionHeader("Bookmarks")
+          sectionHeader("My Library")
         }
       }
 
       Section {
         row(.profile)
+      } header: {
+        sectionHeader("Account")
       }
+
     }
     .listStyle(.sidebar)
     .environment(\.defaultMinListRowHeight, appearance.sidebarDensity.rowHeight)
@@ -99,28 +103,24 @@ struct Sidebar: View {
     }
   }
 
-  @ViewBuilder
   private var libraryHeader: some View {
-    if appearance.showsSectionHeaders {
-      HStack(spacing: 8) {
-        Text("Library".localized)
-        Spacer()
-        Button(isEditingSections ? "Done".localized : "Edit".localized) {
-          withAnimation(.easeInOut(duration: 0.2)) { isEditingSections.toggle() }
-        }
-        .buttonStyle(.plain)
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .padding(.trailing, 12)
-        .contentShape(Rectangle())
-        .opacity(isHoveringLibraryHeader || isEditingSections ? 1 : 0)
-        .allowsHitTesting(isHoveringLibraryHeader || isEditingSections)
-        .help("Customize Sidebar".localized)
+    HStack(spacing: 8) {
+      if appearance.showsSectionHeaders { Text("Library".localized) }
+      Spacer()
+      Button(isEditingSections ? "Done".localized : "Edit".localized) {
+        withAnimation(.easeInOut(duration: 0.2)) { isEditingSections.toggle() }
       }
-      .contentShape(Rectangle())
-      .onHover { hovering in
-        withAnimation(.easeOut(duration: 0.12)) { isHoveringLibraryHeader = hovering }
-      }
+      .buttonStyle(.plain)
+      .foregroundStyle(.secondary)
+      .opacity(isHoveringLibraryHeader || isEditingSections ? 1 : 0)
+      .allowsHitTesting(isHoveringLibraryHeader || isEditingSections)
+      .help("Customize Sidebar".localized)
+    }
+    .font(.caption)
+    .padding(.trailing, 8)
+    .contentShape(Rectangle())
+    .onHover { hovering in
+      withAnimation(.easeOut(duration: 0.12)) { isHoveringLibraryHeader = hovering }
     }
   }
 
@@ -151,7 +151,15 @@ struct Sidebar: View {
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
-      .disabled(!visibility.canHide(item))
+      .onDrag {
+        draggedItem = item
+        return NSItemProvider(object: item.id as NSString)
+      }
+      .onDrop(of: [UTType.text], delegate: SidebarItemDropDelegate(
+        target: item,
+        draggedItem: $draggedItem,
+        visibility: visibility
+      ))
     } else {
       Label {
         HStack {
@@ -179,7 +187,7 @@ struct Sidebar: View {
   private func isConfigurable(_ item: SidebarItem) -> Bool {
     SectionVisibilityStore.editableDiscover.contains(item)
       || SectionVisibilityStore.editableLibrary.contains(item)
-      || SectionVisibilityStore.editableBookmarks.contains(item)
+      || SectionVisibilityStore.editablePersonal.contains(item)
   }
 
   private func bookmarkFolderRow(_ folder: Bookmark) -> some View {
@@ -223,6 +231,30 @@ struct Sidebar: View {
       }
     }
   }
+}
+
+private struct SidebarItemDropDelegate: DropDelegate {
+  let target: SidebarItem
+  @Binding var draggedItem: SidebarItem?
+  let visibility: SectionVisibilityStore
+
+  func dropEntered(info: DropInfo) {
+    guard let draggedItem, draggedItem != target else { return }
+    withAnimation(.easeInOut(duration: 0.15)) {
+      visibility.move(draggedItem, before: target)
+    }
+  }
+
+  func dropUpdated(info: DropInfo) -> DropProposal? {
+    DropProposal(operation: .move)
+  }
+
+  func performDrop(info: DropInfo) -> Bool {
+    draggedItem = nil
+    return true
+  }
+
+  func dropExited(info: DropInfo) {}
 }
 
 private struct SidebarBackground: ViewModifier {

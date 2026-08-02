@@ -2,8 +2,7 @@
 //  SectionsSettingsView.swift
 //  KinoPubAppleClient
 //
-//  Lets the user show/hide library and "other" sections. Films, Serials and Collections are always
-//  on. The section order is fixed — this screen only toggles visibility.
+//  Sidebar visibility settings. Reordering is available directly from the sidebar's Customize menu.
 //
 
 import SwiftUI
@@ -14,14 +13,17 @@ struct SectionsSettingsView: View {
   var body: some View {
     Form {
       Section(header: Text("Discover".localized)) {
-        ForEach(SectionVisibilityStore.editableDiscover) { row($0) }
+        ForEach(visibility.discoverItems) { row($0) }
       }
-      Section(header: Text("Library".localized),
-              footer: Text("Films, Serials and Collections can't be hidden.".localized)) {
-        ForEach(SectionVisibilityStore.editableLibrary) { row($0) }
+      Section(header: Text("Library".localized)) {
+        ForEach(visibility.libraryItems) { row($0) }
       }
-      Section(header: Text("Bookmarks".localized)) {
-        ForEach(SectionVisibilityStore.editableBookmarks) { row($0) }
+      Section(header: Text("My Library".localized),
+              footer: Text("Hover over Library in the sidebar, then choose Edit to reorder items by dragging.".localized)) {
+        ForEach(visibility.personalItems) { row($0) }
+      }
+      Section {
+        Button("Restore Sidebar Defaults".localized) { visibility.reset() }
       }
     }
     .scrollContentBackground(.hidden)
