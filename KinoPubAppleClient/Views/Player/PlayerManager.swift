@@ -138,7 +138,12 @@ class PlayerManager: ObservableObject {
     #if !os(macOS)
     item.externalMetadata = externalMetadata()
     #endif
-    return AVPlayer(playerItem: item)
+    let player = AVPlayer(playerItem: item)
+    // We explicitly apply the HLS default legible track below. Leaving automatic criteria enabled
+    // can replace that selection while the player is starting, yielding a checked but invisible
+    // subtitle track in AVKit's menu.
+    player.appliesMediaSelectionCriteriaAutomatically = false
+    return player
   }()
 
   #if !os(macOS)
@@ -265,6 +270,7 @@ class PlayerManager: ObservableObject {
     // so an unplayable stream is diagnosable on-device instead of failing silently.
     failureObservation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
       guard item.status == .failed else { return }
+        self?.activateDefaultSubtitle(for: item)
       DispatchQueue.main.async { self?.reportPlaybackFailure(item) }
     }
 
@@ -430,6 +436,25 @@ class PlayerManager: ObservableObject {
       seekObservation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
         guard item.status == .readyToPlay else { return }
         self?.player.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
+  /// Explicitly select the HLS playlist's default subtitle option after the item becomes ready.
+  /// AVPlayer sometimes exposes that option as selected in its native menu without starting its
+  /// renderer. Repeat on the next run loop after AVKit attaches its rendering pipeline.
+  private func activateDefaultSubtitle(for item: AVPlayerItem) {
+    applyDefaultSubtitle(to: item)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
+      guard let self, let item, self.player.currentItem === item else { return }
+      self.applyDefaultSubtitle(to: item)
+    }
+  }
+
+  private func applyDefaultSubtitle(to item: AVPlayerItem) {
+    guard watchMode == .media,
+          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible),
+          let defaultOption = group.defaultOption
+    else { return }
+    item.select(defaultOption, in: group)
+  }
+
         self?.seekObservation?.invalidate()
         self?.seekObservation = nil
       }
