@@ -60,7 +60,9 @@ public class DownloadManager<Meta: Codable & Equatable>: NSObject, URLSessionDow
     config.isDiscretionary = false
     config.sessionSendsLaunchEvents = true
     config.allowsCellularAccess = true
-    return URLSession(configuration: config, delegate: self, delegateQueue: nil)
+    // All manager/download state is observed and mutated by the macOS UI on the main thread. A main
+    // delegate queue prevents URLSession callbacks racing `activeDownloads` and @Published values.
+    return URLSession(configuration: config, delegate: self, delegateQueue: OperationQueue.main)
   }()
 
   public func startDownload(url: URL, withMetadata metadata: Meta) -> Download<Meta> {
@@ -143,6 +145,10 @@ public class DownloadManager<Meta: Codable & Equatable>: NSObject, URLSessionDow
     if let http = downloadTask.response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
       Logger.kit.error("[DOWNLOAD] HTTP \(http.statusCode) for \(sourceURL) — discarding error body")
       try? FileManager.default.removeItem(at: location)
+      let error = NSError(domain: "KinoPubDownload", code: http.statusCode,
+                          userInfo: [NSLocalizedDescriptionKey: "Download failed with HTTP \(http.statusCode)"])
+      let metadata = download.metadata
+      onMain { self.onDownloadFailed?(sourceURL, metadata, error) }
       completeDownload(sourceURL)
       return
     }
@@ -153,6 +159,10 @@ public class DownloadManager<Meta: Codable & Equatable>: NSObject, URLSessionDow
        let fileSize = attrs[.size] as? Int64, fileSize < 100_000 {
       Logger.kit.error("[DOWNLOAD] file too small (\(fileSize) bytes) for \(sourceURL) — likely an error page, discarding")
       try? FileManager.default.removeItem(at: location)
+      let error = NSError(domain: "KinoPubDownload", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "The server returned an invalid media file."])
+      let metadata = download.metadata
+      onMain { self.onDownloadFailed?(sourceURL, metadata, error) }
       completeDownload(sourceURL)
       return
     }
@@ -176,6 +186,10 @@ public class DownloadManager<Meta: Codable & Equatable>: NSObject, URLSessionDow
       database.save(fileInfo: fileInfo)
     } catch {
       Logger.kit.error("[DOWNLOAD] Error during moving file: \(error)")
+      let metadata = download.metadata
+      onMain { self.onDownloadFailed?(sourceURL, metadata, error) }
+      completeDownload(sourceURL)
+      return
     }
 
     let metadata = download.metadata
@@ -207,9 +221,10 @@ public class DownloadManager<Meta: Codable & Equatable>: NSObject, URLSessionDow
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
     if let error = error, let url = task.originalRequest?.url {
       Logger.kit.debug("[DOWNLOAD] Download error for \(url): \(error)")
-      // A cancellation that produced resume data is a pause, not a failure — don't notify the user.
-      let isPause = (error as NSError).code == NSURLErrorCancelled
-      if !isPause, let metadata = activeDownloads[url]?.metadata {
+      // Cancellation is used by `pause()` and `removeDownload()`. The resume-data callback owns the
+      // paused-state persistence; removing the control row here loses resumable downloads.
+      if (error as NSError).code == NSURLErrorCancelled { return }
+      if let metadata = activeDownloads[url]?.metadata {
         onMain { self.onDownloadFailed?(url, metadata, error) }
       }
       completeDownload(url)
