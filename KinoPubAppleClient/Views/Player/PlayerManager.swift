@@ -152,6 +152,7 @@ class PlayerManager: ObservableObject {
   private var seekObservation: NSKeyValueObservation?
   private var audioObservation: NSKeyValueObservation?
   private var failureObservation: NSKeyValueObservation?
+  private var mediaSelectionObserver: NSObjectProtocol?
   private var endOfPlaybackObserver: NSObjectProtocol?
   private var actionsService: UserActionsService
   private let episodeQueue: [Episode]
@@ -232,7 +233,7 @@ class PlayerManager: ObservableObject {
       audioObservation = player.currentItem?.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
         guard item.status == .readyToPlay else { return }
         self?.applyPreferredAudio()
-        self?.activateDefaultSubtitle(for: item)
+        self?.restorePreferredSubtitle(for: item)
         self?.audioObservation?.invalidate()
         self?.audioObservation = nil
       }
@@ -244,10 +245,11 @@ class PlayerManager: ObservableObject {
       guard item.status == .failed else { return }
       DispatchQueue.main.async { self?.reportPlaybackFailure(item) }
     }
+    observeMediaSelection(on: player.currentItem)
 
     playerTimeObserver = PlayerTimeObserver(player: player, period: 10.0, timeUpdateHandler: { [weak self] time in
       self?.saveWatchMark(time: time)
-      self?.captureCurrentAudio()
+      self?.captureCurrentMediaSelection()
     })
 
     // Playing to the very end marks the title watched (see `markFinished`).
@@ -262,6 +264,7 @@ class PlayerManager: ObservableObject {
   }
 
   deinit {
+    if let mediaSelectionObserver { NotificationCenter.default.removeObserver(mediaSelectionObserver) }
     if let endOfPlaybackObserver { NotificationCenter.default.removeObserver(endOfPlaybackObserver) }
     let commands = MPRemoteCommandCenter.shared()
     if let nextTrackCommandTarget { commands.nextTrackCommand.removeTarget(nextTrackCommandTarget) }
@@ -342,10 +345,11 @@ class PlayerManager: ObservableObject {
     audioObservation = item.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
       guard self?.watchMode == .media, item.status == .readyToPlay else { return }
       self?.applyPreferredAudio()
-      self?.activateDefaultSubtitle(for: item)
+      self?.restorePreferredSubtitle(for: item)
       self?.audioObservation?.invalidate()
       self?.audioObservation = nil
     }
+    observeMediaSelection(on: item)
     endOfPlaybackObserver = NotificationCenter.default.addObserver(
       forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
     ) { [weak self] _ in
@@ -395,23 +399,60 @@ class PlayerManager: ObservableObject {
     }
   }
 
-  /// Explicitly select the HLS playlist's default subtitle option after the item becomes ready.
-  /// AVPlayer sometimes exposes that option as selected in its native menu without starting its
-  /// renderer. Repeat on the next run loop after AVKit attaches its rendering pipeline.
-  private func activateDefaultSubtitle(for item: AVPlayerItem) {
-    applyDefaultSubtitle(to: item)
+  /// Restore the user's subtitle track, including an explicit Off choice. If no preference exists,
+  /// use the playlist default. Repeat only while the selection is unchanged so a quick user choice
+  /// is never overwritten while AVKit attaches its renderer.
+  private func restorePreferredSubtitle(for item: AVPlayerItem) {
+    guard watchMode == .media,
+          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
+    else { return }
+
+    let preference = AppContext.shared.libraryState.subtitlePreference(itemId: playItem.metadata.id)
+    let desired: AVMediaSelectionOption?
+    if let preference {
+      if preference.isEnabled {
+        desired = group.options.first(where: { $0.displayName == preference.displayName })
+          ?? group.options.first(where: {
+            $0.extendedLanguageTag != nil && $0.extendedLanguageTag == preference.languageTag
+          })
+          ?? preference.index.flatMap { group.options.indices.contains($0) ? group.options[$0] : nil }
+          ?? group.defaultOption
+      } else {
+        desired = nil
+      }
+    } else {
+      desired = group.defaultOption
+    }
+
+    item.select(desired, in: group)
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
       guard let self, let item, self.player.currentItem === item else { return }
-      self.applyDefaultSubtitle(to: item)
+      let current = item.currentMediaSelection.selectedMediaOption(in: group)
+      let selectionIsUnchanged = (current == nil && desired == nil) || current === desired
+      guard selectionIsUnchanged else { return }
+      item.select(desired, in: group)
     }
   }
 
-  private func applyDefaultSubtitle(to item: AVPlayerItem) {
-    guard watchMode == .media,
-          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible),
-          let defaultOption = group.defaultOption
-    else { return }
-    item.select(defaultOption, in: group)
+  private func observeMediaSelection(on item: AVPlayerItem?) {
+    if let mediaSelectionObserver {
+      NotificationCenter.default.removeObserver(mediaSelectionObserver)
+      self.mediaSelectionObserver = nil
+    }
+    guard watchMode == .media, let item else { return }
+    mediaSelectionObserver = NotificationCenter.default.addObserver(
+      forName: AVPlayerItem.mediaSelectionDidChangeNotification,
+      object: item,
+      queue: .main
+    ) { [weak self, weak item] _ in
+      guard let self, let item, self.player.currentItem === item else { return }
+      self.captureCurrentMediaSelection()
+    }
+  }
+
+  private func captureCurrentMediaSelection() {
+    captureCurrentAudio()
+    captureCurrentSubtitle()
   }
 
   /// Remember the audio option currently selected in the player, so the next episode/launch resumes it.
@@ -426,6 +467,26 @@ class PlayerManager: ObservableObject {
                                                        languageTag: selected.extendedLanguageTag,
                                                        index: index)
     AppContext.shared.libraryState.setAudioPreference(itemId: playItem.metadata.id, preference)
+  }
+
+  /// Remember the selected subtitle immediately; nil is a meaningful explicit Off selection.
+  private func captureCurrentSubtitle() {
+    guard watchMode == .media,
+          let item = player.currentItem,
+          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
+    else { return }
+
+    let selected = item.currentMediaSelection.selectedMediaOption(in: group)
+    let preference: MediaLibraryStore.SubtitlePreference
+    if let selected {
+      preference = .init(isEnabled: true,
+                         displayName: selected.displayName,
+                         languageTag: selected.extendedLanguageTag,
+                         index: group.options.firstIndex(of: selected))
+    } else {
+      preference = .init(isEnabled: false, displayName: nil, languageTag: nil, index: nil)
+    }
+    AppContext.shared.libraryState.setSubtitlePreference(itemId: playItem.metadata.id, preference)
   }
   
   // MARK: - Watch marks

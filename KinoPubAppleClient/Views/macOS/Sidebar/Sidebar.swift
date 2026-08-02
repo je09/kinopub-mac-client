@@ -5,38 +5,24 @@
 //  Created by Kirill Kunst on 11.08.2023.
 //
 
-import Foundation
 import SwiftUI
-import KinoPubUI
 import KinoPubBackend
 import KinoPubKit
+import KinoPubUI
 
 struct Sidebar: View {
-
   @Binding var selection: SidebarItem?
 
-  @Environment(\.appContext) var appContext
-  @EnvironmentObject var authState: AuthState
-  @EnvironmentObject var errorHandler: ErrorHandler
-  @EnvironmentObject var navigationState: NavigationState
-  @EnvironmentObject var networkMonitor: NetworkMonitor
+  @EnvironmentObject private var navigationState: NavigationState
+  @EnvironmentObject private var networkMonitor: NetworkMonitor
   @ObservedObject private var visibility = SectionVisibilityStore.shared
 
-  @State private var showProfile = false
-
   var body: some View {
-    // Custom selection binding so picking a section also pops its stack back to root (like a tab bar).
-    // Goes through the normal `selection` binding, so List highlighting/behaviour is unaffected.
-    List(selection: Binding(
-      get: { selection },
-      set: { newValue in
-        selection = newValue
-        if let newValue { navigationState.popToRoot(for: newValue) }
-      }
-    )) {
+    List(selection: selectionBinding) {
+      row(.new)
+      row(.search)
+
       Section("Library".localized) {
-        row(.search)
-        row(.new)
         ForEach(SidebarItem.libraryCategories, id: \.self) { type in
           if visibility.isVisible(.category(type)) { row(.category(type)) }
         }
@@ -53,35 +39,37 @@ struct Sidebar: View {
         }
       }
 
-      // Profile sits in its own section so it reads as separate from the library/other rows.
       Section {
-        Button {
-          showProfile = true
-        } label: {
-          Label("Profile".localized, systemImage: "person.crop.circle")
-        }
-        .buttonStyle(.borderless)
+        row(.profile)
       }
     }
     .listStyle(.sidebar)
     .scrollContentBackground(.hidden)
     .background(Color.KinoPub.background)
     .navigationTitle("KinoPub")
-    .navigationSplitViewColumnWidth(min: 220, ideal: 240)
-    .sheet(isPresented: $showProfile) {
-      profileSheet
-    }
+    .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 320)
   }
 
-  @ViewBuilder
-  func row(_ item: SidebarItem) -> some View {
+  private var selectionBinding: Binding<SidebarItem?> {
+    Binding(
+      get: { selection },
+      set: { newValue in
+        selection = newValue
+        if let newValue { navigationState.popToRoot(for: newValue) }
+      }
+    )
+  }
+
+  private func row(_ item: SidebarItem) -> some View {
     let locked = !networkMonitor.isOnline && !item.isAvailableOffline
-    Label {
+    return Label {
       HStack {
         Text(item.title.localized)
         if locked {
           Spacer(minLength: 6)
-          Image(systemName: "lock.fill").font(.caption2)
+          Image(systemName: "lock.fill")
+            .font(.caption2)
+            .accessibilityLabel("Needs a connection".localized)
         }
       }
     } icon: {
@@ -89,56 +77,19 @@ struct Sidebar: View {
     }
     .foregroundStyle(locked ? Color.KinoPub.subtitle : Color.KinoPub.text)
     .tag(item)
-  }
-
-  private var profileSheet: some View {
-    ProfileSheetContent(
-      model: ProfileModel(userService: appContext.userService,
-                          errorHandler: errorHandler,
-                          authState: authState)
-    )
-    .environmentObject(authState)
-    .environmentObject(errorHandler)
-    .environmentObject(navigationState)
-  }
-}
-
-private struct ProfileSheetContent: View {
-  @Environment(\.dismiss) private var dismiss
-  let model: ProfileModel
-
-  init(model: @autoclosure @escaping () -> ProfileModel) {
-    self.model = model()
-  }
-
-  var body: some View {
-    // ProfileView already provides its own NavigationStack; attach the
-    // dismiss control to that bar instead of nesting another stack.
-    ProfileView(model: model)
-      .toolbar {
-        // Use the standard macOS cancellation slot for the sheet close control.
-        ToolbarItem(placement: .cancellationAction) {
-          Button {
-            dismiss()
-          } label: {
-            Image(systemName: "xmark")
-              .fontWeight(.bold)
-          }
-        }
-      }
+    .disabled(locked)
+    .help(locked ? "Needs a connection".localized : item.title.localized)
   }
 }
 
 struct Sidebar_Previews: PreviewProvider {
   struct Preview: View {
     @State private var selection: SidebarItem? = .new
+
     var body: some View {
       Sidebar(selection: $selection)
-        .environmentObject(AuthState(authService: AuthorizationServiceMock(),
-                                     accessTokenService: AccessTokenServiceMock(),
-                                     deviceService: DeviceServiceMock()))
-        .environmentObject(ErrorHandler())
         .environmentObject(NavigationState())
+        .environmentObject(NetworkMonitor())
     }
   }
 
@@ -146,7 +97,7 @@ struct Sidebar_Previews: PreviewProvider {
     NavigationSplitView {
       Preview()
     } detail: {
-      Text("Detail!")
+      Text("Detail")
     }
   }
 }

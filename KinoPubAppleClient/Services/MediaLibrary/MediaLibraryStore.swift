@@ -46,6 +46,8 @@ final class MediaLibraryStore: ObservableObject {
   /// Remembered audio track (озвучка) per item/series id. Stores AVFoundation's own identifiers so
   /// re-selection round-trips reliably, independent of kino.pub's audios↔HLS mapping.
   @Published private var audioPreferences: [Int: AudioPreference] = [:]
+  /// Remembered native subtitle selection per item/series, including an explicit Off choice.
+  @Published private var subtitlePreferences: [Int: SubtitlePreference] = [:]
   /// The user's like (true) / dislike (false) per item id. kino.pub voting is one-time with no API to
   /// read a prior vote back, so we remember the user's own choice locally to keep showing it.
   @Published private var userVotes: [Int: Bool] = [:]
@@ -66,13 +68,22 @@ final class MediaLibraryStore: ObservableObject {
     var index: Int
   }
 
+  /// `isEnabled == false` preserves the user's explicit subtitle Off selection.
+  struct SubtitlePreference: Codable, Equatable {
+    var isEnabled: Bool
+    var displayName: String?
+    var languageTag: String?
+    var index: Int?
+  }
+
   /// On-disk shape (single file so all owned state persists together).
   private struct Persisted: Codable {
     var records: [Int: Record] = [:]
     var movieWatched: [Int: Bool] = [:]
     var episodeWatched: [Int: Bool] = [:]
     var audioPreferences: [Int: AudioPreference] = [:]
-    // Optional so older persisted files (without this key) still decode and keep the rest of the state.
+    // Optional so older persisted files decode without losing their other library state.
+    var subtitlePreferences: [Int: SubtitlePreference]?
     var userVotes: [Int: Bool]?
   }
 
@@ -304,8 +315,20 @@ final class MediaLibraryStore: ObservableObject {
   }
 
   func setAudioPreference(itemId: Int, _ preference: AudioPreference) {
-    guard audioPreferences[itemId] != preference else { return }  // avoid churn on the 10s capture
+    guard audioPreferences[itemId] != preference else { return }
     audioPreferences[itemId] = preference
+    persist()
+  }
+
+  // MARK: - Subtitle preference per item/series id
+
+  func subtitlePreference(itemId: Int) -> SubtitlePreference? {
+    subtitlePreferences[itemId]
+  }
+
+  func setSubtitlePreference(itemId: Int, _ preference: SubtitlePreference) {
+    guard subtitlePreferences[itemId] != preference else { return }
+    subtitlePreferences[itemId] = preference
     persist()
   }
 
@@ -337,6 +360,7 @@ final class MediaLibraryStore: ObservableObject {
     movieWatchedOverride = decoded.movieWatched
     episodeWatchedOverride = decoded.episodeWatched
     audioPreferences = decoded.audioPreferences
+    subtitlePreferences = decoded.subtitlePreferences ?? [:]
     userVotes = decoded.userVotes ?? [:]
   }
 
@@ -345,6 +369,7 @@ final class MediaLibraryStore: ObservableObject {
                              movieWatched: movieWatchedOverride,
                              episodeWatched: episodeWatchedOverride,
                              audioPreferences: audioPreferences,
+                             subtitlePreferences: subtitlePreferences,
                              userVotes: userVotes)
     guard let data = try? JSONEncoder().encode(snapshot) else { return }
     try? data.write(to: fileURL, options: .atomic)

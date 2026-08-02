@@ -9,8 +9,9 @@ import AppKit
 import SwiftUI
 import KinoPubKit
 
-enum WindowSize {
-  static let macos = CGSize(width: 1280, height: 720)
+enum WindowMetrics {
+  static let minimum = CGSize(width: 900, height: 600)
+  static let preferred = CGSize(width: 1280, height: 800)
 }
 
 @main
@@ -52,9 +53,12 @@ struct KinoPubAppleClientApp: App {
         .task {
           await AppContext.shared.downloadNotificationManager.requestPermission()
         }
-        .frame(minWidth: WindowSize.macos.width, minHeight: WindowSize.macos.height)
+        .frame(minWidth: WindowMetrics.minimum.width,
+               minHeight: WindowMetrics.minimum.height)
     }
-    .windowResizability(.contentSize)
+    .defaultSize(width: WindowMetrics.preferred.width,
+                 height: WindowMetrics.preferred.height)
+    .windowResizability(.contentMinSize)
     .commands {
       SidebarCommands()
       KinoPubCommands(navigationState: navigationState)
@@ -85,6 +89,9 @@ private struct KinoPubCommands: Commands {
         .keyboardShortcut("4", modifiers: .command)
       Button("Downloads".localized) { navigationState.sidebarSelection = .downloads }
         .keyboardShortcut("5", modifiers: .command)
+      Divider()
+      Button("Profile".localized) { navigationState.sidebarSelection = .profile }
+        .keyboardShortcut("6", modifiers: .command)
     }
   }
 }

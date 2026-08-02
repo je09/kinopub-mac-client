@@ -17,10 +17,6 @@ struct HomeView: View {
   @StateObject private var model: HomeModel
   @ObservedObject private var visibility = SectionVisibilityStore.shared
 
-  @State private var heroIndex: Int = 0
-  @State private var isHeroInteracting: Bool = false
-  private let heroTimer = Timer.publish(every: 6, on: .main, in: .common).autoconnect()
-
   init(model: @autoclosure @escaping () -> HomeModel) {
     _model = StateObject(wrappedValue: model())
   }
@@ -44,7 +40,7 @@ struct HomeView: View {
         .padding(.bottom, 24)
       }
       .background(Color.KinoPub.background)
-      .navigationTitle("Home")
+      .navigationTitle("Home".localized)
       // The native macOS toolbar owns the titlebar material.
       .heroNavBar()
       .routeDestinations()
@@ -59,9 +55,15 @@ struct HomeView: View {
     if model.featured.isEmpty {
       HeroBackdrop(imageURL: nil, height: heroHeight) { EmptyView() }
     } else {
-      ScrollView(.horizontal, showsIndicators: false) {
-        LazyHStack(spacing: 16) {
-          ForEach(model.featured) { heroPage($0).frame(width: 820) }
+      GeometryReader { proxy in
+        ScrollView(.horizontal, showsIndicators: false) {
+          LazyHStack(spacing: 16) {
+            ForEach(model.featured) { hero in
+              heroPage(hero)
+                .frame(width: max(600, proxy.size.width - 48))
+            }
+          }
+          .padding(.horizontal, 16)
         }
       }
       .frame(height: heroHeight)
@@ -81,7 +83,7 @@ struct HomeView: View {
             .font(.subheadline)
             .foregroundStyle(.white.opacity(0.85))
             .lineLimit(1)
-          Label("Details", systemImage: "info.circle")
+          Label("Details".localized, systemImage: "info.circle")
             .font(.headline)
             .foregroundStyle(.white)
             .padding(.horizontal, 18)

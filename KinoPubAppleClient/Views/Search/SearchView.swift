@@ -2,10 +2,7 @@
 //  SearchView.swift
 //  KinoPubAppleClient
 //
-//  Apple-TV-style search: a full-width field in the content (auto-focused), a live results LIST while
-//  typing, and sectioned shelves (Top Results / Movies / TV Shows / Cast & Crew) once committed.
-//  "Committed" = keyboard down (the field lost focus via Return or tapping a suggestion); editing the
-//  query brings the live list back.
+//  Native macOS toolbar search with live results and sectioned results after submission.
 //
 
 import SwiftUI
@@ -25,8 +22,6 @@ struct SearchView: View {
   @Environment(\.appContext) var appContext
   @StateObject private var model: SearchModel
 
-  @FocusState private var searchFocused: Bool
-  @State private var didAutoFocus = false
   @State private var bookmarkTarget: BookmarkTarget?
   /// True after the user commits a search (Return or tapping a suggestion) → show the sectioned
   /// layout. It is NOT tied to raw focus: incidental focus loss (opening a row's "…" menu, scrolling)
@@ -51,62 +46,21 @@ struct SearchView: View {
             liveList
           }
         }
-        // The field stays pinned at the very top while content scrolls *under* it (Apple-style),
-        // and there's no "Search" page title — the glass field is the header.
-        .safeAreaInset(edge: .top, spacing: 0) {
-          searchField
-            .padding(.horizontal, 16)
-            .padding(.top, 6)
-            .padding(.bottom, 8)
-        }
       }
+      .searchable(text: $model.query,
+                  placement: .toolbar,
+                  prompt: Text("Shows & Movies".localized))
+      .onSubmit(of: .search) { committed = true }
+      .navigationTitle("Search".localized)
       .background(Color.KinoPub.background)
       .routeDestinations()
       .handleError(state: $errorHandler.state)
-      // Re-focusing the field to edit drops back to the live list; losing focus to a menu/scroll
-      // does NOT (that's what keeps a row from disappearing when you tap its "…").
-      .onChange(of: searchFocused) { focused in if focused { committed = false } }
+      .onChange(of: model.query) { _ in committed = false }
       .task { await model.loadGenres() }
-      .onAppear {
-        guard !didAutoFocus else { return }
-        didAutoFocus = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { searchFocused = true }
-      }
       .sheet(item: $bookmarkTarget) { target in
         BookmarkActionSheet(item: target.item, actionsService: appContext.actionsService)
       }
     }
-  }
-
-  // MARK: - Search field
-
-  private var searchField: some View {
-    HStack(spacing: 8) {
-      Image(systemName: "magnifyingglass").foregroundStyle(Color.KinoPub.subtitle)
-      TextField("Shows & Movies".localized, text: $model.query)
-        .textFieldStyle(.plain)
-        .foregroundStyle(Color.KinoPub.text)
-        .focused($searchFocused)
-        .submitLabel(.search)
-        .autocorrectionDisabled()
-        .onSubmit { committed = true; searchFocused = false } // commit → sections, keyboard down
-      if !model.query.isEmpty {
-        Button {
-          model.query = ""
-          searchFocused = true
-        } label: {
-          Image(systemName: "xmark.circle.fill")
-            .foregroundStyle(Color.KinoPub.subtitle)
-            .frame(width: 32, height: 32)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-      }
-    }
-    .padding(.horizontal, 12)
-    // Fixed height so the row doesn't grow when the (taller) clear button appears on first keystroke.
-    .frame(height: 44)
-    .glassSearchField()
   }
 
   // MARK: - Discovery (empty query): recent + browse
@@ -217,8 +171,7 @@ struct SearchView: View {
       ForEach(matchingRecents) { recent in
         Button {
           model.query = recent.title
-          committed = true
-          searchFocused = false
+          DispatchQueue.main.async { committed = true }
         } label: {
           HStack(spacing: 12) {
             Image(systemName: "magnifyingglass").foregroundStyle(Color.KinoPub.accent)

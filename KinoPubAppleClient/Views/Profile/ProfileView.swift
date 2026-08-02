@@ -107,7 +107,9 @@ struct ProfileView: View {
           .formStyle(.grouped)
           .scrollContentBackground(.hidden)
           .background(Color.KinoPub.background)
+          .frame(maxWidth: 760)
         }
+        .frame(maxWidth: .infinity)
       }
       .kinoScreen("Profile".localized)
       .onAppear(perform: {
@@ -204,7 +206,7 @@ struct ProfileView: View {
         Spacer()
         Picker("", selection: $selectedLanguage) {
           ForEach(model.availableLanguages.keys.sorted(), id: \.self) { key in
-            Text(model.availableLanguages[key] ?? key).tag(key)
+            Text(model.availableLanguages[key, default: key]).tag(key)
           }
         }
         .labelsHidden()

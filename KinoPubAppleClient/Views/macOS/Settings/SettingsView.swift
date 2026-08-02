@@ -5,24 +5,53 @@
 //  Created by Kirill Kunst on 28.10.2023.
 //
 
-import Foundation
 import SwiftUI
 import KinoPubUI
 
 struct SettingsView: View {
-  @EnvironmentObject var windowSettings: WindowSettings
-  @State private var cacheSize: String = ImageCache.shared.formattedDiskUsage()
+  @EnvironmentObject private var windowSettings: WindowSettings
+  @State private var cacheSize = ImageCache.shared.formattedDiskUsage()
 
   var body: some View {
+    TabView {
+      generalSettings
+        .tabItem { Label("General".localized, systemImage: "gearshape") }
+
+      storageSettings
+        .tabItem { Label("Storage".localized, systemImage: "internaldrive") }
+    }
+    .padding(20)
+    .frame(width: 480, height: 250)
+  }
+
+  private var generalSettings: some View {
     Form {
-      Toggle("AlwaysOnTop", isOn: $windowSettings.alwaysOnTop)
-      LabeledContent("Image Cache", value: cacheSize)
-      Button("Clear Image Cache") {
-        ImageCache.shared.clear()
-        cacheSize = ImageCache.shared.formattedDiskUsage()
+      Section {
+        Toggle("AlwaysOnTop".localized, isOn: $windowSettings.alwaysOnTop)
+      }
+
+      Section {
+        LabeledContent("App version".localized,
+                       value: "\(Bundle.main.appVersionLong) (\(Bundle.main.appBuild))")
       }
     }
-    .padding()
-    .frame(width: 320, height: 220)
+    .formStyle(.grouped)
+  }
+
+  private var storageSettings: some View {
+    Form {
+      Section {
+        LabeledContent("Image cache".localized, value: cacheSize)
+        HStack {
+          Spacer()
+          Button("Clear image cache".localized) {
+            ImageCache.shared.clear()
+            cacheSize = ImageCache.shared.formattedDiskUsage()
+          }
+          .disabled(ImageCache.shared.diskUsageBytes() == 0)
+        }
+      }
+    }
+    .formStyle(.grouped)
   }
 }

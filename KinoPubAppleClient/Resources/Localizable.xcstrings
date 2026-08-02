@@ -4948,6 +4948,7 @@
       }
     },
     "Clear Image Cache" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -6966,6 +6967,7 @@
       }
     },
     "Details" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10531,6 +10533,107 @@
         }
       }
     },
+    "General" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "az" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ümumi"
+          }
+        },
+        "be" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Агульныя"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
+        "et" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Üldine"
+          }
+        },
+        "hy" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ընդհանուր"
+          }
+        },
+        "ka" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ზოგადი"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Жалпы"
+          }
+        },
+        "ky" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Жалпы"
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bendrieji"
+          }
+        },
+        "lv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vispārīgi"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "General"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Основные"
+          }
+        },
+        "tg" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Умумӣ"
+          }
+        },
+        "tk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Umumy"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Загальні"
+          }
+        },
+        "uz" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Umumiy"
+          }
+        }
+      }
+    },
     "Genre" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -11357,6 +11460,7 @@
       }
     },
     "Home" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11659,6 +11763,7 @@
       }
     },
     "Image Cache" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
