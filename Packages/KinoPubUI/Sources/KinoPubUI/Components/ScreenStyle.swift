@@ -7,6 +7,7 @@
 //  its own navigationTitle / display-mode / toolbar combination).
 //
 
+import AppKit
 import SwiftUI
 
 public extension View {
@@ -21,10 +22,14 @@ public extension View {
     self
   }
 
-  /// Compatibility no-op; the native macOS toolbar controls the titlebar appearance.
+  /// Extends cinematic content beneath a permanently translucent unified toolbar. This avoids the
+  /// native scroll-edge transition switching between glass and an opaque titlebar while the hero
+  /// carousel changes or settles at the top.
   @ViewBuilder
   func heroNavBar() -> some View {
     self
+      .ignoresSafeArea(.container, edges: .top)
+      .background(WindowGlassProbe())
   }
 
   /// Shapes the context-menu "lift" preview to a rounded rectangle so a surrounding ScrollView /
@@ -53,6 +58,27 @@ public extension View {
 #else
     self.background(.ultraThinMaterial, in: Capsule())
 #endif
+  }
+}
+
+private struct WindowGlassProbe: NSViewRepresentable {
+  func makeNSView(context: Context) -> GlassProbeView { GlassProbeView() }
+  func updateNSView(_ view: GlassProbeView, context: Context) { view.configureWindow() }
+
+  final class GlassProbeView: NSView {
+    override func viewDidMoveToWindow() {
+      super.viewDidMoveToWindow()
+      configureWindow()
+      DispatchQueue.main.async { [weak self] in self?.configureWindow() }
+    }
+
+    func configureWindow() {
+      guard let window else { return }
+      window.styleMask.insert(.fullSizeContentView)
+      window.titlebarAppearsTransparent = true
+      window.toolbarStyle = .unified
+      window.toolbar?.showsBaselineSeparator = false
+    }
   }
 }
 
