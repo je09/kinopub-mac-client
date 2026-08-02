@@ -163,8 +163,22 @@ struct MediaItemView: View {
 
   // MARK: - Hero
 
+  private var heroArtworkURLs: [String] {
+    // The kino.pub detail response always has posters and often has native video/episode thumbnails.
+    // Use those before best-effort Kinopoisk stills so every title gets an Apple TV-style carousel.
+    let posters = [mediaItem.posters.wide, mediaItem.posters.big].compactMap { $0 }
+    let movieThumbnails = mediaItem.videos?.prefix(3).map(\.thumbnail) ?? []
+    let episodeThumbnails = mediaItem.orderedEpisodes.prefix(4).map { $0.episode.thumbnail }
+    let stills = itemModel.images.prefix(6).compactMap { $0.previewUrl ?? $0.imageUrl }
+    return posters + movieThumbnails + episodeThumbnails + stills
+  }
+
   private var hero: some View {
-    HeroBackdrop(imageURL: mediaItem.posters.wide ?? mediaItem.posters.big, height: 552, tallBlur: true, blurReduction: 50) {
+    HeroBackdrop(imageURLs: heroArtworkURLs,
+                 videoURL: mediaItem.trailer?.url,
+                 height: 552,
+                 tallBlur: true,
+                 blurReduction: 50) {
       VStack(alignment: .leading, spacing: 10) {
         Text(mediaItem.localizedTitle)
           .font(.system(size: 34, weight: .bold))
@@ -1699,10 +1713,16 @@ struct ReviewCard: View {
       // Sentiment dot + author + date.
       HStack(spacing: 7) {
         Circle().fill(typeColor).frame(width: 7, height: 7)
-        Text(review.author ?? "Аноним".localized)
-          .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(Color.KinoPub.text)
-          .lineLimit(1)
+        Group {
+          if let author = review.author, !author.isEmpty {
+            Text(author)
+          } else {
+            Text("Anonymous".localized)
+          }
+        }
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(Color.KinoPub.text)
+        .lineLimit(1)
         if let date = formattedDate {
           Text("·").font(.system(size: 12)).foregroundStyle(Color.KinoPub.subtitle)
           Text(date).font(.system(size: 12)).foregroundStyle(Color.KinoPub.subtitle)
