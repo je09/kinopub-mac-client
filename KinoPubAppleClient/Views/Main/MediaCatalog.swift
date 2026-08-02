@@ -18,6 +18,8 @@ class MediaCatalog: ObservableObject {
   private var errorHandler: ErrorHandler
   private var itemsService: VideoContentService
   private var bag = Set<AnyCancellable>()
+  private var loadGeneration = 0
+  private var pagesInFlight = Set<String>()
 
   @Published public var items: [MediaItem] = MediaItem.skeletonMock()
   @Published public var pagination: Pagination?
@@ -79,10 +81,16 @@ class MediaCatalog: ObservableObject {
       return
     }
 
+    let generation = loadGeneration
+    let page = pagination.map { $0.current + 1 }
+    let pageKey = "\(generation):\(page ?? 1)"
+    guard pagesInFlight.insert(pageKey).inserted else { return }
+    defer { pagesInFlight.remove(pageKey) }
+
     do {
-      let page = pagination != nil ? pagination!.current + 1 : nil
       if !query.isEmpty {
         let data = try await itemsService.search(query: query, contentType: nil, field: nil, page: page)
+        guard generation == loadGeneration else { return }
         handleData(items: data.items, pagination: data.pagination)
         return
       }
@@ -95,6 +103,7 @@ class MediaCatalog: ObservableObject {
       // in-app filter matches the website (see MediaItemsFilter.clientSideMatches).
       let now = Date().timeIntervalSince1970
       let incoming = f.hasClientSideFacets ? data.items.filter { f.clientSideMatches($0, now: now) } : data.items
+      guard generation == loadGeneration else { return }
       handleData(items: incoming, pagination: data.pagination)
 
       // A page can shrink to a few matches once facets are applied; pull more pages (bounded) so the
@@ -104,6 +113,7 @@ class MediaCatalog: ObservableObject {
         await fetchItems(fillBurst: fillBurst + 1, forceRefresh: forceRefresh)
       }
     } catch {
+      guard generation == loadGeneration, !error.isCancellationError else { return }
       Logger.app.debug("fetch items error: \(error)")
       errorHandler.setError(error)
     }
@@ -135,8 +145,7 @@ class MediaCatalog: ObservableObject {
       return
     }
 
-    let thresholdIndex = self.items.index(self.items.endIndex, offsetBy: -1)
-    if thresholdIndex == self.items.firstIndex(of: item), pagination.current <= pagination.total {
+    if self.items.last == item, pagination.current < pagination.total {
       Logger.app.debug("load more content after item: \(item.id)")
       Task {
         await fetchItems()
@@ -146,6 +155,8 @@ class MediaCatalog: ObservableObject {
 
   @MainActor
   func refresh() {
+    loadGeneration &+= 1
+    pagesInFlight.removeAll()
     items = MediaItem.skeletonMock()
     pagination = nil
     errorHandler.reset()
@@ -157,9 +168,11 @@ class MediaCatalog: ObservableObject {
 
   @MainActor
   func apply(filter: MediaItemsFilter) {
-    contentType = filter.contentType
+    let typeChanged = contentType != filter.contentType
     activeFilter = filter
-    refresh()
+    contentType = filter.contentType
+    // A content-type change is already observed by `subscribe()`; otherwise trigger the reload here.
+    if !typeChanged { refresh() }
   }
 
   @MainActor

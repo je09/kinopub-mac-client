@@ -73,6 +73,7 @@ class WatchingModel: ObservableObject {
   private var errorHandler: ErrorHandler
   private var contentService: VideoContentService
   private var bag = Set<AnyCancellable>()
+  private var loadGeneration = 0
 
   @Published public var serials: [WatchingSerial] = []
   @Published public var isLoading: Bool = true
@@ -104,6 +105,8 @@ class WatchingModel: ObservableObject {
       return
     }
 
+    loadGeneration &+= 1
+    let generation = loadGeneration
     isLoading = true
     do {
       switch tab {
@@ -112,20 +115,24 @@ class WatchingModel: ObservableObject {
         // kino.pub endpoint ignores the `type` query param (returns all types regardless), so the
         // sub-tab filter has to be applied on the client by the item's `type`.
         let data = try await contentService.fetchWatchingSerials(subscribed: 0, type: episodesType.rawValue)
+        guard generation == loadGeneration else { return }
         serials = data.items.filter { $0.type == episodesType.rawValue }
       case .watchlist:
         // "Я смотрю": serials you're subscribed to, or movies you're part-way through.
         switch watchlistKind {
         case .serials:
           let data = try await contentService.fetchWatchingSerials(subscribed: 1, type: nil)
+          guard generation == loadGeneration else { return }
           serials = data.items
         case .movies:
           let data = try await contentService.fetchWatchingMovies()
+          guard generation == loadGeneration else { return }
           serials = data.items
         }
       }
-      isLoading = false
+      if generation == loadGeneration { isLoading = false }
     } catch {
+      guard generation == loadGeneration, !error.isCancellationError else { return }
       Logger.app.debug("fetch watching serials error: \(error)")
       isLoading = false
       errorHandler.setError(error)

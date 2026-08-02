@@ -19,6 +19,8 @@ class HistoryModel: ObservableObject {
   private var errorHandler: ErrorHandler
   private var contentService: VideoContentService
   private var bag = Set<AnyCancellable>()
+  private var loadGeneration = 0
+  private var pagesInFlight = Set<String>()
 
   @Published public var items: [MediaItem] = MediaItem.skeletonMock()
   @Published public var historyItems: [HistoryItem] = []
@@ -82,11 +84,18 @@ class HistoryModel: ObservableObject {
       return
     }
 
+    let generation = loadGeneration
+    let page = pagination.map { $0.current + 1 }
+    let pageKey = "\(generation):\(page ?? 1)"
+    guard pagesInFlight.insert(pageKey).inserted else { return }
+    defer { pagesInFlight.remove(pageKey) }
+
     do {
-      let page = pagination != nil ? pagination!.current + 1 : nil
       let data = try await contentService.fetchHistory(page: page)
+      guard generation == loadGeneration else { return }
       handleData(data)
     } catch {
+      guard generation == loadGeneration, !error.isCancellationError else { return }
       Logger.app.debug("fetch history error: \(error)")
       errorHandler.setError(error)
     }
@@ -109,8 +118,7 @@ class HistoryModel: ObservableObject {
       return
     }
 
-    let thresholdIndex = self.items.index(self.items.endIndex, offsetBy: -1)
-    if thresholdIndex == self.items.firstIndex(of: item), pagination.current <= pagination.total {
+    if self.items.last == item, pagination.current < pagination.total {
       Logger.app.debug("load more history after item: \(item.id)")
       Task {
         await fetchItems()
@@ -143,6 +151,8 @@ class HistoryModel: ObservableObject {
 
   @Sendable @MainActor
   func refresh() async {
+    loadGeneration &+= 1
+    pagesInFlight.removeAll()
     items = MediaItem.skeletonMock()
     historyItems = []
     pagination = nil

@@ -41,15 +41,15 @@ class HomeModel: ObservableObject {
   // views → views-, added → created-, watchers → watchers-. `period` is sent server-side
   // (see FilterItemsRequest); "Популярные фильмы" = most viewed this month.
   private static let shelfSpecs: [ShelfSpec] = [
-    ShelfSpec(title: "Популярные фильмы", type: .movie, sort: "views-", period: "month"),
-    ShelfSpec(title: "Новые фильмы", type: .movie, sort: "created-", period: nil),
-    ShelfSpec(title: "Популярные сериалы", type: .serial, sort: "watchers-", period: nil),
-    ShelfSpec(title: "Новые сериалы", type: .serial, sort: "created-", period: nil),
-    ShelfSpec(title: "Новые концерты", type: .concert, sort: "created-", period: nil),
-    ShelfSpec(title: "Новое в 3D", type: .threeD, sort: "created-", period: nil),
-    ShelfSpec(title: "Новые ДокуФильмы", type: .documovie, sort: "created-", period: nil),
-    ShelfSpec(title: "Новые Докусериалы", type: .docuserial, sort: "created-", period: nil),
-    ShelfSpec(title: "Новые ТВ шоу", type: .tvshow, sort: "created-", period: nil)
+    ShelfSpec(title: "Popular Movies", type: .movie, sort: "views-", period: "month"),
+    ShelfSpec(title: "New Movies", type: .movie, sort: "created-", period: nil),
+    ShelfSpec(title: "Popular Series", type: .serial, sort: "watchers-", period: nil),
+    ShelfSpec(title: "New Series", type: .serial, sort: "created-", period: nil),
+    ShelfSpec(title: "New Concerts", type: .concert, sort: "created-", period: nil),
+    ShelfSpec(title: "New in 3D", type: .threeD, sort: "created-", period: nil),
+    ShelfSpec(title: "New Documentary Movies", type: .documovie, sort: "created-", period: nil),
+    ShelfSpec(title: "New Documentary Series", type: .docuserial, sort: "created-", period: nil),
+    ShelfSpec(title: "New TV Shows", type: .tvshow, sort: "created-", period: nil)
   ]
 
   /// A "Continue Watching" entry enriched with resume progress and, for series,
@@ -84,6 +84,8 @@ class HomeModel: ObservableObject {
   /// Whether the real shelves have been fetched. `shelves` starts as skeleton placeholders (so
   /// it's never empty), so we can't gate the one-time load on `shelves.isEmpty`.
   private var didLoadShelves = false
+  private var lastContinueWatchingRefresh: Date?
+  private var isFetchingData = false
 
   init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
     self.itemsService = itemsService
@@ -94,11 +96,15 @@ class HomeModel: ObservableObject {
     Task { await fetchData() }
   }
 
-  func fetchData() async {
+  func fetchData(forceRefresh: Bool = false) async {
+    guard !isFetchingData else { return }
     guard authState.userState == .authorized else {
       subscribeForAuth()
       return
     }
+
+    isFetchingData = true
+    defer { isFetchingData = false }
 
     // The watch history powers the "Continue Watching" shelf. Fetch it alongside the other
     // shelves, but isolate failures so a history error can't take down the whole Home screen.
@@ -112,16 +118,23 @@ class HomeModel: ObservableObject {
       let specs = HomeModel.shelfSpecs
       let shelfService = itemsService
       let loaded: [Shelf] = await withTaskGroup(of: (Int, Shelf?).self) { group in
-        for (index, spec) in specs.enumerated() {
+        var iterator = Array(specs.enumerated()).makeIterator()
+        func add(_ entry: (offset: Int, element: ShelfSpec)) {
           group.addTask {
-            let items = (try? await shelfService.filter(filter: spec.filter, page: nil))?.items ?? []
+            let items = (try? await shelfService.filter(filter: entry.element.filter,
+                                                        page: nil,
+                                                        forceRefresh: forceRefresh))?.items ?? []
             let shelf = items.isEmpty ? nil
-              : Shelf(title: spec.title, items: items, ranked: false, filter: spec.filter)
-            return (index, shelf)
+              : Shelf(title: entry.element.title.localized, items: items, ranked: false, filter: entry.element.filter)
+            return (entry.offset, shelf)
           }
         }
+        for _ in 0..<3 { if let entry = iterator.next() { add(entry) } }
         var slots = [Shelf?](repeating: nil, count: specs.count)
-        for await (index, shelf) in group { slots[index] = shelf }
+        while let (index, shelf) = await group.next() {
+          slots[index] = shelf
+          if let entry = iterator.next() { add(entry) }
+        }
         return slots.compactMap { $0 }
       }
 
@@ -134,7 +147,9 @@ class HomeModel: ObservableObject {
         // The banner should surface fresh catalog additions, not whatever older title happens to
         // lead the monthly-popular shelf. Both shelves above come directly from `/v1/items` with
         // `sort=created-`; popular entries remain a fallback if the new-content calls are empty.
-        let newShelves = loaded.filter { $0.title == "Новые фильмы" || $0.title == "Новые сериалы" }
+        let newShelves = loaded.filter {
+          $0.filter?.sort == "created-" && ($0.filter?.contentType == .movie || $0.filter?.contentType == .serial)
+        }
         let heroSource = newShelves.isEmpty ? loaded : newShelves
         var heroSeen = Set<Int>()
         featured = heroSource
@@ -160,14 +175,20 @@ class HomeModel: ObservableObject {
     // per-episode watching positions that the history list does not), keeping the timestamp.
     let service = itemsService
     let enriched: [(item: ContinueItem, watchedAt: TimeInterval)] = await withTaskGroup(of: (Int, ContinueItem).self) { group in
-      for (index, candidate) in candidates.enumerated() {
+      var iterator = Array(candidates.enumerated()).makeIterator()
+      func add(_ entry: (offset: Int, element: (item: MediaItem, watchedAt: TimeInterval))) {
         group.addTask {
+          let candidate = entry.element
           let full = (try? await service.fetchDetails(for: "\(candidate.item.id)").item) ?? candidate.item
-          return (index, HomeModel.continueItem(from: full))
+          return (entry.offset, HomeModel.continueItem(from: full))
         }
       }
+      for _ in 0..<3 { if let entry = iterator.next() { add(entry) } }
       var slots = [ContinueItem?](repeating: nil, count: candidates.count)
-      for await (index, value) in group { slots[index] = value }
+      while let (index, value) = await group.next() {
+        slots[index] = value
+        if let entry = iterator.next() { add(entry) }
+      }
       return slots.enumerated().compactMap { index, item in
         item.map { ($0, candidates[index].watchedAt) }
       }
@@ -198,6 +219,26 @@ class HomeModel: ObservableObject {
       .sorted { $0.watchedAt > $1.watchedAt }
       .map { $0.item }
     continueWatchingLoading = false
+    lastContinueWatchingRefresh = Date()
+  }
+
+  /// Refresh mutable Home data after returning to this cached sidebar screen, without repeatedly
+  /// rebuilding the catalog shelves during quick navigation.
+  func refreshContinueWatchingIfStale() async {
+    guard didLoadShelves,
+          lastContinueWatchingRefresh.map({ Date().timeIntervalSince($0) >= 30 }) ?? true else { return }
+    continueWatchingLoading = true
+    await fetchData()
+  }
+
+  @Sendable @MainActor
+  func refresh() async {
+    guard !isFetchingData else { return }
+    didLoadShelves = false
+    shelves = Self.skeletonShelves()
+    featured = []
+    continueWatchingLoading = true
+    await fetchData(forceRefresh: true)
   }
 
   /// Builds a Continue Watching entry from a fully-loaded media item. Series use the same
@@ -218,9 +259,9 @@ class HomeModel: ObservableObject {
 
   private static func skeletonShelves() -> [Shelf] {
     [
-      Shelf(title: "Популярные фильмы", items: MediaItem.skeletonMock(), ranked: true),
-      Shelf(title: "Горячие сериалы", items: MediaItem.skeletonMock(), ranked: true),
-      Shelf(title: "Новинки кино", items: MediaItem.skeletonMock(), ranked: false)
+      Shelf(title: "Popular Movies".localized, items: MediaItem.skeletonMock(), ranked: true),
+      Shelf(title: "Popular Series".localized, items: MediaItem.skeletonMock(), ranked: true),
+      Shelf(title: "New Movies".localized, items: MediaItem.skeletonMock(), ranked: false)
     ]
   }
 

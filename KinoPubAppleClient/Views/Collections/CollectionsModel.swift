@@ -55,6 +55,7 @@ class CollectionsModel: ObservableObject {
 
   private var pagination: Pagination?
   private var isLoadingMore: Bool = false
+  private var loadGeneration = 0
 
   init(collectionsService: CollectionsService, authState: AuthState, errorHandler: ErrorHandler) {
     self.collectionsService = collectionsService
@@ -71,35 +72,46 @@ class CollectionsModel: ObservableObject {
       return
     }
 
+    loadGeneration &+= 1
+    let generation = loadGeneration
     isLoading = true
     pagination = nil
     collectionItems = [:]
     do {
       let data = try await collectionsService.fetchCollections(page: nil, sort: selectedSort.apiValue)
+      guard generation == loadGeneration else { return }
       collections = data.collections
       pagination = data.pagination
-      loadItems(for: data.collections)
+      loadItems(for: data.collections, generation: generation)
     } catch {
+      guard generation == loadGeneration, !error.isCancellationError else { return }
       Logger.app.debug("fetch collections error: \(error)")
       errorHandler.setError(error)
     }
-    isLoading = false
+    if generation == loadGeneration { isLoading = false }
   }
 
   /// Loads each collection's preview items in parallel (best-effort) so they fill in as they arrive,
   /// each shelf showing placeholders until then — exactly like the Bookmarks folders.
-  private func loadItems(for collections: [Collection]) {
+  private func loadItems(for collections: [Collection], generation: Int) {
     let service = collectionsService
     Task {
       await withTaskGroup(of: (Int, [MediaItem]).self) { group in
-        for collection in collections {
+        var iterator = collections.makeIterator()
+        func add(_ collection: Collection) {
           group.addTask {
             let items = (try? await service.fetchCollection(id: collection.id).1) ?? []
             return (collection.id, items)
           }
         }
-        for await (id, items) in group {
+        for _ in 0..<3 { if let collection = iterator.next() { add(collection) } }
+        while let (id, items) = await group.next() {
+          guard generation == loadGeneration else {
+            group.cancelAll()
+            return
+          }
           collectionItems[id] = items
+          if let collection = iterator.next() { add(collection) }
         }
       }
     }
@@ -133,7 +145,7 @@ class CollectionsModel: ObservableObject {
       let data = try await collectionsService.fetchCollections(page: nextPage, sort: selectedSort.apiValue)
       collections.append(contentsOf: data.collections)
       self.pagination = data.pagination
-      loadItems(for: data.collections)
+      loadItems(for: data.collections, generation: loadGeneration)
     } catch {
       Logger.app.debug("fetch more collections error: \(error)")
       errorHandler.setError(error)

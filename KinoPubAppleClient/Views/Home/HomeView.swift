@@ -40,6 +40,8 @@ struct HomeView: View {
         .padding(.bottom, 24)
       }
       .background(Color.KinoPub.background)
+      .refreshable { await model.refresh() }
+      .task { await model.refreshContinueWatchingIfStale() }
       .navigationTitle("Home".localized)
       // The native macOS toolbar owns the titlebar material.
       .heroNavBar()

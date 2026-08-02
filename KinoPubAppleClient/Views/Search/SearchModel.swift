@@ -189,6 +189,8 @@ class SearchModel: ObservableObject {
   /// The query value that was last applied as a person-search preset. Used to
   /// distinguish a programmatic preset from a manual edit of the search bar.
   private var presetQuery: String?
+  private var searchTask: Task<Void, Never>?
+  private var isLoadingMore = false
 
   init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
     self.contentService = itemsService
@@ -216,7 +218,8 @@ class SearchModel: ObservableObject {
         // (so typing a regular title query searches by title again).
         self.searchField = nil
         self.presetQuery = nil
-        Task { await self.performSearch(query: value) }
+        self.searchTask?.cancel()
+        self.searchTask = Task { await self.performSearch(query: value) }
       }.store(in: &bag)
   }
 
@@ -225,7 +228,8 @@ class SearchModel: ObservableObject {
   func preset(query: String, field: String?) {
     presetQuery = query
     self.query = query
-    Task { await performFieldSearch(query: query, field: field) }
+    searchTask?.cancel()
+    searchTask = Task { await performFieldSearch(query: query, field: field) }
   }
 
   /// Main search bar: query Titles / Actors / Directors at once so the UI can show tabs with
@@ -259,8 +263,8 @@ class SearchModel: ObservableObject {
     let c = (try? await cast)?.items ?? []
     let d = (try? await directors)?.items ?? []
 
-    // Ignore stale responses if the query changed while the requests were in flight.
-    guard trimmed == pagedQuery else { return }
+    // Ignore stale/cancelled responses if the query changed while requests were in flight.
+    guard !Task.isCancelled, trimmed == pagedQuery else { return }
     titleResults = t
     castResults = c
     directorResults = d
@@ -306,24 +310,28 @@ class SearchModel: ObservableObject {
       results = data.items
       pagination = data.pagination
     } catch {
+      guard !Task.isCancelled, trimmed == pagedQuery, !error.isCancellationError else { return }
       Logger.app.debug("search error: \(error)")
       results = []
       pagination = nil
       errorHandler.setError(error)
     }
+    guard trimmed == pagedQuery else { return }
     searching = false
   }
 
   /// Loads the next page when the last result becomes visible (mirrors
   /// `MediaCatalog.loadMoreContent`). Keeps it simple: no separate loading flag.
   func loadMoreContent(after item: MediaItem) {
-    guard let pagination, pagination.current < pagination.total else { return }
+    guard let pagination, pagination.current < pagination.total, !isLoadingMore else { return }
     guard let last = results.last, last.id == item.id, !(item.skeleton ?? false) else { return }
 
+    isLoadingMore = true
     let nextPage = pagination.current + 1
     let trimmed = pagedQuery
     let field = searchField
     Task {
+      defer { isLoadingMore = false }
       do {
         let data: PaginatedData<MediaItem>
         if let field, field == "cast" || field == "director" {

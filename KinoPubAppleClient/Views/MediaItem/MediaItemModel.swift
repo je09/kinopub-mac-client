@@ -108,7 +108,7 @@ class MediaItemModel: ObservableObject {
   func refreshOnReappear() {
     guard itemLoaded else { return }
     localProgressTick &+= 1
-    fetchData()
+    fetchData(includeSupplementary: false)
   }
 
   /// Actor names parsed from the comma-separated `cast` field (trimmed, non-empty).
@@ -190,7 +190,7 @@ class MediaItemModel: ObservableObject {
     self.actionsService = actionsService
   }
 
-  func fetchData() {
+  func fetchData(includeSupplementary: Bool = true) {
     Task {
       do {
         mediaItem = try await itemsService.fetchDetails(for: "\(mediaItemId)").item
@@ -209,9 +209,11 @@ class MediaItemModel: ObservableObject {
         AppContext.shared.libraryState.seedIfAbsent(itemId: mediaId,
                                                     folderIds: mediaItem.bookmarks?.map { $0.id } ?? [],
                                                     inWatchlist: mediaItem.inWatchlist == true)
-        fetchRelated()
-        fetchPeopleShelves()
-        fetchExtras()
+        if includeSupplementary {
+          fetchRelated()
+          fetchPeopleShelves()
+          fetchExtras()
+        }
       } catch {
         errorHandler.setError(error)
       }
