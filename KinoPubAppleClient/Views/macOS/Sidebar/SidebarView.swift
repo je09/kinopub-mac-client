@@ -5,6 +5,7 @@
 //  Created by Kirill Kunst on 11.08.2023.
 //
 
+import AppKit
 import Foundation
 import SwiftUI
 import KinoPubUI
@@ -48,7 +49,16 @@ struct SidebarView: View {
           }
         }
     }
-    .accentColor(Color.KinoPub.accent)
+    .toolbar {
+      if navigationState.sidebarSelection != .search {
+        ToolbarItem(placement: .primaryAction) {
+          Button(action: openSearch) {
+            Label("Search".localized, systemImage: "magnifyingglass")
+          }
+          .help("Search".localized)
+        }
+      }
+    }
     .animation(.easeInOut(duration: 0.25), value: networkMonitor.isOnline)
     .animation(.easeInOut(duration: 0.25), value: showReconnected)
     .onChange(of: networkMonitor.isOnline) { online in
@@ -68,6 +78,24 @@ struct SidebarView: View {
     .environmentObject(errorHandler)
     .task {
       await authState.check()
+    }
+  }
+
+  private func openSearch() {
+    navigationState.sidebarSelection = .search
+    focusToolbarSearchField()
+  }
+
+  /// The searchable field belongs to AVKit's/AppKit's merged window toolbar and appears one run-loop
+  /// after the detail destination changes. Retry briefly, then hand it first responder status.
+  private func focusToolbarSearchField(attemptsRemaining: Int = 6) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+      if let window = NSApp.keyWindow,
+         let item = window.toolbar?.items.compactMap({ $0 as? NSSearchToolbarItem }).first {
+        window.makeFirstResponder(item.searchField)
+      } else if attemptsRemaining > 1 {
+        self.focusToolbarSearchField(attemptsRemaining: attemptsRemaining - 1)
+      }
     }
   }
 

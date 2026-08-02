@@ -156,7 +156,6 @@ struct FilterView: View {
       }
       // 0…10 in 0.1 steps.
       Slider(value: value, in: 0...10, step: 0.1)
-        .tint(Color.KinoPub.accent)
     }
   }
 }

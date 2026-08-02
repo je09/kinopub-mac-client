@@ -149,7 +149,7 @@ struct CollectionDetailView: View {
   private var loading: some View {
     VStack {
       Spacer()
-      ProgressView().tint(Color.KinoPub.accent)
+      ProgressView()
       Spacer()
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)

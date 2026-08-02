@@ -33,7 +33,7 @@ class NavigationState: ObservableObject {
     switch item {
     case .search: searchRoutes = []
     case .new: homeRoutes = []
-    case .bookmarks: bookmarksRoutes = []
+    case .bookmarks, .bookmarkFolder: bookmarksRoutes = []
     case .history: historyRoutes = []
     case .downloads: downloadsRoutes = []
     case .collections: collectionsRoutes = []

@@ -63,6 +63,7 @@ enum SidebarItem: Hashable, Identifiable {
   case newEpisodes
   case watching
   case bookmarks
+  case bookmarkFolder(Int)
   case history
   case downloads
   case profile
@@ -78,6 +79,7 @@ enum SidebarItem: Hashable, Identifiable {
     case .newEpisodes: return "new-episodes"
     case .watching: return "watching"
     case .bookmarks: return "bookmarks"
+    case .bookmarkFolder(let id): return "bookmark-folder-\(id)"
     case .history: return "history"
     case .downloads: return "downloads"
     case .profile: return "profile"
@@ -107,7 +109,8 @@ enum SidebarItem: Hashable, Identifiable {
     case .collections: return "Collections"
     case .newEpisodes: return "New episodes"
     case .watching: return "Watching"
-    case .bookmarks: return "Bookmarks"
+    case .bookmarks: return "All Bookmarks"
+    case .bookmarkFolder: return "Bookmark"
     case .history: return "History"
     case .downloads: return "Downloads"
     case .profile: return "Profile"
@@ -124,7 +127,8 @@ enum SidebarItem: Hashable, Identifiable {
     case .collections: return "rectangle.stack"
     case .newEpisodes: return "sparkles.tv"
     case .watching: return "play.tv"
-    case .bookmarks: return "bookmark"
+    case .bookmarks: return "square.grid.2x2"
+    case .bookmarkFolder: return "folder"
     case .history: return "clock.arrow.circlepath"
     case .downloads: return "arrow.down.circle"
     case .profile: return "person.crop.circle"

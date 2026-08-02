@@ -24,12 +24,13 @@ final class SectionVisibilityStore: ObservableObject {
   private static let forced: Set<String> = ["category-movie", "category-serial", "collections"]
 
   /// The sections the user can actually show/hide, grouped like the sidebar (order preserved).
+  static let editableDiscover: [SidebarItem] = [.newEpisodes, .watching, .history, .downloads]
   static var editableLibrary: [SidebarItem] {
     SidebarItem.libraryCategories.map { SidebarItem.category($0) }
       + CatalogPreset.visible.map { SidebarItem.preset($0) }
       + [.sport, .collections]
   }
-  static let editableOther: [SidebarItem] = [.newEpisodes, .watching, .bookmarks, .history, .downloads]
+  static let editableBookmarks: [SidebarItem] = [.bookmarks]
 
   func canHide(_ item: SidebarItem) -> Bool { !Self.forced.contains(item.id) }
 

@@ -25,6 +25,7 @@ struct KinoPubAppleClientApp: App {
   @StateObject var networkMonitor = NetworkMonitor()
 
   @StateObject var windowSettings = WindowSettings()
+  @StateObject var appearanceSettings = AppearanceSettings()
   @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
   
   var body: some Scene {
@@ -39,6 +40,7 @@ struct KinoPubAppleClientApp: App {
         .environmentObject(authState)
         .environmentObject(errorHandler)
         .environmentObject(networkMonitor)
+        .environmentObject(appearanceSettings)
         .environmentObject(AppContext.shared.libraryState)
         .onAppear { windowSettings.updateWindowLevel() }
         // Register this device's name once authorized, so it isn't listed as "unknown".
@@ -67,6 +69,8 @@ struct KinoPubAppleClientApp: App {
     Settings {
       SettingsView()
         .environmentObject(windowSettings)
+        .environmentObject(appearanceSettings)
+        .tint(appearanceSettings.accent.color)
         .preferredColorScheme(.dark)
     }
   }

@@ -13,12 +13,15 @@ struct SectionsSettingsView: View {
 
   var body: some View {
     Form {
+      Section(header: Text("Discover".localized)) {
+        ForEach(SectionVisibilityStore.editableDiscover) { row($0) }
+      }
       Section(header: Text("Library".localized),
               footer: Text("Films, Serials and Collections can't be hidden.".localized)) {
         ForEach(SectionVisibilityStore.editableLibrary) { row($0) }
       }
-      Section(header: Text("Other".localized)) {
-        ForEach(SectionVisibilityStore.editableOther) { row($0) }
+      Section(header: Text("Bookmarks".localized)) {
+        ForEach(SectionVisibilityStore.editableBookmarks) { row($0) }
       }
     }
     .scrollContentBackground(.hidden)
@@ -34,7 +37,6 @@ struct SectionsSettingsView: View {
       Label(item.title.localized, systemImage: item.systemImage)
         .foregroundStyle(Color.KinoPub.text)
     }
-    .tint(Color.KinoPub.accent)
     .disabled(!visibility.canHide(item))
   }
 }
