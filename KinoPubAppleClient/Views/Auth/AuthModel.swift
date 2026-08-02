@@ -5,6 +5,7 @@
 //  Created by Kirill Kunst on 27.07.2023.
 //
 
+import AppKit
 import Foundation
 import SwiftUI
 import KinoPubBackend
@@ -52,12 +53,8 @@ class AuthModel: ObservableObject {
 
   func copyCode() {
     guard !deviceCode.isEmpty else { return }
-    #if os(iOS)
-    UIPasteboard.general.string = deviceCode
-    #elseif os(macOS)
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(deviceCode, forType: .string)
-    #endif
   }
 
   /// Human-friendly activation page (host + path, without the scheme), e.g. "kino.pub/device".
@@ -74,9 +71,7 @@ class AuthModel: ObservableObject {
 
     Logger.app.debug("open activation url: \(url)")
 
-    #if os(iOS)
-    UIApplication.shared.open(url)
-    #endif
+    NSWorkspace.shared.open(url)
   }
 
   private func startPolling(for response: VerificationResponse) {

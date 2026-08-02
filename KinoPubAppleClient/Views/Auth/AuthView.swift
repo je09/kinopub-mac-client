@@ -7,9 +7,7 @@
 import SwiftUI
 import KinoPubUI
 import PopupView
-#if canImport(AppKit)
 import AppKit
-#endif
 
 struct AuthView: View {
 
@@ -65,11 +63,7 @@ struct AuthView: View {
   }
 
   private func quitApp() {
-    #if os(macOS)
     NSApplication.shared.terminate(nil)
-    #else
-    exit(0)
-    #endif
   }
 
   private var logo: some View {

@@ -3,76 +3,43 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KinoPub — Apple client</title>
-  <meta name="description" content="Unofficial kino.pub client for iPhone, iPad & Mac. One-tap install via AltStore / SideStore.">
-  <!-- Custom-scheme redirector: GitHub Markdown strips altstore://, so README/wiki buttons point here
-       (https) and we forward to the app scheme on the device. -->
-  <script>
-    (function () {
-      try {
-        var r = new URLSearchParams(location.search).get('r');
-        if (r) { location.replace(r); }
-      } catch (e) {}
-    })();
-  </script>
+  <title>KinoPub for macOS</title>
+  <meta name="description" content="A native, unofficial kino.pub client for macOS.">
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-           background: #0e0e10; color: #eaeaea; margin: 0; padding: 48px 20px; }
-    .wrap { max-width: 880px; margin: 0 auto; text-align: center; }
-    h1 { font-size: 2.4rem; margin: .1em 0 .2em; }
-    .tag { color: #b8b8be; line-height: 1.5; max-width: 560px; margin: 0 auto 28px; }
-    .fork { color: #8a8a90; font-size: .9rem; }
-    .btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 24px 0 8px; }
-    .btn { display: inline-flex; align-items: center; padding: 13px 22px; border-radius: 13px;
-           text-decoration: none; font-weight: 600; font-size: 1rem; }
-    .primary  { background: #eaeaea; color: #111; }
-    .altstore { background: #1F8AFF; color: #fff; }
-    .sidestore{ background: #8A4FFF; color: #fff; }
-    .ghost    { border: 1px solid #2c2c30; color: #eaeaea; }
-    #redir { display: none; color: #1F8AFF; font-weight: 600; margin-top: 8px; }
-    .shots { display: flex; gap: 14px; overflow-x: auto; padding: 28px 4px 8px; scroll-snap-type: x mandatory; }
-    .shots img { height: 420px; border-radius: 18px; border: 1px solid #1d1d20; scroll-snap-align: center; }
-    .src { display: block; margin-top: 26px; color: #8a8a90; }
-    code { background: #1a1a1e; padding: 3px 8px; border-radius: 7px; color: #cfd; font-size: .85rem; }
+    body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: #0e0e10;
+           color: #eaeaea; margin: 0; padding: 72px 20px; }
+    main { max-width: 760px; margin: auto; text-align: center; }
+    h1 { font-size: clamp(2.5rem, 8vw, 5rem); margin: 0 0 12px; letter-spacing: -.04em; }
+    p { color: #b8b8be; line-height: 1.6; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 32px 0; }
+    a.button { padding: 13px 22px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+    .primary { background: #eaeaea; color: #111; }
+    .secondary { border: 1px solid #343438; color: #eaeaea; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px;
+                margin: 48px 0; text-align: left; }
+    .feature { padding: 20px; border: 1px solid #29292d; border-radius: 16px; background: #151518; }
+    .feature strong { display: block; margin-bottom: 8px; }
+    footer { color: #77777e; font-size: .9rem; margin-top: 52px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <main>
     <h1>KinoPub</h1>
-    <p class="tag">Native <strong>iOS · iPadOS · macOS</strong> client for kino.pub.
-       One-tap install via AltStore / SideStore — with automatic updates.</p>
-    <p id="redir">Opening your sideload app…</p>
-
-    <div class="btns">
-      <a class="btn altstore"  href="./?r=altstore-classic://source?url=https%3A%2F%2Fgithub.com%2Fdungeon-master-xx%2Fkinopub-apple-client%2Freleases%2Flatest%2Fdownload%2Fapps.json">➕ Add to AltStore Classic</a>
-      <a class="btn sidestore" href="./?r=sidestore://source?url=https%3A%2F%2Fgithub.com%2Fdungeon-master-xx%2Fkinopub-apple-client%2Freleases%2Flatest%2Fdownload%2Fapps.json">➕ Add to SideStore</a>
-      <a class="btn primary"   href="https://github.com/dungeon-master-xx/kinopub-apple-client/releases/latest">⬇︎ Download IPA / macOS</a>
-      <a class="btn ghost"     href="https://github.com/dungeon-master-xx/kinopub-apple-client/wiki">📖 Install guide &amp; FAQ</a>
+    <p>A native macOS client with a system sidebar, menus, keyboard shortcuts, notifications,
+       and an AVKit player. No Catalyst and no mobile sideloading layer.</p>
+    <div class="buttons">
+      <a class="button primary" href="https://github.com/dungeon-master-xx/kinopub-apple-client/releases/latest">Download for macOS</a>
+      <a class="button secondary" href="https://github.com/dungeon-master-xx/kinopub-apple-client/wiki">Install guide</a>
+      <a class="button secondary" href="https://github.com/dungeon-master-xx/kinopub-apple-client">Source</a>
     </div>
-    <p class="fork">Manual source URL: <code>https://github.com/dungeon-master-xx/kinopub-apple-client/releases/latest/download/apps.json</code></p>
-    <p class="fork">Use AltStore <strong>Classic</strong> or SideStore (free sideloading) — not AltStore PAL, which only installs notarized apps.</p>
-
-    <div class="shots">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/2.jpeg" alt="iPhone screenshot" loading="lazy">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/3.jpeg" alt="iPhone screenshot" loading="lazy">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/4.jpeg" alt="iPhone screenshot" loading="lazy">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/5.jpeg" alt="iPhone screenshot" loading="lazy">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/6.jpeg" alt="iPhone screenshot" loading="lazy">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/7.jpeg" alt="iPhone screenshot" loading="lazy">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/8.jpeg" alt="iPhone screenshot" loading="lazy">
-      <img src="https://raw.githubusercontent.com/dungeon-master-xx/kinopub-apple-client/main/Screenshots/iphone/9.jpeg" alt="iPhone screenshot" loading="lazy">
-    </div>
-
-    <a class="src" href="https://github.com/dungeon-master-xx/kinopub-apple-client">Source on GitHub →</a>
-    <p class="fork">Community fork of leoru/kinopub-apple-client. Not affiliated with kino.pub.</p>
-  </div>
-
-  <script>
-    if (new URLSearchParams(location.search).get('r')) {
-      document.getElementById('redir').style.display = 'block';
-    }
-  </script>
+    <section class="features">
+      <div class="feature"><strong>Native playback</strong><p>AVKit controls, fullscreen, Picture in Picture, HEVC, 4K, and HDR.</p></div>
+      <div class="feature"><strong>Mac interface</strong><p>NavigationSplitView, Settings, native menus, shortcuts, and notifications.</p></div>
+      <div class="feature"><strong>Your library</strong><p>Catalog, search, bookmarks, history, downloads, and Continue Watching.</p></div>
+    </section>
+    <footer>Requires macOS 13 or newer. Community project; not affiliated with kino.pub.</footer>
+  </main>
 </body>
 </html>

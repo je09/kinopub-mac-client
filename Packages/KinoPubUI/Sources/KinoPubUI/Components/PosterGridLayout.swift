@@ -3,7 +3,7 @@
 //  KinoPubUI
 //
 //  One responsive layout for every poster grid. Instead of `GridItem(.adaptive(minimum:))` — which
-//  silently drops to a single column on narrow widths (e.g. a 393pt iPhone with a 172pt minimum) —
+//  silently drops to a single column in a narrow Mac window —
 //  we derive a DETERMINISTIC column count from the available width and a target tile size, then use
 //  flexible columns so tiles always fill the row edge-to-edge. Mirrors the width-based approach used
 //  in the rawtherapy queue grid.
@@ -14,7 +14,7 @@ import SwiftUI
 public enum PosterGridLayout {
 
   /// Column count for the given container width: as many `targetTileWidth`-ish tiles as fit, clamped
-  /// to `minColumns…maxColumns` (so a phone never falls to 1 column, and an iPad doesn't over-pack).
+  /// to `minColumns…maxColumns` so narrow windows stay useful and wide windows do not over-pack.
   public static func columnCount(width: CGFloat,
                                  targetTileWidth: CGFloat = 165,
                                  spacing: CGFloat = 16,

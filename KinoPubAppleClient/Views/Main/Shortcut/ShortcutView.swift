@@ -40,9 +40,6 @@ struct SortSelectionView: View {
       .scrollContentBackground(.hidden)
       .background(Color.KinoPub.background)
       .navigationTitle("Sort".localized)
-      #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done".localized) {

@@ -36,21 +36,12 @@ struct BookmarkView: View {
     .navigationTitle(model.title)
     .background(Color.KinoPub.background)
     .toolbar {
-#if os(iOS)
-      ToolbarItem(placement: .topBarTrailing) {
-        sortMenu
-      }
-      ToolbarItem(placement: .topBarTrailing) {
-        deleteButton
-      }
-#else
       ToolbarItem(placement: .primaryAction) {
         sortMenu
       }
       ToolbarItem(placement: .primaryAction) {
         deleteButton
       }
-#endif
     }
     .alert("Delete folder".localized, isPresented: $showDeleteConfirm) {
       Button("Cancel".localized, role: .cancel) {}

@@ -11,19 +11,13 @@ import SwiftUI
 /**
  A view useful for determining if a child view should act like it is horizontally compressed.
  
- Several elements are used to decide if a view is compressed:
- - Width
- - Dynamic Type size
- - Horizontal size class (on iOS)
+ Width and Dynamic Type size determine whether the child should use its compact layout.
  */
 struct WidthThresholdReader<Content: View>: View {
   var widthThreshold: Double = 400
   var dynamicTypeThreshold: DynamicTypeSize = .xxLarge
   @ViewBuilder var content: (WidthThresholdProxy) -> Content
   
-#if os(iOS)
-  @Environment(\.horizontalSizeClass) private var sizeClass
-#endif
   @Environment(\.dynamicTypeSize) private var dynamicType
   
   var body: some View {
@@ -38,11 +32,6 @@ struct WidthThresholdReader<Content: View>: View {
   }
   
   func isCompact(width: Double) -> Bool {
-#if os(iOS)
-    if sizeClass == .compact {
-      return true
-    }
-#endif
     if dynamicType >= dynamicTypeThreshold {
       return true
     }
@@ -90,17 +79,6 @@ struct WidthThresholdReader_Previews: PreviewProvider {
       .dynamicTypeSize(.xxxLarge)
       .border(.quaternary)
       
-#if os(iOS)
-      WidthThresholdReader { proxy in
-        Label {
-          Text("Manually Compact Size Class")
-        } icon: {
-          compactIndicator(proxy: proxy)
-        }
-      }
-      .border(.quaternary)
-      .environment(\.horizontalSizeClass, .regular)
-#endif
     }
   }
   

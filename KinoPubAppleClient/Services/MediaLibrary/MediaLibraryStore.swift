@@ -79,8 +79,6 @@ final class MediaLibraryStore: ObservableObject {
   // MARK: - Façade dependencies (not owned — queried live)
 
   private let downloadManager: DownloadManager<DownloadMeta>
-  private let hlsDownloadManager: HLSAssetDownloadManager
-  private let hlsStore: HLSDownloadsStore
   private let downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>
   private let progressStore: LocalWatchProgressStore
   private let actionsService: UserActionsService
@@ -89,14 +87,10 @@ final class MediaLibraryStore: ObservableObject {
   private var cancellables = Set<AnyCancellable>()
 
   init(downloadManager: DownloadManager<DownloadMeta>,
-       hlsDownloadManager: HLSAssetDownloadManager,
-       hlsStore: HLSDownloadsStore,
        downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>,
        progressStore: LocalWatchProgressStore,
        actionsService: UserActionsService) {
     self.downloadManager = downloadManager
-    self.hlsDownloadManager = hlsDownloadManager
-    self.hlsStore = hlsStore
     self.downloadedFilesDatabase = downloadedFilesDatabase
     self.progressStore = progressStore
     self.actionsService = actionsService
@@ -109,10 +103,6 @@ final class MediaLibraryStore: ObservableObject {
     // downloads progress/complete — mirrors what DownloadsCatalog does for the Downloads tab. Also
     // rebuild the completed-download index so per-card "downloaded" checks stay current and cheap.
     downloadManager.$activeDownloads
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] _ in self?.rebuildDownloadedIndex(); self?.objectWillChange.send() }
-      .store(in: &cancellables)
-    hlsDownloadManager.objectWillChange
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in self?.rebuildDownloadedIndex(); self?.objectWillChange.send() }
       .store(in: &cancellables)
@@ -238,21 +228,16 @@ final class MediaLibraryStore: ObservableObject {
 
   /// Whether the title has ANY in-flight download right now (any episode/video).
   func isDownloadingAny(itemId: Int) -> Bool {
-    if hlsDownloadManager.activeDownloads.contains(where: { $0.meta.id == itemId }) { return true }
-    return downloadManager.activeDownloads.values.contains(where: { $0.metadata.id == itemId })
+    downloadManager.activeDownloads.values.contains(where: { $0.metadata.id == itemId })
   }
 
   private static func downloadKey(_ id: Int, _ video: Int?, _ season: Int?) -> String {
     "\(id)|\(video.map(String.init) ?? "-")|\(season.map(String.init) ?? "-")"
   }
 
-  /// Rebuild the completed-download index from the HLS + mp4 stores (cheap plist reads, done once
-  /// per download-state change rather than per card per render).
+  /// Rebuild the completed-download index from the downloaded files database.
   private func rebuildDownloadedIndex() {
     var keys = Set<String>()
-    for asset in hlsStore.readData() where asset.fileExists {
-      keys.insert(Self.downloadKey(asset.meta.id, asset.meta.metadata.video, asset.meta.metadata.season))
-    }
     for file in (downloadedFilesDatabase.readData() ?? [])
     where FileManager.default.fileExists(atPath: file.localFileURL.path) {
       keys.insert(Self.downloadKey(file.metadata.id, file.metadata.metadata.video, file.metadata.metadata.season))
@@ -262,11 +247,6 @@ final class MediaLibraryStore: ObservableObject {
 
   /// Live progress [0,1] of an in-flight download for this item/episode, or nil if none.
   func activeDownloadProgress(itemId: Int, video: Int?, season: Int?) -> Double? {
-    if let hls = hlsDownloadManager.activeDownloads.first(where: {
-      $0.meta.id == itemId && $0.meta.metadata.video == video && $0.meta.metadata.season == season
-    }) {
-      return Double(hls.progress)
-    }
     if let mp4 = downloadManager.activeDownloads.values.first(where: {
       $0.metadata.id == itemId && $0.metadata.metadata.video == video && $0.metadata.metadata.season == season
     }) {

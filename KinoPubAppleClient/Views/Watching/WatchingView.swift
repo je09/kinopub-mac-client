@@ -100,9 +100,7 @@ struct WatchingView: View {
         NavigationLink(value: Route.detailsByID(serial.id)) {
           WatchingSerialView(serial: serial)
         }
-        #if os(macOS)
         .buttonStyle(PlainButtonStyle())
-        #endif
       }
     }
     .padding(.horizontal, 20)

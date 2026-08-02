@@ -48,9 +48,6 @@ struct CommentsView: View {
       }
       .background(Color.KinoPub.background)
       .navigationTitle("Comments".localized)
-      #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Done".localized) { dismiss() }

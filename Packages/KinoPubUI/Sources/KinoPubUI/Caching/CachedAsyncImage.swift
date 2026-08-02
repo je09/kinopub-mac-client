@@ -53,10 +53,6 @@ public struct CachedAsyncImage<Content: View, Placeholder: View>: View {
 
 extension Image {
   init(platformImage: KinoPlatformImage) {
-#if canImport(UIKit)
-    self.init(uiImage: platformImage)
-#elseif canImport(AppKit)
     self.init(nsImage: platformImage)
-#endif
   }
 }

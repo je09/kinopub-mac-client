@@ -45,7 +45,7 @@ struct HomeView: View {
       }
       .background(Color.KinoPub.background)
       .navigationTitle("Home")
-      // iOS 26: hero bleeds under the transparent glass bar. Pre-26: blurred bar + restored safe area.
+      // The native macOS toolbar owns the titlebar material.
       .heroNavBar()
       .routeDestinations()
       .handleError(state: $errorHandler.state)
@@ -59,34 +59,12 @@ struct HomeView: View {
     if model.featured.isEmpty {
       HeroBackdrop(imageURL: nil, height: heroHeight) { EmptyView() }
     } else {
-#if os(iOS)
-      TabView(selection: $heroIndex) {
-        ForEach(Array(model.featured.enumerated()), id: \.element.id) { index, item in
-          heroPage(item).tag(index)
-        }
-      }
-      .tabViewStyle(.page(indexDisplayMode: .always))
-      .frame(height: heroHeight)
-      // Don't auto-advance while the user is swiping the gallery (resume shortly after).
-      .simultaneousGesture(
-        DragGesture()
-          .onChanged { _ in isHeroInteracting = true }
-          .onEnded { _ in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 8) { isHeroInteracting = false }
-          }
-      )
-      .onReceive(heroTimer) { _ in
-        guard !isHeroInteracting, model.featured.count > 1 else { return }
-        withAnimation { heroIndex = (heroIndex + 1) % model.featured.count }
-      }
-#else
       ScrollView(.horizontal, showsIndicators: false) {
         LazyHStack(spacing: 16) {
           ForEach(model.featured) { heroPage($0).frame(width: 820) }
         }
       }
       .frame(height: heroHeight)
-#endif
     }
   }
 

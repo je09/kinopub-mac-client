@@ -2,7 +2,7 @@
 //  SectionVisibilityStore.swift
 //  KinoPubAppleClient
 //
-//  Persisted show/hide state for the library/other sections in the sidebar and the iPhone "More"
+//  Persisted show/hide state for library and other sections in the macOS sidebar.
 //  tab. Films, Serials and Collections can't be hidden. Order is unchanged — this only toggles
 //  visibility; the editing UI lives in Profile → Sections.
 //

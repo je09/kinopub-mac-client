@@ -26,11 +26,7 @@ struct MainView: View {
   }
   
   var toolbarItemPlacement: ToolbarItemPlacement {
-#if os(iOS)
-    .topBarTrailing
-#elseif os(macOS)
     .navigation
-#endif
   }
   
   var body: some View {
@@ -138,11 +134,7 @@ struct FilteredCatalogView: View {
   }
 
   private var toolbarItemPlacement: ToolbarItemPlacement {
-#if os(iOS)
-    .topBarTrailing
-#elseif os(macOS)
     .navigation
-#endif
   }
 
   // Lands on the actual section catalog (e.g. Serials) pre-filtered, with the section's own
@@ -271,13 +263,13 @@ struct PersonSearchView: View {
 
 // MARK: - Toolbar indicators
 
-/// Filter icon with a count badge when filters are active. iOS 26+ uses the system `.badge`
+/// Filter icon with a count badge when filters are active. macOS 26+ uses the system `.badge`
 /// (not clipped by the toolbar group); older OSes fall back to a corner overlay. No padding
 /// is applied to the icon itself, so the toolbar icons keep their native alignment.
 private struct FilterBadgeIcon: View {
   let count: Int
   var body: some View {
-    if #available(iOS 26.0, macOS 26.0, *) {
+    if #available(macOS 26.0, *) {
       Image(systemName: "line.3.horizontal.decrease.circle")
         .foregroundStyle(count > 0 ? Color.KinoPub.accent : Color.KinoPub.text)
         .modifier(SystemCountBadge(count: count))
@@ -315,8 +307,8 @@ private struct SortDotIcon: View {
   }
 }
 
-/// iOS 26+ system badge on a toolbar label (stable `.id` so Liquid Glass rebuilds it on change).
-@available(iOS 26.0, macOS 26.0, *)
+/// macOS 26+ system badge on a toolbar label (stable `.id` so Liquid Glass rebuilds it on change).
+@available(macOS 26.0, *)
 private struct SystemCountBadge: ViewModifier {
   let count: Int
   func body(content: Content) -> some View {

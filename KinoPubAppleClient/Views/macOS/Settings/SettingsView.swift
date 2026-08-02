@@ -9,10 +9,8 @@ import Foundation
 import SwiftUI
 import KinoPubUI
 
-#if os(macOS)
 struct SettingsView: View {
   @EnvironmentObject var windowSettings: WindowSettings
-  @AppStorage("alwaysOnTop") var alwaysOnTop: Bool = false
   @State private var cacheSize: String = ImageCache.shared.formattedDiskUsage()
 
   var body: some View {
@@ -28,4 +26,3 @@ struct SettingsView: View {
     .frame(width: 320, height: 220)
   }
 }
-#endif

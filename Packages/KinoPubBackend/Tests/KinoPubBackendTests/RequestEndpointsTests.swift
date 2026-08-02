@@ -296,9 +296,9 @@ final class RequestEndpointsTests: XCTestCase {
   // MARK: - DeviceNotifyRequest (POST -> form-urlencoded body)
 
   func testDeviceNotifyRequest_PutsDeviceInfoInFormBody() {
-    let endpoint = DeviceNotifyRequest(title: "Kirill's iPhone",
-                                       hardware: "iPhone (iPhone16,2)",
-                                       software: "iOS 26.0")
+    let endpoint = DeviceNotifyRequest(title: "Kirill's Mac",
+                                       hardware: "Mac15,3",
+                                       software: "macOS 26.0")
     let request = requestBuilder.build(with: endpoint)
     let body = bodyDictionary(for: endpoint)
 
@@ -306,8 +306,8 @@ final class RequestEndpointsTests: XCTestCase {
     XCTAssertEqual(request?.httpMethod, "POST")
     // Must be in the body (kino.pub ignores notify name/specs sent as query params).
     XCTAssertNil(request?.url?.query)
-    XCTAssertEqual(body["title"], "Kirill's iPhone")
-    XCTAssertEqual(body["hardware"], "iPhone (iPhone16,2)")
-    XCTAssertEqual(body["software"], "iOS 26.0")
+    XCTAssertEqual(body["title"], "Kirill's Mac")
+    XCTAssertEqual(body["hardware"], "Mac15,3")
+    XCTAssertEqual(body["software"], "macOS 26.0")
   }
 }

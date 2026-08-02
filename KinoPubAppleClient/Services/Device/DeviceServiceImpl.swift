@@ -9,9 +9,6 @@ import Foundation
 import KinoPubBackend
 import OSLog
 import KinoPubLogging
-#if os(iOS)
-import UIKit
-#endif
 
 final class DeviceServiceImpl: DeviceService {
 
@@ -55,19 +52,9 @@ final class DeviceServiceImpl: DeviceService {
     var title: String
     let hardware: String
     let software: String
-#if os(iOS)
-    title = UIDevice.current.name
-    hardware = "\(UIDevice.current.model) (\(Self.machineModel))"
-    software = "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
-#elseif os(macOS)
     title = Host.current().localizedName ?? "Mac"
     hardware = Self.machineModel
     software = "macOS \(ProcessInfo.processInfo.operatingSystemVersionString)"
-#else
-    title = "KinoPub"
-    hardware = "Apple"
-    software = "Apple"
-#endif
     if title.trimmingCharacters(in: .whitespaces).isEmpty {
       title = "KinoPub Apple"
     }
@@ -83,7 +70,7 @@ final class DeviceServiceImpl: DeviceService {
   func syncCapabilities() async {
     // Match the kino.pub device profile to what this hardware can DECODE. When HEVC decode is
     // available we advertise HEVC + 4K (kino.pub then serves HEVC + HDR10; AVPlayer plays it, tone-
-    // mapping to SDR displays like the base iPad), AND turn on mixedPlaylist so the master also
+    // mapping to SDR displays), AND turn on mixedPlaylist so the master also
     // carries h264 variants — AVPlayer can't open an HEVC-only HDR master (error -11868/-17223,
     // the crossed-out play), so the fallback guarantees playback while still allowing HDR where the
     // device can use the HEVC variant. When HEVC isn't decodable, turn all three off (plain h264).
@@ -108,7 +95,7 @@ final class DeviceServiceImpl: DeviceService {
     }
   }
 
-  /// The hardware model identifier, e.g. "iPhone16,2" / "Mac15,3".
+  /// The hardware model identifier, e.g. "Mac15,3".
   private static var machineModel: String {
     var systemInfo = utsname()
     uname(&systemInfo)

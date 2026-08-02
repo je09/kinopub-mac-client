@@ -44,13 +44,14 @@ jobs:
           [ -n "$XC" ] && sudo xcode-select -s "$XC"
           xcodebuild -version
 
-      - name: Build (iOS, unsigned)
+      - name: Build native macOS app
         run: |
           xcodebuild \
             -project KinoPubAppleClient.xcodeproj \
             -scheme KinoPubAppleClient \
             -configuration Debug \
-            -destination 'generic/platform=iOS' \
+            -destination 'platform=macOS' \
             -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" \
             build

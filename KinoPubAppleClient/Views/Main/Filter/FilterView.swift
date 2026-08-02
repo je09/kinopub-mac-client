@@ -43,9 +43,6 @@ struct FilterView: View {
       .scrollContentBackground(.hidden)
       .background(Color.KinoPub.background)
       .navigationTitle("Filter".localized)
-      #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Clear".localized, role: .destructive) {

@@ -10,7 +10,6 @@ import SwiftUI
 
 class NavigationState: ObservableObject {
   @Published var columnVisibility = NavigationSplitViewVisibility.all
-  @Published var selectedTab: NavigationTabs = .main
   @Published var sidebarSelection: SidebarItem? = .new
   // Every section navigates with the shared `Route` type (see Routes.swift). Separate arrays just
   // hold each section's own back-stack; sharing one element type means the NavigationSplitView

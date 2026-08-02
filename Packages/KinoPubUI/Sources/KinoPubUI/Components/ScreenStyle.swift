@@ -3,55 +3,28 @@
 //  KinoPubUI
 //
 //  One shared modifier for every top-level screen's navigation chrome, so titles, background and
-//  toolbar look and take up space identically across iOS and macOS (instead of each screen rolling
+//  toolbar look and take up space identically across the native macOS app.
 //  its own navigationTitle / display-mode / toolbar combination).
 //
 
 import SwiftUI
 
 public extension View {
-  /// Standard top-level screen chrome: a large, left-aligned title, the app background, and a
-  /// matching toolbar — identical on every screen and platform.
+  /// Standard top-level macOS screen chrome: title and app background.
   func kinoScreen(_ title: String) -> some View {
     modifier(KinoScreenModifier(title: title))
   }
 
-  /// On iOS < 26 puts a frosted-blur background behind the navigation bar (so content reads under a
-  /// blur, not a hard fill). iOS 26 already supplies the translucent "Liquid Glass" bar, so we leave
-  /// it to the system there.
+  /// Compatibility no-op retained for existing screen call sites; macOS owns its toolbar material.
   @ViewBuilder
   func navBarBlurBackground() -> some View {
-#if os(iOS)
-    if #available(iOS 26.0, *) {
-      self
-    } else {
-      self.toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-    }
-#else
     self
-#endif
   }
 
-  /// Immersive hero chrome (Home): on iOS 26 the artwork bleeds under the transparent glass bar; on
-  /// older iOS the bar gets a blur and the safe area is restored so the hero sits below it.
+  /// Compatibility no-op; the native macOS toolbar controls the titlebar appearance.
   @ViewBuilder
   func heroNavBar() -> some View {
-#if os(iOS)
-    if #available(iOS 26.0, *) {
-      self
-        .ignoresSafeArea(edges: .top)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-    } else {
-      self
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-    }
-#else
     self
-#endif
   }
 
   /// Shapes the context-menu "lift" preview to a rounded rectangle so a surrounding ScrollView /
@@ -61,15 +34,7 @@ public extension View {
   @ViewBuilder
   func contextMenuPreviewShape(cornerRadius: CGFloat = 12) -> some View {
     let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-#if os(iOS)
-    if #available(iOS 17.0, *) {
-      self.contentShape(.contextMenuPreview, shape)
-    } else {
-      self.contentShape(shape)
-    }
-#else
     self.contentShape(shape)
-#endif
   }
 
   /// Wraps content in a floating capsule "island": real Liquid Glass on OS 26, an ultra-thin material
@@ -77,10 +42,10 @@ public extension View {
   /// floating islands over the scrolling content instead of a flat opaque bar.
   @ViewBuilder
   func glassCapsule() -> some View {
-    // `glassEffect` only exists in the iOS/macOS 26 SDK (Xcode 26 = Swift 6.2). Compile-time gate so
+    // `glassEffect` only exists in the macOS 26 SDK (Xcode 26 = Swift 6.2). Compile-time gate so
     // older toolchains (e.g. CI on Xcode 16) still build, falling back to a material capsule.
 #if compiler(>=6.2)
-    if #available(iOS 26.0, macOS 26.0, *) {
+    if #available(macOS 26.0, *) {
       self.glassEffect(.regular, in: Capsule())
     } else {
       self.background(.ultraThinMaterial, in: Capsule())
@@ -98,9 +63,5 @@ private struct KinoScreenModifier: ViewModifier {
     content
       .navigationTitle(title)
       .background(Color.KinoPub.background)
-#if os(iOS)
-      .navigationBarTitleDisplayMode(.large)
-      .navBarBlurBackground()
-#endif
   }
 }

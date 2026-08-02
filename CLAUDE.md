@@ -2,35 +2,29 @@
 
 Guidance for working in this repo. It's a **community fork** of
 [leoru/kinopub-apple-client](https://github.com/leoru/kinopub-apple-client): a native SwiftUI
-client for the third-party **kino.pub** service, targeting **iOS/iPadOS 16+ and macOS 13+**
-(no tvOS — the `AppleTV/` UI components are just tvOS-*style* cards). The app is distributed as an
-**unsigned build** for sideloading (AltStore Classic / SideStore / Sideloadly / TrollStore) and a
-macOS `.dmg`/`.app`; it authenticates against a user's own kino.pub account via the device-code flow
-and bundles no credentials.
+client for the third-party **kino.pub** service, targeting **macOS 13+**. This is a native macOS app
+built with SwiftUI, AppKit, AVKit, and AVFoundation — not Catalyst. It is distributed as an ad-hoc
+signed `.dmg`/`.app`, authenticates against a user's own kino.pub account via the device-code flow,
+and bundles no user credentials.
 
 ## Build & run
 
 ```bash
-# iOS (compile check / run) — simulator name may vary by Xcode
-xcodebuild -project KinoPubAppleClient.xcodeproj -scheme KinoPubAppleClient \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -skipPackagePluginValidation build
-
-# macOS (native) — ad-hoc signed
+# Native macOS app — ad-hoc signed
 xcodebuild -project KinoPubAppleClient.xcodeproj -scheme KinoPubAppleClient \
   -configuration Release -destination 'platform=macOS' -skipPackagePluginValidation \
   CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" build
 
-./scripts/build-ipa.sh     # unsigned .ipa  -> dist/  (BUNDLE_ID=com.kino.pub … / BUILD_NUMBER=… to override)
 ./scripts/build-macos.sh   # .app + zip     -> dist/
 ./scripts/build-dmg.sh     # drag-to-install .dmg (+ Gatekeeper-fix .command) -> dist/
 ```
 
 - **Signing:** `DEVELOPMENT_TEAM` is intentionally **empty** in the project. Pick your own team in
   Xcode locally; **never commit it** (a local `.git/hooks/pre-commit` blocks accidental team-id /
-  custom-bundle-id leaks). Release artifacts are unsigned and re-signed by the sideloader.
-- **Xcode 26** is required for the iOS 26 Liquid Glass icon (`AppIcon.icon`) and effects
-  (`glassEffect`). Those APIs are compile-gated with `#if compiler(>=6.2)` + a material fallback so
-  older Xcode still builds; the app also ships a classic `AppIcon.appiconset` for iOS < 26.
+  custom-bundle-id leaks). Release artifacts are ad-hoc signed and not notarized.
+- **Xcode 26** enables the macOS 26 Liquid Glass icon (`AppIcon.icon`) and effects (`glassEffect`).
+  Those APIs are compile-gated with `#if compiler(>=6.2)` plus a material fallback so older Xcode
+  still builds; the classic asset catalog remains available for older macOS versions.
 
 ## Tests
 
@@ -51,8 +45,8 @@ Runners are **`macos-26` / Xcode 26** (so releases ship with Liquid Glass). Work
 - **Lint** (`lint.yml`) — SwiftLint + swift-format, informational.
 - **Release Please** (`release-please.yml`) — reads Conventional Commits, opens a "release PR"
   bumping `version.txt` + `CHANGELOG.md` (and the pbxproj `MARKETING_VERSION` via `extra-files`).
-- **Release** (`release.yml`) — dispatched by Release Please; builds the IPA + macOS `.zip`/`.dmg`,
-  regenerates the AltStore source, and attaches everything to the release.
+- **Release** (`release.yml`) — dispatched by Release Please; builds the macOS `.zip`/`.dmg` and
+  attaches both artifacts to the release.
 - **Pages** (`pages.yml`) — deploys `docs/` (landing page) on push to `main`.
 
 **Release flow (use PRs; `main` is protected):**
@@ -68,7 +62,7 @@ Swift Package Manager workspace:
 
 | Package | Purpose |
 |---|---|
-| `KinoPubAppleClient` | App target (views, services, app state), shared across platforms |
+| `KinoPubAppleClient` | Native macOS app target (views, services, app state) |
 | `KinoPubUI` | Reusable SwiftUI components (`MediaShelf`, cards, `ContentItemsListView`, colors) |
 | `KinoPubKit` | Shared business logic |
 | `KinoPubBackend` | Networking layer + models (kino.pub API) |
@@ -90,7 +84,7 @@ Key pieces:
   downloads/progress façade) reconciled against the server. **`LocalWatchProgressStore`** — local
   resume points so Continue Watching updates instantly (its "started" floor = `WatchProgress.startedSeconds`).
 - **HDR/4K:** driven by the device profile advertising HEVC + 4K + `mixedPlaylist`; AVPlayer renders
-  HDR10 natively. Verify on a real HDR device (Simulator can't).
+  HDR10 natively. Verify on a real HDR-capable Mac display.
 - **Sport EPG** (`Views/Sport/` + `Services/EPG/`) — the Sport tab is an Electronic Program Guide:
   inline player pinned on top + a channel list whose rows show now/next. `EPGServiceImpl` (an `actor`)
   SAX-parses (low-memory) the XMLTV feeds configured in `Resources/EPGSources.json` — each source has a
@@ -140,8 +134,6 @@ Key pieces:
 
 ## Distribution
 
-- **AltStore source** (`Dungeon Apps`) is generated per release by `scripts/gen-altstore-source.sh`
-  and published as a release asset, so `…/releases/latest/download/apps.json` always serves the
-  newest. Deep links use the **`altstore-classic://`** scheme (AltStore PAL is notarized-only and
-  can't install this).
-- Install guide, FAQ, and one-tap buttons live in the **Wiki** and the **Pages landing** (`docs/`).
+- `scripts/build-macos.sh` produces the ad-hoc signed `.app` and zip; `scripts/build-dmg.sh` packages
+  the drag-to-install DMG and Gatekeeper quarantine helper.
+- The install guide and download button live in the **Wiki** and Pages landing (`docs/`).

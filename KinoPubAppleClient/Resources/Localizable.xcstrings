@@ -30,6 +30,7 @@
 
     },
     "“%@” failed to download (no file was produced)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -130,6 +131,7 @@
       }
     },
     "“%@” failed to download: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -229,16 +231,6 @@
         }
       }
     },
-    "%@ (%lld)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ (%2$lld)"
-          }
-        }
-      }
-    },
     "%@ %@" : {
       "localizations" : {
         "en" : {
@@ -273,6 +265,7 @@
       }
     },
     "%d episodes queued" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -431,6 +424,7 @@
 
     },
     "Active" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -531,6 +525,7 @@
       }
     },
     "Actor" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -631,6 +626,7 @@
       }
     },
     "Actors" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -831,6 +827,7 @@
       }
     },
     "Add to bookmarks" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -847,6 +844,7 @@
       }
     },
     "Add to watchlist" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -863,6 +861,7 @@
       }
     },
     "Add to Watchlist" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -963,6 +962,7 @@
       }
     },
     "Added" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1063,6 +1063,7 @@
       }
     },
     "Added to watchlist" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1264,6 +1265,7 @@
       }
     },
     "All" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1364,6 +1366,7 @@
       }
     },
     "Already downloaded" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1464,6 +1467,7 @@
       }
     },
     "Already downloading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1665,6 +1669,7 @@
       }
     },
     "Anime" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1765,6 +1770,7 @@
       }
     },
     "Any" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1865,6 +1871,7 @@
       }
     },
     "Any time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -1965,6 +1972,7 @@
       }
     },
     "App version" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -2065,6 +2073,7 @@
       }
     },
     "Apply" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -2669,6 +2678,7 @@
       }
     },
     "Author" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -2769,6 +2779,7 @@
       }
     },
     "Auto" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -2869,6 +2880,7 @@
       }
     },
     "Back online" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -2969,6 +2981,7 @@
       }
     },
     "Be the first to discuss this title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -3069,6 +3082,7 @@
       }
     },
     "Best quality" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -3169,6 +3183,7 @@
       }
     },
     "Bookmark folders" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3185,6 +3200,7 @@
       }
     },
     "Bookmarks" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -3385,6 +3401,7 @@
       }
     },
     "Browser sessions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3401,6 +3418,7 @@
       }
     },
     "By IMDb" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -3501,6 +3519,7 @@
       }
     },
     "By Kinopoisk" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -3601,6 +3620,7 @@
       }
     },
     "By rating" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -3701,6 +3721,7 @@
       }
     },
     "By update" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -3801,6 +3822,7 @@
       }
     },
     "By views" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -4001,6 +4023,7 @@
       }
     },
     "Caps streaming quality. Auto lets the player adapt to your connection." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -4101,6 +4124,7 @@
       }
     },
     "Cartoon Series" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -4201,6 +4225,7 @@
       }
     },
     "Cartoons" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -4301,6 +4326,7 @@
       }
     },
     "Cast" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -4401,6 +4427,7 @@
       }
     },
     "Cast & Crew" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -4501,6 +4528,7 @@
       }
     },
     "Changes take effect within a minute" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -4802,6 +4830,7 @@
       }
     },
     "Clear EPG cache" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4818,6 +4847,7 @@
       }
     },
     "Clear image cache" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -5119,6 +5149,7 @@
       }
     },
     "Collections" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -5219,6 +5250,7 @@
       }
     },
     "Comments" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -5420,6 +5452,7 @@
       }
     },
     "Continue" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -5621,6 +5654,7 @@
       }
     },
     "Couldn't load comments" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -5721,6 +5755,7 @@
       }
     },
     "Couldn't start download" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -5821,6 +5856,7 @@
       }
     },
     "Couldn't start downloading “%@” (the server didn't return a valid HLS stream)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -5921,6 +5957,7 @@
       }
     },
     "Country" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -6021,6 +6058,7 @@
       }
     },
     "Create" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -6323,6 +6361,7 @@
       }
     },
     "Day" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -6524,6 +6563,7 @@
       }
     },
     "Default" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -6624,6 +6664,7 @@
       }
     },
     "Delete" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -6724,6 +6765,7 @@
       }
     },
     "Delete folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -7024,6 +7066,7 @@
       }
     },
     "Device" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -7124,6 +7167,7 @@
       }
     },
     "Device settings" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -7224,6 +7268,7 @@
       }
     },
     "Devices" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -7324,6 +7369,7 @@
       }
     },
     "Director" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -7424,6 +7470,7 @@
       }
     },
     "Directors" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -7624,6 +7671,7 @@
       }
     },
     "Disliked" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -7926,6 +7974,7 @@
       }
     },
     "Done" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -8328,6 +8377,7 @@
       }
     },
     "Download started" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -8428,6 +8478,7 @@
       }
     },
     "Download whole season" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -8528,6 +8579,7 @@
       }
     },
     "Downloaded" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -8628,6 +8680,7 @@
       }
     },
     "Downloading…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -8728,6 +8781,7 @@
       }
     },
     "Downloads" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -8828,6 +8882,7 @@
       }
     },
     "Dubbing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -8928,6 +8983,7 @@
       }
     },
     "Duration" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9028,6 +9084,7 @@
       }
     },
     "English" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9128,6 +9185,7 @@
       }
     },
     "English language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9228,6 +9286,7 @@
       }
     },
     "Episode" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9328,6 +9387,7 @@
       }
     },
     "episodes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9428,6 +9488,7 @@
       }
     },
     "Facts" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9528,6 +9589,7 @@
       }
     },
     "Films, Serials and Collections can't be hidden." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9544,6 +9606,7 @@
       }
     },
     "Filter" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9644,6 +9707,7 @@
       }
     },
     "Find movies, shows, actors and directors." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9744,6 +9808,7 @@
       }
     },
     "Finished" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9844,6 +9909,7 @@
       }
     },
     "Finnish" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -9944,6 +10010,7 @@
       }
     },
     "Folder name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10044,6 +10111,7 @@
       }
     },
     "Freed %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10060,6 +10128,7 @@
       }
     },
     "French" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10160,6 +10229,7 @@
       }
     },
     "French language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10361,6 +10431,7 @@
       }
     },
     "From" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10461,6 +10532,7 @@
       }
     },
     "Genre" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10561,6 +10633,7 @@
       }
     },
     "German" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10661,6 +10734,7 @@
       }
     },
     "German language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10761,6 +10835,7 @@
       }
     },
     "Go to Downloads" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10861,6 +10936,7 @@
       }
     },
     "Go to Movie" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -10961,6 +11037,7 @@
       }
     },
     "Go to Series" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11061,6 +11138,7 @@
       }
     },
     "Guide updated" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -11077,6 +11155,7 @@
       }
     },
     "History" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11177,6 +11256,7 @@
       }
     },
     "HLS downloads are stored in the app's private storage (not visible in the Files app) and keep every audio track, so they're larger than the source file." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11478,6 +11558,7 @@
       }
     },
     "Image cache" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11678,6 +11759,7 @@
       }
     },
     "Images" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11778,6 +11860,7 @@
       }
     },
     "IMDB Rating" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11878,6 +11961,7 @@
       }
     },
     "Information" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -11978,6 +12062,7 @@
       }
     },
     "Interrupted" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12078,6 +12163,7 @@
       }
     },
     "Italian" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12178,6 +12264,7 @@
       }
     },
     "Italian language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12278,6 +12365,7 @@
       }
     },
     "Japanese language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12378,6 +12466,7 @@
       }
     },
     "Kinopoisk Rating" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12581,6 +12670,7 @@
       }
     },
     "Languages" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12681,6 +12771,7 @@
       }
     },
     "Last seen %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12781,6 +12872,7 @@
       }
     },
     "left" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -12881,6 +12973,7 @@
       }
     },
     "Library" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -13085,6 +13178,7 @@
       }
     },
     "Liked" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -13286,6 +13380,7 @@
       }
     },
     "Loading guide" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -13503,6 +13598,7 @@
       }
     },
     "Mark as Unwatched" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -13603,6 +13699,7 @@
       }
     },
     "Mark as Watched" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -13804,6 +13901,7 @@
       }
     },
     "Marked as unwatched" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -13904,6 +14002,7 @@
       }
     },
     "Marked as watched" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -14004,6 +14103,7 @@
       }
     },
     "Maximum Quality" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -15114,6 +15214,7 @@
       }
     },
     "min" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -15315,6 +15416,7 @@
       }
     },
     "Month" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -15415,6 +15517,7 @@
       }
     },
     "More" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -15515,6 +15618,7 @@
       }
     },
     "More from %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -15615,6 +15719,7 @@
       }
     },
     "More with %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -15917,6 +16022,7 @@
       }
     },
     "Multi-voice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16017,6 +16123,7 @@
       }
     },
     "My series" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16217,7 +16324,11 @@
         }
       }
     },
+    "Navigate" : {
+
+    },
     "Needs a connection" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16318,6 +16429,7 @@
       }
     },
     "Neural" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16418,6 +16530,7 @@
       }
     },
     "New" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16518,6 +16631,7 @@
       }
     },
     "New episodes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16719,6 +16833,7 @@
       }
     },
     "New folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16819,6 +16934,7 @@
       }
     },
     "New folder…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -16919,6 +17035,7 @@
       }
     },
     "Next" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -17120,6 +17237,7 @@
       }
     },
     "No bookmark folders yet." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -17136,6 +17254,7 @@
       }
     },
     "No collections yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -17236,6 +17355,7 @@
       }
     },
     "No comments yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -17336,6 +17456,7 @@
       }
     },
     "No history yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -17436,6 +17557,7 @@
       }
     },
     "No live broadcasts right now" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -17536,6 +17658,7 @@
       }
     },
     "No programme info" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -17837,6 +17960,7 @@
       }
     },
     "Nothing found" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -17937,6 +18061,7 @@
       }
     },
     "Nothing here yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18037,6 +18162,7 @@
       }
     },
     "Nothing to clear" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -18053,6 +18179,7 @@
       }
     },
     "Nothing to download" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18253,6 +18380,7 @@
       }
     },
     "On air" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18353,6 +18481,7 @@
       }
     },
     "One-voice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18453,6 +18582,7 @@
       }
     },
     "Ongoing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18553,6 +18683,7 @@
       }
     },
     "Open" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -18569,6 +18700,7 @@
       }
     },
     "Original" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18669,6 +18801,7 @@
       }
     },
     "Other" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18870,6 +19003,7 @@
       }
     },
     "Play" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -18970,6 +19104,7 @@
       }
     },
     "Playback failed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19070,6 +19205,7 @@
       }
     },
     "Polish" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19271,6 +19407,7 @@
       }
     },
     "Portuguese" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19371,6 +19508,7 @@
       }
     },
     "Portuguese language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19471,6 +19609,7 @@
       }
     },
     "Premiere" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19571,6 +19710,7 @@
       }
     },
     "Profile" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19671,6 +19811,7 @@
       }
     },
     "Rating" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19771,6 +19912,7 @@
       }
     },
     "Re-download" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -19971,6 +20113,7 @@
       }
     },
     "Registration Date" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20071,6 +20214,7 @@
       }
     },
     "Related" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20171,6 +20315,7 @@
       }
     },
     "Release Year" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20271,6 +20416,7 @@
       }
     },
     "Remove" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20371,6 +20517,7 @@
       }
     },
     "Remove device?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20471,6 +20618,7 @@
       }
     },
     "Remove devices you no longer use. The current device can't be removed here — use Logout." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20571,6 +20719,7 @@
       }
     },
     "Remove from folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20671,6 +20820,7 @@
       }
     },
     "Remove from history" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20771,6 +20921,7 @@
       }
     },
     "Remove leftover download files" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20871,6 +21022,7 @@
       }
     },
     "Removed from %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -20971,6 +21123,7 @@
       }
     },
     "Removed from history" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -21071,6 +21224,7 @@
       }
     },
     "Removed from watchlist" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -21574,6 +21728,7 @@
       }
     },
     "Reviews" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -21674,6 +21829,7 @@
       }
     },
     "Russian" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -21774,6 +21930,7 @@
       }
     },
     "Russian language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -21873,17 +22030,8 @@
         }
       }
     },
-    "S%lldE%lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "S%1$lldE%2$lld"
-          }
-        }
-      }
-    },
     "Save" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -21984,6 +22132,7 @@
       }
     },
     "Saved" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -22084,6 +22233,7 @@
       }
     },
     "Saved to %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -22184,6 +22334,7 @@
       }
     },
     "Search" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -22485,6 +22636,7 @@
       }
     },
     "seasons" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -22686,6 +22838,7 @@
       }
     },
     "Sections" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -22702,6 +22855,7 @@
       }
     },
     "Select Language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23004,6 +23158,7 @@
       }
     },
     "Server location" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23104,6 +23259,7 @@
       }
     },
     "Show less" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23204,6 +23360,7 @@
       }
     },
     "Show more" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23304,6 +23461,7 @@
       }
     },
     "Shows & Movies" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23404,6 +23562,7 @@
       }
     },
     "Sort" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23504,6 +23663,7 @@
       }
     },
     "Spanish" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23604,6 +23764,7 @@
       }
     },
     "Spanish language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23704,6 +23865,7 @@
       }
     },
     "Sport" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -23804,6 +23966,7 @@
       }
     },
     "Stand-up" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -24005,6 +24168,7 @@
       }
     },
     "Status" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -24105,6 +24269,7 @@
       }
     },
     "Storage" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -24205,6 +24370,7 @@
       }
     },
     "Storage used" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -24305,6 +24471,7 @@
       }
     },
     "Stream type" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -24706,6 +24873,7 @@
       }
     },
     "This device" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -24806,6 +24974,7 @@
       }
     },
     "This folder is empty" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -24906,6 +25075,7 @@
       }
     },
     "This section isn't available offline." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25006,6 +25176,7 @@
       }
     },
     "This will permanently delete the folder." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25106,6 +25277,7 @@
       }
     },
     "Title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25206,6 +25378,7 @@
       }
     },
     "Titles" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25407,6 +25580,7 @@
       }
     },
     "To" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25507,6 +25681,7 @@
       }
     },
     "Today" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25607,6 +25782,7 @@
       }
     },
     "Top Results" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -25623,6 +25799,7 @@
       }
     },
     "total" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25723,6 +25900,7 @@
       }
     },
     "Total" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -25924,6 +26102,7 @@
       }
     },
     "Trailers" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -26125,6 +26304,7 @@
       }
     },
     "Try a different title, actor or director." : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -26326,6 +26506,7 @@
       }
     },
     "TV Shows" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -26342,6 +26523,7 @@
       }
     },
     "Two-voice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -26543,6 +26725,7 @@
       }
     },
     "Ukrainian" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -26643,6 +26826,7 @@
       }
     },
     "Ukrainian language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -26743,6 +26927,7 @@
       }
     },
     "Unknown device" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -27045,6 +27230,7 @@
       }
     },
     "User Name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -27145,6 +27331,7 @@
       }
     },
     "User Subscription" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -27345,6 +27532,7 @@
       }
     },
     "Views" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -27445,6 +27633,7 @@
       }
     },
     "Want 4K" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -27545,6 +27734,7 @@
       }
     },
     "Want AC3" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -27645,6 +27835,7 @@
       }
     },
     "Want HD" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -27947,6 +28138,7 @@
       }
     },
     "Watching" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28047,6 +28239,7 @@
       }
     },
     "Week" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28248,6 +28441,7 @@
       }
     },
     "Without HD" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28348,6 +28542,7 @@
       }
     },
     "Year" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28549,6 +28744,7 @@
       }
     },
     "Yesterday" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28649,6 +28845,7 @@
       }
     },
     "You don't have any downloads yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28749,6 +28946,7 @@
       }
     },
     "You're offline — your downloads are available" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28849,6 +29047,7 @@
       }
     },
     "You've already rated this" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {
@@ -28949,6 +29148,7 @@
       }
     },
     "Аноним" : {
+      "extractionState" : "stale",
       "localizations" : {
         "az" : {
           "stringUnit" : {

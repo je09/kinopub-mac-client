@@ -5,6 +5,7 @@
 //  Created by Kirill Kunst on 17.07.2023.
 //
 
+import AppKit
 import SwiftUI
 import KinoPubKit
 
@@ -22,17 +23,8 @@ struct KinoPubAppleClientApp: App {
                                          deviceService: AppContext.shared.deviceService)
   @StateObject var networkMonitor = NetworkMonitor()
 
-#if os(macOS)
   @StateObject var windowSettings = WindowSettings()
-#endif
-  
-#if os(iOS)
-  @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-#endif
-  
-#if os(macOS)
   @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-#endif
   
   var body: some Scene {
     WindowGroup {
@@ -47,6 +39,7 @@ struct KinoPubAppleClientApp: App {
         .environmentObject(errorHandler)
         .environmentObject(networkMonitor)
         .environmentObject(AppContext.shared.libraryState)
+        .onAppear { windowSettings.updateWindowLevel() }
         // Register this device's name once authorized, so it isn't listed as "unknown".
         .task(id: authState.userState) {
           if authState.userState == .authorized {
@@ -59,20 +52,39 @@ struct KinoPubAppleClientApp: App {
         .task {
           await AppContext.shared.downloadNotificationManager.requestPermission()
         }
-#if os(macOS)
         .frame(minWidth: WindowSize.macos.width, minHeight: WindowSize.macos.height)
-#endif
     }
-#if os(macOS)
     .windowResizability(.contentSize)
-#endif
-    
-#if os(macOS)
+    .commands {
+      SidebarCommands()
+      KinoPubCommands(navigationState: navigationState)
+    }
+
     Settings {
       SettingsView()
         .environmentObject(windowSettings)
         .preferredColorScheme(.dark)
     }
-#endif
+  }
+}
+
+private struct KinoPubCommands: Commands {
+  @ObservedObject var navigationState: NavigationState
+
+  var body: some Commands {
+    CommandMenu("Navigate") {
+      Button("Home".localized) { navigationState.sidebarSelection = .new }
+        .keyboardShortcut("1", modifiers: .command)
+      Button("Search".localized) { navigationState.sidebarSelection = .search }
+        .keyboardShortcut("f", modifiers: .command)
+      Button("Watching".localized) { navigationState.sidebarSelection = .watching }
+        .keyboardShortcut("2", modifiers: .command)
+      Button("Bookmarks".localized) { navigationState.sidebarSelection = .bookmarks }
+        .keyboardShortcut("3", modifiers: .command)
+      Button("History".localized) { navigationState.sidebarSelection = .history }
+        .keyboardShortcut("4", modifiers: .command)
+      Button("Downloads".localized) { navigationState.sidebarSelection = .downloads }
+        .keyboardShortcut("5", modifiers: .command)
+    }
   }
 }

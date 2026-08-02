@@ -8,24 +8,7 @@
 import Foundation
 import KinoPubBackend
 
-enum NavigationTabs: Hashable {
-  case search
-  case main
-  case sport
-  case collections
-  case bookmarks
-  case newEpisodes
-  case watching
-  case history
-  case downloads
-  case profile
-  /// The custom iPhone "Ещё" tab (hosts everything the iPad sidebar has).
-  case more
-  /// A library category (Movies, Serials, …).
-  case category(MediaType)
-}
-
-/// Sidebar destinations for the iPad / macOS two-column layout.
+/// Sidebar destinations for the native macOS two-column layout.
 /// The `library` group mirrors the kino.pub website categories, the rest live in the "Other" group.
 /// Catalog "preset" sections the website exposes that aren't plain content types — they're a
 /// `type` + `genre` filter combo (verified live from the web app's `/v1/items` calls):

@@ -23,7 +23,6 @@ struct SidebarView: View {
   @State private var showReconnected = false
 
   var body: some View {
-#if os(macOS)
     // Show auth as full-window content (not a modal sheet): a macOS sheet disables the window's
     // close button, trapping the user on the activation screen with no way to quit the app.
     if authState.shouldShowAuthentication {
@@ -31,10 +30,6 @@ struct SidebarView: View {
     } else {
       mainContent
     }
-#else
-    mainContent
-      .sheet(isPresented: $authState.shouldShowAuthentication) { authSheet }
-#endif
   }
 
   private var mainContent: some View {

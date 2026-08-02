@@ -6,10 +6,10 @@ pull requests are welcome.
 ## Getting started
 
 1. **Fork** the repo and clone your fork.
-2. Open `KinoPubAppleClient.xcodeproj` in **Xcode 16+** (the project targets iOS/iPadOS 16+ and macOS 13+).
+2. Open `KinoPubAppleClient.xcodeproj` in **Xcode 16+** (the project targets macOS 13+).
 3. In **Signing & Capabilities**, select your own team. `DEVELOPMENT_TEAM` is intentionally empty in the
    repo — **don't commit your team id**.
-4. Build & run on a simulator, device, or My Mac.
+4. Build and run on My Mac.
 
 ## Branching & commits
 
@@ -24,7 +24,7 @@ pull requests are welcome.
 
 ## Checks
 
-- **CI** builds the app for iOS on every PR (required to merge).
+- **CI** builds the native macOS app on every PR (required to merge).
 - **Lint** runs SwiftLint + swift-format and reports as annotations (informational, not blocking).
   Run them locally before pushing:
   ```bash
@@ -36,7 +36,7 @@ pull requests are welcome.
 
 You don't tag manually. Merging conventional commits to `main` makes **Release Please** open a release
 PR that bumps `version.txt` and `CHANGELOG.md`. Merging that PR cuts the tag + GitHub Release, and the
-**Release** workflow builds and attaches the unsigned IPA automatically.
+**Release** workflow builds and attaches the ad-hoc signed macOS zip and DMG automatically.
 
 ## Code of Conduct
 

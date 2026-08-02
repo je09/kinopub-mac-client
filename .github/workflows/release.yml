@@ -1,65 +1,23 @@
 name: Release
 
-# Builds the unsigned IPA and attaches it to a release.
-# - Automatic: when Release Please publishes a GitHub Release (after a release PR is merged).
-# - Manual: workflow_dispatch with an existing tag, or push a v* tag yourself.
-# Driven by the Release Please workflow, which dispatches this with the new tag once it cuts a release.
-# (Single deterministic build path — avoids double-builds from release/tag events.) Also runnable
-# manually to (re)build an existing tag's artifacts.
+# Builds the native macOS app for a Release Please tag and attaches a zip + DMG.
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing tag to build & attach the IPA + macOS app to (e.g. v1.0.0)'
+        description: 'Existing tag to build and attach (e.g. v1.0.0)'
         required: true
 
 permissions:
   contents: write
 
-# A release build per tag should never be cancelled mid-flight by a newer one.
 concurrency:
   group: release-${{ github.event.inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
-  ios:
-    name: iOS IPA
-    runs-on: macos-26
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Resolve tag
-        id: tag
-        run: echo "tag=${{ github.event.release.tag_name || github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
-
-      - name: Select Xcode 26
-        run: |
-          XC="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
-          [ -n "$XC" ] && sudo xcode-select -s "$XC"
-          xcodebuild -version
-
-      - name: Build unsigned IPA
-        env:
-          BUILD_NUMBER: ${{ github.run_number }}
-        run: ./scripts/build-ipa.sh
-
-      - name: Upload IPA to the release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ steps.tag.outputs.tag }}" dist/*.ipa --clobber --repo "${{ github.repository }}"
-
-      # Regenerate the AltStore/SideStore source (apps.json) from all releases — now including this new
-      # IPA — and publish it as a release asset so `…/releases/latest/download/apps.json` stays current.
-      - name: Update AltStore/SideStore source
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          ./scripts/gen-altstore-source.sh "${{ github.repository }}" dist/apps.json
-          gh release upload "${{ steps.tag.outputs.tag }}" dist/apps.json --clobber --repo "${{ github.repository }}"
-
   macos:
-    name: macOS app
+    name: Native macOS app
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -67,7 +25,7 @@ jobs:
 
       - name: Resolve tag
         id: tag
-        run: echo "tag=${{ github.event.release.tag_name || github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+        run: echo "tag=${{ github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Select Xcode 26
         run: |
@@ -80,17 +38,15 @@ jobs:
           BUILD_NUMBER: ${{ github.run_number }}
         run: ./scripts/build-macos.sh
 
-      - name: Upload macOS zip to the release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ steps.tag.outputs.tag }}" dist/*-macOS-*.zip --clobber --repo "${{ github.repository }}"
-
-      - name: Package .dmg installer (drag-to-install + Gatekeeper fix)
+      - name: Package DMG
         env:
           BUILD_NUMBER: ${{ github.run_number }}
         run: ./scripts/build-dmg.sh
 
-      - name: Upload macOS DMG to the release
+      - name: Upload macOS artifacts
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ steps.tag.outputs.tag }}" dist/*.dmg --clobber --repo "${{ github.repository }}"
+        run: |
+          gh release upload "${{ steps.tag.outputs.tag }}" \
+            dist/*-macOS-*.zip dist/*.dmg \
+            --clobber --repo "${{ github.repository }}"

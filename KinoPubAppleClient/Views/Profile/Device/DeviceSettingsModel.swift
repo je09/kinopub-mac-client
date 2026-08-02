@@ -9,9 +9,6 @@ import Foundation
 import KinoPubBackend
 import OSLog
 import KinoPubLogging
-#if canImport(UIKit)
-import UIKit
-#endif
 
 @MainActor
 class DeviceSettingsModel: ObservableObject {
@@ -62,11 +59,8 @@ class DeviceSettingsModel: ObservableObject {
     }
   }
 
-  /// iOS-standard success feedback: a success haptic plus a brief "Saved" confirmation toast.
+  /// Brief native confirmation after settings are saved.
   private func confirmSaved() {
-    #if canImport(UIKit)
-    UINotificationFeedbackGenerator().notificationOccurred(.success)
-    #endif
     didSave = true
     Task {
       try? await Task.sleep(nanoseconds: 1_800_000_000)

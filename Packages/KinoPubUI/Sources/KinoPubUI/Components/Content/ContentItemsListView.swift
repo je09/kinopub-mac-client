@@ -26,30 +26,16 @@ public struct ContentItemsListView: View {
   /// header) so it scrolls away with the content instead of being pinned.
   public var header: AnyView
 
-#if os(iOS)
-  @Environment(\.horizontalSizeClass) private var sizeClass
-#endif
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var useReducedThumbnailSize: Bool {
-#if os(iOS)
-    if sizeClass == .compact {
-      return true
-    }
-#endif
     if dynamicTypeSize >= .xxxLarge {
       return true
     }
 
-#if os(iOS)
-    if width <= 390 {
-      return true
-    }
-#elseif os(macOS)
     if width <= 520 {
       return true
     }
-#endif
 
     return false
   }

@@ -2,7 +2,7 @@ name: Release Please
 
 # Conventional-commit driven SemVer. On every push to main, opens/updates a "release PR" that bumps
 # version.txt + CHANGELOG.md. Merging that PR creates the tag vX.Y.Z and the GitHub Release, which in
-# turn triggers the Release workflow to build & attach the IPA.
+# turn triggers the Release workflow to build and attach the macOS artifacts.
 on:
   push:
     branches: [ main ]
@@ -31,7 +31,7 @@ jobs:
 
       # Release Please creates the release with GITHUB_TOKEN, which (by design) does NOT trigger the
       # Release workflow's `release: published` event. So dispatch it explicitly — workflow_dispatch
-      # via GITHUB_TOKEN is allowed — to build & attach the IPA + macOS artifacts.
+      # via GITHUB_TOKEN is allowed — to build and attach the macOS artifacts.
       - name: Build & attach artifacts for the new release
         if: ${{ steps.release.outputs.release_created }}
         env:

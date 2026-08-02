@@ -61,12 +61,6 @@ struct SearchView: View {
         }
       }
       .background(Color.KinoPub.background)
-#if os(iOS)
-      // No page title (the glass field is the header). Crucially we DON'T set an empty
-      // navigationTitle — on iPad an empty title renders a tiny title-menu dot above the bar. Just
-      // force the inline (thin) bar so the sidebar toggle stays but no large title area appears.
-      .navigationBarTitleDisplayMode(.inline)
-#endif
       .routeDestinations()
       .handleError(state: $errorHandler.state)
       // Re-focusing the field to edit drops back to the live list; losing focus to a menu/scroll
@@ -95,9 +89,6 @@ struct SearchView: View {
         .focused($searchFocused)
         .submitLabel(.search)
         .autocorrectionDisabled()
-#if os(iOS)
-        .textInputAutocapitalization(.never)
-#endif
         .onSubmit { committed = true; searchFocused = false } // commit → sections, keyboard down
       if !model.query.isEmpty {
         Button {
@@ -476,9 +467,6 @@ private struct BookmarkActionSheet: View {
       .scrollContentBackground(.hidden)
       .background(Color.KinoPub.background)
       .navigationTitle(item.localizedTitle)
-#if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-#endif
       .toolbar {
         ToolbarItem(placement: .confirmationAction) { Button("Done".localized) { dismiss() } }
       }
@@ -504,9 +492,7 @@ struct MediaListGridView: View {
             NavigationLink(value: Route.details(item)) {
               PosterCard(imageURL: item.posters.medium, title: item.localizedTitle, width: nil)
             }
-#if os(macOS)
             .buttonStyle(.plain)
-#endif
           }
         }
         .padding(16)

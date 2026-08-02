@@ -60,20 +60,14 @@ struct Sidebar: View {
         } label: {
           Label("Profile".localized, systemImage: "person.crop.circle")
         }
-#if os(macOS)
         .buttonStyle(.borderless)
-#else
-        .buttonStyle(.plain)
-#endif
       }
     }
     .listStyle(.sidebar)
     .scrollContentBackground(.hidden)
     .background(Color.KinoPub.background)
     .navigationTitle("KinoPub")
-#if os(macOS)
     .navigationSplitViewColumnWidth(min: 220, ideal: 240)
-#endif
     .sheet(isPresented: $showProfile) {
       profileSheet
     }
@@ -122,8 +116,7 @@ private struct ProfileSheetContent: View {
     // dismiss control to that bar instead of nesting another stack.
     ProfileView(model: model)
       .toolbar {
-        // `.cancellationAction` adapts per platform (no #if): a leading close on iOS/iPad, the
-        // standard cancel slot on macOS.
+        // Use the standard macOS cancellation slot for the sheet close control.
         ToolbarItem(placement: .cancellationAction) {
           Button {
             dismiss()

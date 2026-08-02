@@ -7,42 +7,26 @@
 
 import SwiftUI
 import KinoPubUI
-import KinoPubBackend
-#if os(iOS)
-import UIKit
-#endif
+
+private struct SectionEmbeddedKey: EnvironmentKey {
+  static let defaultValue = false
+}
+
+extension EnvironmentValues {
+  var sectionEmbedded: Bool {
+    get { self[SectionEmbeddedKey.self] }
+    set { self[SectionEmbeddedKey.self] = newValue }
+  }
+}
+
+extension View {
+  func moreBackButton() -> some View { self }
+}
 
 struct RootView: View {
-
-  var placement: ToolbarPlacement {
-#if os(iOS)
-    .tabBar
-#elseif os(macOS)
-    .windowToolbar
-#endif
-  }
-
   var body: some View {
-    // Apple-recommended single source of truth for the accent: set the brand green tint once at
-    // the root so every control (toggles, pickers, links, progress, etc.) inherits it instead of
-    // falling back to the system blue in places.
-    content
-      .tint(Color.KinoPub.accent)
-  }
-
-  @ViewBuilder
-  private var content: some View {
-#if os(iOS)
-    // iPad uses the classic two-column NavigationSplitView sidebar layout,
-    // iPhone keeps the bottom tab bar.
-    if UIDevice.current.userInterfaceIdiom == .pad {
-      SidebarView()
-    } else {
-      TabsNavigationView()
-    }
-#elseif os(macOS)
     SidebarView()
-#endif
+      .tint(Color.KinoPub.accent)
   }
 }
 

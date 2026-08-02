@@ -30,8 +30,6 @@
 		8098D8F91375689FF8CDF2E5 /* EPGService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D76E7607D577290118049B2C /* EPGService.swift */; };
 		9322A36C27DD40CEA6FEB4C7 /* SportModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02162D92FD24B56A6991CD2 /* SportModel.swift */; };
 		9ED54B4CEADC49ECABC94580 /* DeviceServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FC43C2833943E9A5FBCDD5 /* DeviceServiceImpl.swift */; };
-		AA01000A2C0000010000AAAA /* HLSAssetDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000B2C0000010000BBBB /* HLSAssetDownloadManager.swift */; };
-		AA01000C2C0000010000CCCC /* HLSDownloadsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000D2C0000010000DDDD /* HLSDownloadsStore.swift */; };
 		AAAAAAAA0000000000000003 /* CommentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA0000000000000002 /* CommentsView.swift */; };
 		AAAAAAAA0000000000000013 /* SeasonDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA0000000000000012 /* SeasonDownloadManager.swift */; };
 		AAAAAAAA0000000000000023 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA0000000000000022 /* FeatureFlags.swift */; };
@@ -66,7 +64,6 @@
 		CC60254A2AFE7191003D8391 /* DownloadMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6025492AFE7191003D8391 /* DownloadMeta.swift */; };
 		CC60254D2AFF548B003D8391 /* UserActionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC60254C2AFF548B003D8391 /* UserActionsService.swift */; };
 		CC60254F2AFF5499003D8391 /* UserActionsServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC60254E2AFF5499003D8391 /* UserActionsServiceImpl.swift */; };
-		CC71E6EE2A6BF92D004AFB3F /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CC71E6ED2A6BF92D004AFB3F /* Launch Screen.storyboard */; platformFilter = ios; };
 		CC71E6F02A6C048C004AFB3F /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CC71E6EF2A6C048C004AFB3F /* Localizable.xcstrings */; };
 		CC71E6F82A6C0626004AFB3F /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC71E6F72A6C0626004AFB3F /* ProfileView.swift */; };
 		CC71E6FA2A6C0655004AFB3F /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC71E6F92A6C0655004AFB3F /* BookmarksView.swift */; };
@@ -80,7 +77,6 @@
 		CC71E70D2A6DD56A004AFB3F /* SkeletonUI in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E70C2A6DD56A004AFB3F /* SkeletonUI */; };
 		CC71E7262A6DD643004AFB3F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC71E7252A6DD643004AFB3F /* AppDelegate.swift */; };
 		CC748DEE2A83CCA200D87C0C /* UserServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC748DED2A83CCA200D87C0C /* UserServiceImpl.swift */; };
-		CC7734482A86BBBC00FE56CF /* TabsNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7734472A86BBBC00FE56CF /* TabsNavigationView.swift */; };
 		CC78FC482A82CDF600C5BDFD /* DownloadsCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC78FC472A82CDF600C5BDFD /* DownloadsCatalog.swift */; };
 		CC78FC4A2A82D5D100C5BDFD /* DownloadedItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC78FC492A82D5D100C5BDFD /* DownloadedItemView.swift */; };
 		CC7FCE872A72ACB700DFC0A9 /* AuthModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7FCE862A72ACB700DFC0A9 /* AuthModel.swift */; };
@@ -151,8 +147,6 @@
 		9CB9EAF3CB4D4EE4ACCDDBCE /* DeviceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DeviceSettingsView.swift; path = KinoPubAppleClient/Views/Profile/Device/DeviceSettingsView.swift; sourceTree = SOURCE_ROOT; };
 		9D0D55F0BBD71AFB2B0C1DAD /* ChannelEPGRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChannelEPGRow.swift; sourceTree = "<group>"; };
 		A3A0D46F9D2449768FBBC265 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
-		AA01000B2C0000010000BBBB /* HLSAssetDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSAssetDownloadManager.swift; sourceTree = "<group>"; };
-		AA01000D2C0000010000DDDD /* HLSDownloadsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSDownloadsStore.swift; sourceTree = "<group>"; };
 		AAAAAAAA0000000000000002 /* CommentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsView.swift; sourceTree = "<group>"; };
 		AAAAAAAA0000000000000012 /* SeasonDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeasonDownloadManager.swift; sourceTree = "<group>"; };
 		AAAAAAAA0000000000000022 /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
@@ -189,7 +183,6 @@
 		CC60254E2AFF5499003D8391 /* UserActionsServiceImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserActionsServiceImpl.swift; sourceTree = "<group>"; };
 		CC676BC52A6ADBEE00B8AC66 /* KinoPubLogging */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = KinoPubLogging; path = Packages/KinoPubLogging; sourceTree = "<group>"; };
 		CC71E6EC2A6B2FBE004AFB3F /* KinoPubKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = KinoPubKit; path = Packages/KinoPubKit; sourceTree = "<group>"; };
-		CC71E6ED2A6BF92D004AFB3F /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		CC71E6EF2A6C048C004AFB3F /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		CC71E6F72A6C0626004AFB3F /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		CC71E6F92A6C0655004AFB3F /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
@@ -198,7 +191,6 @@
 		CC71E7002A6DD043004AFB3F /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		CC71E7252A6DD643004AFB3F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CC748DED2A83CCA200D87C0C /* UserServiceImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserServiceImpl.swift; sourceTree = "<group>"; };
-		CC7734472A86BBBC00FE56CF /* TabsNavigationView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabsNavigationView.swift; sourceTree = "<group>"; };
 		CC78FC472A82CDF600C5BDFD /* DownloadsCatalog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DownloadsCatalog.swift; sourceTree = "<group>"; };
 		CC78FC492A82D5D100C5BDFD /* DownloadedItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemView.swift; sourceTree = "<group>"; };
 		CC7FCE862A72ACB700DFC0A9 /* AuthModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModel.swift; sourceTree = "<group>"; };
@@ -397,8 +389,6 @@
 			children = (
 				CCFDF43D2A828B6B0035D8E0 /* Providers.swift */,
 				AAAAAAAA0000000000000012 /* SeasonDownloadManager.swift */,
-				AA01000B2C0000010000BBBB /* HLSAssetDownloadManager.swift */,
-				AA01000D2C0000010000DDDD /* HLSDownloadsStore.swift */,
 			);
 			path = Download;
 			sourceTree = "<group>";
@@ -445,7 +435,6 @@
 		CC71E6F22A6C04B5004AFB3F /* Root */ = {
 			isa = PBXGroup;
 			children = (
-				CC7734472A86BBBC00FE56CF /* TabsNavigationView.swift */,
 				CC88E1E62A6586E600E9387F /* RootView.swift */,
 			);
 			path = Root;
@@ -573,7 +562,6 @@
 			children = (
 				CC88E1EA2A6586E700E9387F /* KinoPubAppleClient.entitlements */,
 				CC88E1E82A6586E700E9387F /* Assets.xcassets */,
-				CC71E6ED2A6BF92D004AFB3F /* Launch Screen.storyboard */,
 				CC71E6EF2A6C048C004AFB3F /* Localizable.xcstrings */,
 				7D1095862FEC71FE00CBA905 /* AppIcon.icon */,
 				0D48FABCB9A4733D287E8F03 /* EPGSources.json */,
@@ -893,7 +881,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC71E6EE2A6BF92D004AFB3F /* Launch Screen.storyboard in Resources */,
 				CC71E6F02A6C048C004AFB3F /* Localizable.xcstrings in Resources */,
 				CC88E1E92A6586E700E9387F /* Assets.xcassets in Resources */,
 				7D1095872FEC71FE00CBA905 /* AppIcon.icon in Resources */,
@@ -912,7 +899,6 @@
 				CCF388212A718ADE00242581 /* VideoContentService.swift in Sources */,
 				CCF3881A2A71882300242581 /* AuthorizationService.swift in Sources */,
 				CC09047F2A7BE95D00A71F53 /* AuthState.swift in Sources */,
-				CC7734482A86BBBC00FE56CF /* TabsNavigationView.swift in Sources */,
 				AAAAAAAA0000000000000003 /* CommentsView.swift in Sources */,
 				CCF3882B2A718E6300242581 /* Configuration.swift in Sources */,
 				CC01461B2A783DF900F858AF /* NavigationState.swift in Sources */,
@@ -921,8 +907,6 @@
 				CC0146352A78439600F858AF /* NavigationLinkProvider.swift in Sources */,
 				CCFDF43E2A828B6B0035D8E0 /* Providers.swift in Sources */,
 				AAAAAAAA0000000000000013 /* SeasonDownloadManager.swift in Sources */,
-				AA01000A2C0000010000AAAA /* HLSAssetDownloadManager.swift in Sources */,
-				AA01000C2C0000010000CCCC /* HLSDownloadsStore.swift in Sources */,
 				CCF388412A71C9CF00242581 /* AccessTokenServiceImpl.swift in Sources */,
 				CC71E7262A6DD643004AFB3F /* AppDelegate.swift in Sources */,
 				CC71E7012A6DD043004AFB3F /* AuthView.swift in Sources */,
@@ -1077,7 +1061,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -1134,7 +1117,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -1162,30 +1144,15 @@
 				INFOPLIST_KEY_CFBundleDisplayName = KinoPub;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.5.0; /* x-release-please-version */
 				PRODUCT_BUNDLE_IDENTIFIER = com.kino.pub;
 				PRODUCT_NAME = KinoPub;
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -1208,30 +1175,15 @@
 				INFOPLIST_KEY_CFBundleDisplayName = KinoPub;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.5.0; /* x-release-please-version */
 				PRODUCT_BUNDLE_IDENTIFIER = com.kino.pub;
 				PRODUCT_NAME = KinoPub;
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

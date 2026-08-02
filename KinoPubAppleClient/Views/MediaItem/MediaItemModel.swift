@@ -278,23 +278,6 @@ class MediaItemModel: ObservableObject {
 
   func startDownload(item: DownloadableMediaItem, file: FileInfo) {
     let meta = DownloadMeta.make(from: item, quality: file.quality)
-#if os(iOS)
-    // Prefer the HLS master so the offline copy keeps full quality + every audio track (озвучка) +
-    // subtitles, switchable during playback (mp4 would bake in a single track). macOS falls back to mp4.
-    if let hlsURL = URL(string: file.url.hls4) {
-      switch AppContext.shared.hlsDownloadManager.startDownload(meta: meta, hlsURL: hlsURL) {
-      case .started:
-        toastMessage = .success("Download started".localized)
-      case .alreadyDownloading:
-        toastMessage = .info("Already downloading".localized)
-      case .alreadyDownloaded:
-        toastMessage = .info("Already downloaded".localized)
-      case .failed(let reason):
-        toastMessage = .error(reason)
-      }
-      return
-    }
-#endif
     guard let url = URL(string: file.url.http) else {
       toastMessage = .error("Couldn't start download".localized)
       return

@@ -5,10 +5,10 @@
 //  Created by Kirill Kunst on 28.10.2023.
 //
 
+import AppKit
 import Foundation
 import SwiftUI
 
-#if os(macOS)
 
 /// A class that manages the window settings, including the "always on top" feature.
 class WindowSettings: ObservableObject {
@@ -32,4 +32,3 @@ class WindowSettings: ObservableObject {
         }
     }
 }
-#endif

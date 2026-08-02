@@ -18,7 +18,6 @@ struct DownloadsView: View {
   @StateObject private var catalog: DownloadsCatalog
   @Environment(\.sectionEmbedded) private var sectionEmbedded
   @State private var showStorage = false
-  @State private var errorToast: ToastMessage?
 
   init(catalog: @autoclosure @escaping () -> DownloadsCatalog) {
     _catalog = StateObject(wrappedValue: catalog())
@@ -49,32 +48,21 @@ struct DownloadsView: View {
     .sheet(isPresented: $showStorage, onDismiss: { catalog.refresh() }) {
       StorageBreakdownView()
     }
-    .toast(message: $errorToast, duration: 5)
-    .onChange(of: catalog.downloadError) { error in
-      if let error { errorToast = .error(error) }
-    }
   }
   
-  private var hasActive: Bool { !catalog.activeDownloads.isEmpty || !catalog.hlsActive.isEmpty }
-  private var hasCompleted: Bool { !catalog.downloadedItems.isEmpty || !catalog.hlsCompleted.isEmpty }
+  private var hasActive: Bool { !catalog.activeDownloads.isEmpty }
+  private var hasCompleted: Bool { !catalog.downloadedItems.isEmpty }
 
   var downloadsList: some View {
     List {
       if hasActive {
         Section {
           activeDownloadsList
-          hlsActiveList
         } header: { sectionHeader("Active") }
-      }
-      if !catalog.hlsInterrupted.isEmpty {
-        Section {
-          hlsInterruptedList
-        } header: { sectionHeader("Interrupted") }
       }
       if hasCompleted {
         Section {
           downloadedFilesList
-          hlsCompletedList
         } header: { sectionHeader("Downloaded") }
       }
       if catalog.totalBytes > 0 {
@@ -114,56 +102,10 @@ struct DownloadsView: View {
       .listRowBackground(Color.clear)
   }
 
-  /// Interrupted HLS downloads (force-quit). Tap to re-download; swipe to dismiss + clean up.
-  var hlsInterruptedList: some View {
-    ForEach(catalog.hlsInterrupted) { item in
-      Button {
-        catalog.retryHLSInterrupted(item)
-      } label: {
-        DownloadedItemView(mediaItem: item.meta, progress: nil, state: .interrupted) { _ in }
-      }
-      .buttonStyle(.plain)
-      .contextMenu { detailLink(for: item.meta) }
-    }
-    .onDelete(perform: { catalog.dismissHLSInterrupted(at: $0) })
-    .listRowBackground(Color.KinoPub.background)
-  }
-
-  /// In-progress HLS downloads (offline, with all tracks/subs). Not navigable until finished.
-  var hlsActiveList: some View {
-    ForEach(catalog.hlsActive) { download in
-      DownloadedItemView(mediaItem: download.meta,
-                         progress: download.progress,
-                         speed: download.speed,
-                         remaining: download.remaining) { _ in }
-        .contextMenu { detailLink(for: download.meta) }
-    }
-    .onDelete(perform: { catalog.cancelHLSDownload(at: $0) })
-    .listRowBackground(Color.KinoPub.background)
-  }
-
-  /// Opens the player for a downloaded item. On macOS a `NavigationLink` inside a `List` row doesn't
-  /// fire on click, so push the route via a Button there; NavigationLink elsewhere (chevron + swipe).
-  @ViewBuilder
-  private func playRow(_ route: Route, @ViewBuilder label: () -> some View) -> some View {
-#if os(macOS)
+  /// `NavigationLink` in a macOS `List` row can lose the click to the row itself, so push directly.
+  private func playRow<Label: View>(_ route: Route, @ViewBuilder label: () -> Label) -> some View {
     Button { navigationState.downloadsRoutes.append(route) } label: { label() }
       .buttonStyle(.plain)
-#else
-    NavigationLink(value: route) { label() }
-#endif
-  }
-
-  /// Completed HLS downloads (.movpkg). Tapping opens the player; swipe deletes the bundle.
-  var hlsCompletedList: some View {
-    ForEach(catalog.hlsCompleted, id: \.relativePath) { asset in
-      playRow(Route.player(asset.meta)) {
-        DownloadedItemView(mediaItem: asset.meta, progress: nil, fileURL: asset.localFileURL) { _ in }
-      }
-      .contextMenu { detailLink(for: asset.meta) }
-    }
-    .onDelete(perform: { catalog.deleteHLSCompleted(at: $0) })
-    .listRowBackground(Color.KinoPub.background)
   }
 
   var activeDownloadsList: some View {
@@ -218,9 +160,7 @@ struct DownloadsView: View {
 
 // MARK: - Storage breakdown
 
-/// A breakdown of the app's on-disk usage so the user can see where space goes (HLS downloads live in
-/// Library — invisible to the Files app — and keep every audio track, so they're bigger than the
-/// source). Lets the user clear the image cache and sweep orphaned download files.
+/// Native macOS storage breakdown for downloads, cache, EPG data, and other app files.
 struct StorageBreakdownView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.appContext) private var appContext
@@ -237,8 +177,6 @@ struct StorageBreakdownView: View {
             row("Image cache".localized, breakdown.imageCache)
             row("EPG", breakdown.epg)
             row("Other".localized, breakdown.other)
-          } footer: {
-            Text("HLS downloads are stored in the app's private storage (not visible in the Files app) and keep every audio track, so they're larger than the source file.".localized)
           }
           Section {
             HStack { Text("Total".localized).bold(); Spacer(); Text(format(breakdown.total)).bold() }
@@ -256,16 +194,6 @@ struct StorageBreakdownView: View {
                 await appContext.epgService.clearCache()
                 announce(freed: freed)
                 recompute()
-              }
-            }
-            Button("Remove leftover download files".localized) {
-              busy = true
-              DispatchQueue.global(qos: .utility).async {
-                let freed = AppContext.shared.hlsDownloadsStore.sweepOrphans(keepRelativePaths: [])
-                DispatchQueue.main.async {
-                  announce(freed: freed)
-                  recompute()
-                }
               }
             }
           }
@@ -303,10 +231,9 @@ struct StorageBreakdownView: View {
 
   private func recompute() {
     busy = true
-    let store = AppContext.shared.hlsDownloadsStore
-    let mp4URLs = (AppContext.shared.downloadedFilesDatabase.readData() ?? []).map { $0.localFileURL }
+    let downloadURLs = (AppContext.shared.downloadedFilesDatabase.readData() ?? []).map { $0.localFileURL }
     Task.detached(priority: .utility) {
-      let result = StorageUsage.compute(hlsStore: store, mp4URLs: mp4URLs)
+      let result = StorageUsage.compute(downloadURLs: downloadURLs)
       await MainActor.run { self.breakdown = result; self.busy = false }
     }
   }
@@ -320,17 +247,31 @@ private struct StorageUsage {
   let epg: Int64
   var other: Int64 { max(0, total - downloads - imageCache - epg) }
 
-  static func compute(hlsStore: HLSDownloadsStore, mp4URLs: [URL]) -> StorageUsage {
+  static func compute(downloadURLs: [URL]) -> StorageUsage {
     let home = URL(fileURLWithPath: NSHomeDirectory())
     let containers = ["Documents", "Library", "tmp"].map { home.appendingPathComponent($0) }
-    let total = containers.reduce(Int64(0)) { $0 + HLSDownloadsStore.directorySize(at: $1) }
-    let mp4 = mp4URLs.reduce(Int64(0)) { acc, url in
-      acc + ((try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0)
+    let total = containers.reduce(Int64(0)) { $0 + directorySize(at: $1) }
+    let downloads = downloadURLs.reduce(Int64(0)) { total, url in
+      total + ((try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0)
     }
-    let downloads = hlsStore.totalDownloadedBytes() + mp4
-    let imageCache = Int64(ImageCache.shared.diskUsageBytes())
-    let epg = EPGServiceImpl.diskUsageBytes()
-    return StorageUsage(total: total, downloads: downloads, imageCache: imageCache, epg: epg)
+    return StorageUsage(total: total,
+                        downloads: downloads,
+                        imageCache: Int64(ImageCache.shared.diskUsageBytes()),
+                        epg: EPGServiceImpl.diskUsageBytes())
+  }
+
+  private static func directorySize(at url: URL) -> Int64 {
+    guard let enumerator = FileManager.default.enumerator(
+      at: url,
+      includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
+      options: [.skipsHiddenFiles]
+    ) else { return 0 }
+    var bytes: Int64 = 0
+    for case let fileURL as URL in enumerator {
+      let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+      if values?.isRegularFile == true { bytes += Int64(values?.fileSize ?? 0) }
+    }
+    return bytes
   }
 }
 

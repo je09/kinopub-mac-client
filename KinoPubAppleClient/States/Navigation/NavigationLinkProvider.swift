@@ -160,9 +160,7 @@ struct GenreResultsView: View {
               NavigationLink(value: Route.details(item)) {
                 PosterCard(imageURL: item.posters.medium, title: item.localizedTitle, width: nil)
               }
-#if os(macOS)
               .buttonStyle(.plain)
-#endif
             }
           }
         }

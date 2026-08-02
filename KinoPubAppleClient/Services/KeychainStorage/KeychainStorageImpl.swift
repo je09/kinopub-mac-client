@@ -14,7 +14,6 @@ final class KeychainStorageImpl: KeychainStorage {
     return Keychain(service: "com.kunst.kinopub")
   }()
 
-#if os(macOS)
   // On macOS the legacy keychain prompts "… wants to use the keychain" on EVERY launch: the item's
   // ACL is tied to the app's code signature, which changes between (dev) builds, so "Always Allow"
   // never sticks. For a low-risk media-client token the conventional, prompt-free approach is plain
@@ -51,32 +50,4 @@ final class KeychainStorageImpl: KeychainStorage {
     }
     try? keychain.removeAll()
   }
-#else
-  public func object<Value>(for key: Key<Value>) -> Value? where Value: Decodable, Value: Encodable {
-    do {
-      guard let data = try keychain.getData(key.rawValue) else { return nil }
-      return try JSONDecoder().decode(Value.self, from: data)
-    } catch {
-      print(error)
-      return nil
-    }
-  }
-
-  public func setObject<Value>(_ object: Value?, for key: Key<Value>) where Value: Decodable, Value: Encodable {
-    do {
-      let data = try JSONEncoder().encode(object)
-      try keychain.set(data, key: key.rawValue)
-    } catch {
-      print(error)
-    }
-  }
-
-  func clear() {
-    do {
-      try keychain.removeAll()
-    } catch {
-      print(error)
-    }
-  }
-#endif
 }

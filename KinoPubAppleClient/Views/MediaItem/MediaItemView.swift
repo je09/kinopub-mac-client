@@ -18,9 +18,6 @@ struct MediaItemView: View {
   @EnvironmentObject private var navigationState: NavigationState
   @EnvironmentObject private var libraryState: MediaLibraryStore
   @Environment(\.appContext) private var appContext
-#if os(iOS)
-  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-#endif
   @StateObject private var itemModel: MediaItemModel
 
   @State private var plotExpanded: Bool = false
@@ -46,13 +43,9 @@ struct MediaItemView: View {
   private var mediaItem: MediaItem { itemModel.mediaItem }
   private var isSkeleton: Bool { !itemModel.itemLoaded }
 
-  /// True when the app uses the sidebar (iPad/macOS) so facets can deep-link into a section.
+  /// The macOS sidebar lets facets deep-link into a catalog section.
   private var usesSidebarSections: Bool {
-#if os(macOS)
     return true
-#else
-    return horizontalSizeClass == .regular
-#endif
   }
 
   /// A tappable facet (genre/country/year). On wide layouts it selects the matching Library
@@ -124,7 +117,7 @@ struct MediaItemView: View {
                      pendingPersonRoute = .personSearch(name, field, name)
                    })
     }
-    // Programmatic push (iOS 16-compatible) onto whichever stack this page lives in.
+    // Programmatic push onto whichever navigation stack hosts this page.
     .navigationDestination(isPresented: $showPerson) {
       if let route = pendingPersonRoute {
         RouteDestinationView(route: route)
@@ -148,10 +141,7 @@ struct MediaItemView: View {
       Button("Create".localized) { itemModel.createFolderAndAdd(named: newFolderName) }
     }
     .toast(message: $itemModel.toastMessage)
-    #if os(iOS)
-    .toolbar(.hidden, for: .tabBar)
-    #endif
-    // iOS 26: the hero backdrop bleeds under the glass bar. Pre-26: frosted bar + restored safe area.
+    // The native macOS toolbar owns the titlebar material.
     .heroNavBar()
     .task {
       itemModel.fetchData()
@@ -270,13 +260,13 @@ struct MediaItemView: View {
   @ViewBuilder
   private var heroActions: some View {
     if usesSidebarSections {
-      // Wide (iPad/macOS): everything on one row.
+      // Wide Mac window: everything on one row.
       HStack(spacing: 12) {
         playButton
         secondaryActions
       }
     } else {
-      // Narrow (iPhone): the play button gets its own full-width row; the circle actions sit below.
+      // Narrow Mac window: the play button gets a full-width row; circle actions sit below.
       VStack(spacing: 14) {
         playButton
         HStack(spacing: 12) {
@@ -324,11 +314,9 @@ struct MediaItemView: View {
       circleIcon("cube")
     }
     .menuIndicator(.hidden)
-    #if os(macOS)
     .menuStyle(.button)
     .buttonStyle(.plain)
     .fixedSize()
-    #endif
     .accessibilityLabel("3D mode")
   }
 
@@ -414,13 +402,11 @@ struct MediaItemView: View {
       circleIcon(libraryState.isInAnyBookmarkFolder(itemId: mediaItem.id) ? "folder.fill" : "folder")
     }
     .menuIndicator(.hidden)
-    #if os(macOS)
     // `.button` + `.plain` renders our circle label faithfully (borderlessButton strips the
     // background and tints the symbol with the accent colour).
     .menuStyle(.button)
     .buttonStyle(.plain)
     .fixedSize()
-    #endif
     .accessibilityLabel("Add to Bookmark")
   }
 
@@ -431,11 +417,9 @@ struct MediaItemView: View {
       circleIcon(movieDownloadGlyph)
     }
     .menuIndicator(.hidden)
-#if os(macOS)
     .menuStyle(.button)
     .buttonStyle(.plain)
     .fixedSize()
-#endif
     .accessibilityLabel("Download")
   }
 
@@ -1525,9 +1509,6 @@ struct CastCrewView: View {
       }
       .background(Color.KinoPub.background)
       .navigationTitle("Cast & Crew".localized)
-#if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-#endif
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done".localized) { dismiss() }
@@ -1632,7 +1613,7 @@ struct StillThumbnail: View {
 }
 
 /// A single trivia fact / goof card. The icon is chosen from trigger words in the text (money, awards,
-/// camera, cast, music, …) and sits in a tinted rounded square — iOS Settings / App Store style.
+/// camera, cast, music, …) and sits in a tinted rounded square.
 struct FactCard: View {
   let fact: KpFact
 
@@ -1794,9 +1775,6 @@ struct FactsView: View {
       }
       .background(Color.KinoPub.background)
       .navigationTitle("Facts".localized)
-#if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-#endif
       .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done".localized) { dismiss() } } }
     }
   }
@@ -1818,9 +1796,6 @@ struct ReviewsView: View {
       }
       .background(Color.KinoPub.background)
       .navigationTitle("Reviews".localized)
-#if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-#endif
       .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done".localized) { dismiss() } } }
     }
   }
@@ -1851,14 +1826,8 @@ struct StillsViewer: View {
           .tag(i)
         }
       }
-#if os(iOS)
-      .tabViewStyle(.page(indexDisplayMode: .automatic))
-#endif
       .background(Color.black.ignoresSafeArea())
       .navigationTitle("\(min(index + 1, images.count)) / \(images.count)")
-#if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-#endif
       .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done".localized) { dismiss() } } }
     }
   }

@@ -10,13 +10,8 @@
 import Foundation
 import CryptoKit
 
-#if canImport(UIKit)
-import UIKit
-public typealias KinoPlatformImage = UIImage
-#elseif canImport(AppKit)
 import AppKit
 public typealias KinoPlatformImage = NSImage
-#endif
 
 public final class ImageCache {
 

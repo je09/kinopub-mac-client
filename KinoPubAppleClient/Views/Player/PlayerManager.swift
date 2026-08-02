@@ -16,8 +16,7 @@ import CoreImage
 import KinoPubLogging
 import OSLog
 
-/// How a stereoscopic (3D) source is shown on a flat screen. True stereo can't be output on
-/// iPhone/iPad/Mac, so the choices are: pick one eye (normal 2D) or red-cyan anaglyph (for glasses).
+/// How a stereoscopic source is shown on a flat Mac display: one-eye 2D or red-cyan anaglyph.
 /// The source can be packed Side-by-Side (two eyes left/right) or Over-Under (top/bottom).
 enum ThreeDMode: String, CaseIterable, Identifiable {
   case off
@@ -116,8 +115,8 @@ class PlayerManager: ObservableObject {
   /// Current 3D view mode (Off for non-3D titles).
   @Published var threeDMode: ThreeDMode = .off
 
-  /// Last-used 3D view mode, shared across launches and platforms (iOS picks it on the detail page,
-  /// macOS switches it live in the player). Defaults to Side-by-Side 2D — the common packing, shown
+  /// Last-used 3D view mode, persisted across launches and switched live in the player.
+  /// Defaults to Side-by-Side 2D — the common packing, shown
   /// flat so it's watchable without glasses.
   private static let threeDModeKey = "preferredThreeDMode"
   static var preferredThreeDMode: ThreeDMode {
@@ -137,10 +136,6 @@ class PlayerManager: ObservableObject {
     if watchMode == .media, let maxResolution = StreamQuality.current.maxResolution {
       item.preferredMaximumResolution = maxResolution
     }
-    // Surface the title (and season/episode) in the native player UI (iOS/tvOS only).
-    #if !os(macOS)
-    item.externalMetadata = externalMetadata()
-    #endif
     let player = AVPlayer(playerItem: item)
     // We explicitly apply the HLS default legible track below. Leaving automatic criteria enabled
     // can replace that selection while the player is starting, yielding a checked but invisible
@@ -149,31 +144,6 @@ class PlayerManager: ObservableObject {
     return player
   }()
 
-  #if !os(macOS)
-  private func externalMetadata() -> [AVMetadataItem] {
-    var items: [AVMetadataItem] = []
-    // For a trailer, make it explicit in the player's title.
-    var title = playItem.playerTitle
-    if watchMode == .trailer, !title.isEmpty {
-      title += " — \("Trailer".localized)"
-    }
-    if !title.isEmpty {
-      let titleItem = AVMutableMetadataItem()
-      titleItem.identifier = .commonIdentifierTitle
-      titleItem.value = title as NSString
-      titleItem.extendedLanguageTag = "und"
-      items.append(titleItem)
-    }
-    if let subtitle = playItem.playerSubtitle, !subtitle.isEmpty {
-      let subtitleItem = AVMutableMetadataItem()
-      subtitleItem.identifier = .iTunesMetadataTrackSubTitle
-      subtitleItem.value = subtitle as NSString
-      subtitleItem.extendedLanguageTag = "und"
-      items.append(subtitleItem)
-    }
-    return items
-  }
-  #endif
   private var playerTimeObserver: PlayerTimeObserver?
   private var playItem: any PlayableItem
   private var watchMode: WatchMode
@@ -197,14 +167,6 @@ class PlayerManager: ObservableObject {
       // is the series id; a DownloadMeta is the reverse. Match on either so an already-downloaded
       // movie/episode opened from the detail page plays the local file instead of streaming.
       let contentIds: Set<Int> = [playItem.id, playItem.metadata.id]
-      // Prefer a downloaded offline HLS asset (.movpkg) — full quality + all audio tracks + subtitles.
-      for contentId in contentIds {
-        if let hls = AppContext.shared.hlsDownloadsStore.asset(forId: contentId,
-                                                               video: playItem.metadata.video,
-                                                               season: playItem.metadata.season) {
-          return hls.localFileURL
-        }
-      }
       let downloadedFiles = downloadedFilesDatabase.readData() ?? []
       let sameItem = downloadedFiles.filter { contentIds.contains($0.metadata.id) }
       // For a series there can be several downloads under the same (series) id, plus stale rows whose
@@ -370,9 +332,6 @@ class PlayerManager: ObservableObject {
     if watchMode == .media, let maxResolution = StreamQuality.current.maxResolution {
       item.preferredMaximumResolution = maxResolution
     }
-    #if !os(macOS)
-    item.externalMetadata = externalMetadata()
-    #endif
     if let endOfPlaybackObserver { NotificationCenter.default.removeObserver(endOfPlaybackObserver) }
     didHandlePlaybackEnd = false
     player.replaceCurrentItem(with: item)

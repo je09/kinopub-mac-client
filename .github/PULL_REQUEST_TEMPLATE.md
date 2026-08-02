@@ -12,11 +12,10 @@
 - [ ] docs
 - [ ] chore / ci
 
-## Platforms tested
+## Tested
 
-- [ ] iPhone
-- [ ] iPad
-- [ ] macOS
+- [ ] macOS 13+
+- [ ] Apple Silicon or Intel, where relevant
 
 ## Checklist
 
