@@ -18,6 +18,7 @@ struct MediaItemView: View {
   @EnvironmentObject private var navigationState: NavigationState
   @EnvironmentObject private var libraryState: MediaLibraryStore
   @Environment(\.appContext) private var appContext
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @StateObject private var itemModel: MediaItemModel
 
   @State private var plotExpanded: Bool = false
@@ -101,8 +102,15 @@ struct MediaItemView: View {
       }
       .padding(.bottom, 32)
       .frame(maxWidth: .infinity, alignment: .leading)
+      .background(alignment: .top) {
+        VStack(spacing: 0) {
+          Color.clear.frame(height: heroHeight)
+          Color.KinoPub.background
+        }
+      }
     }
-    .background(Color.KinoPub.background)
+    .background(Color.clear)
+    .preference(key: WindowHeroMediaPreferenceKey.self, value: windowBackdropMedia)
     .sheet(isPresented: $showComments) {
       CommentsView(mediaId: mediaItem.id)
     }
@@ -163,22 +171,25 @@ struct MediaItemView: View {
 
   // MARK: - Hero
 
-  private var heroArtworkURLs: [String] {
-    // The kino.pub detail response always has posters and often has native video/episode thumbnails.
-    // Use those before best-effort Kinopoisk stills so every title gets an Apple TV-style carousel.
-    let posters = [mediaItem.posters.wide, mediaItem.posters.big].compactMap { $0 }
-    let movieThumbnails = mediaItem.videos?.prefix(3).map(\.thumbnail) ?? []
-    let episodeThumbnails = mediaItem.orderedEpisodes.prefix(4).map { $0.episode.thumbnail }
-    let stills = itemModel.images.prefix(6).compactMap { $0.previewUrl ?? $0.imageUrl }
-    return posters + movieThumbnails + episodeThumbnails + stills
+  private let heroHeight: CGFloat = 552
+
+  private var windowBackdropMedia: WindowHeroMedia? {
+    let poster = mediaItem.posters.wide ?? mediaItem.posters.big
+    let trailerURL = mediaItem.trailer?.url
+    let trailer = (!reduceMotion && !(trailerURL?.isEmpty ?? true)) ? trailerURL : nil
+    guard poster != nil || trailer != nil else { return nil }
+    return WindowHeroMedia(posterURL: poster,
+                           videoURL: trailer,
+                           revealVideo: trailer != nil,
+                           height: heroHeight)
   }
 
   private var hero: some View {
-    HeroBackdrop(imageURLs: heroArtworkURLs,
-                 videoURL: mediaItem.trailer?.url,
-                 height: 552,
+    HeroBackdrop(imageURL: nil,
+                 height: heroHeight,
                  tallBlur: true,
-                 blurReduction: 50) {
+                 blurReduction: 50,
+                 transparentBase: true) {
       VStack(alignment: .leading, spacing: 10) {
         Text(mediaItem.localizedTitle)
           .font(.system(size: 34, weight: .bold))

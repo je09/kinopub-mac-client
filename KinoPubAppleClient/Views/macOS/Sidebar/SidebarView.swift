@@ -78,7 +78,7 @@ struct SidebarView: View {
           .opacity(shouldRevealHeroVideo ? 0 : 1)
         }
 
-        if windowHeroMedia != nil { homeHeroTextGradient }
+        if let media = windowHeroMedia { windowHeroTextGradient(height: media.height) }
       }
       .animation(.easeInOut(duration: 0.7), value: windowHeroMedia?.posterURL)
       .animation(.easeInOut(duration: 0.7), value: shouldRevealHeroVideo)
@@ -117,18 +117,19 @@ struct SidebarView: View {
     return readyHeroVideoURL == video
   }
 
-  /// Home's artwork lives at the split-view level, so its legibility scrim must live here too in
-  /// order to span behind both the sidebar and detail column. Its lower edge matches Home's 620pt hero.
-  private var homeHeroTextGradient: some View {
-    VStack(spacing: 0) {
-      Spacer().frame(height: 200)
+  /// Window-level artwork needs a window-level scrim so both poster/video and their gradient span
+  /// behind the sidebar and detail column. The lower edge follows each screen's hero height.
+  private func windowHeroTextGradient(height: CGFloat) -> some View {
+    let gradientHeight = min(height * 0.76, 420)
+    return VStack(spacing: 0) {
+      Spacer().frame(height: max(height - gradientHeight, 0))
       LinearGradient(stops: [
         .init(color: .clear, location: 0),
         .init(color: .black.opacity(0.22), location: 0.42),
         .init(color: .black.opacity(0.82), location: 1)
       ], startPoint: .top, endPoint: .bottom)
         .frame(maxWidth: .infinity)
-        .frame(height: 420)
+        .frame(height: gradientHeight)
       Spacer(minLength: 0)
     }
     .allowsHitTesting(false)

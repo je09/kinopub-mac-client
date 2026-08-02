@@ -138,7 +138,8 @@ struct HomeView: View {
     let trailer = (!reduceMotion && !(trailerURL?.isEmpty ?? true)) ? trailerURL : nil
     return WindowHeroMedia(posterURL: item.posters.wide ?? item.posters.big,
                            videoURL: trailer,
-                           revealVideo: trailerReadyItemID == item.id)
+                           revealVideo: trailerReadyItemID == item.id,
+                           height: heroHeight)
   }
 
   private var homeCarouselControls: some View {

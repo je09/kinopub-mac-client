@@ -12,12 +12,13 @@ private struct SectionEmbeddedKey: EnvironmentKey {
   static let defaultValue = false
 }
 
-/// Home's active visual, rendered behind the entire split view so poster or trailer continues
+/// The active hero visual, rendered behind the entire split view so poster or trailer continues
 /// beneath the translucent sidebar instead of starting at the column divider.
 struct WindowHeroMedia: Equatable {
   let posterURL: String?
   let videoURL: String?
   let revealVideo: Bool
+  let height: CGFloat
 }
 
 struct WindowHeroMediaPreferenceKey: PreferenceKey {
