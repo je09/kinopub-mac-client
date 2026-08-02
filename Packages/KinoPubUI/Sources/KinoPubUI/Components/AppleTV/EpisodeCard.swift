@@ -94,7 +94,7 @@ public struct EpisodeCard: View {
         GeometryReader { geo in
           ZStack(alignment: .leading) {
             Rectangle().fill(Color.white.opacity(0.3))
-            Rectangle().fill(Color.KinoPub.accent)
+            Rectangle().fill(Color.accentColor)
               .frame(width: geo.size.width * min(max(progress, 0), 1))
           }
         }

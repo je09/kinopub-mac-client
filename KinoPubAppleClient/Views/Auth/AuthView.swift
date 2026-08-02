@@ -68,9 +68,9 @@ struct AuthView: View {
   private var logo: some View {
     Image(systemName: "play.tv.fill")
       .font(.system(size: 40, weight: .semibold))
-      .foregroundStyle(Color.KinoPub.accent)
+      .foregroundStyle(Color.accentColor)
       .frame(width: 88, height: 88)
-      .background(Circle().fill(Color.KinoPub.accent.opacity(0.15)))
+      .background(Circle().fill(Color.accentColor.opacity(0.15)))
   }
 
   var titleView: some View {
@@ -109,7 +109,7 @@ struct AuthView: View {
               .foregroundStyle(Color.KinoPub.text)
             Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
               .font(.system(size: 20))
-              .foregroundStyle(copied ? Color.green : Color.KinoPub.accent)
+              .foregroundStyle(copied ? Color.green : Color.accentColor)
           }
         }
         .buttonStyle(.plain)
@@ -129,7 +129,7 @@ struct AuthView: View {
         .foregroundStyle(.white)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.KinoPub.accent))
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.accentColor))
     }
     .buttonStyle(.plain)
     .disabled(model.deviceCode.isEmpty)

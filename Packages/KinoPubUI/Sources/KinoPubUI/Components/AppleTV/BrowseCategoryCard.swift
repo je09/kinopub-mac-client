@@ -16,7 +16,7 @@ public struct BrowseCategoryCard: View {
 
   public init(title: String,
               imageURL: String? = nil,
-              gradientColors: [Color] = [Color.KinoPub.accentBlue, Color.KinoPub.accent],
+              gradientColors: [Color] = [Color.KinoPub.accentBlue, Color.accentColor],
               height: CGFloat = 130) {
     self.title = title
     self.imageURL = imageURL

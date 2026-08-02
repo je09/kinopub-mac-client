@@ -33,7 +33,7 @@ struct DeviceSettingsView: View {
           .foregroundStyle(.white)
           .padding(.horizontal, 16)
           .padding(.vertical, 10)
-          .background(Capsule().fill(Color.KinoPub.accent))
+          .background(Capsule().fill(Color.accentColor))
           .padding(.bottom, 24)
           .transition(.move(edge: .bottom).combined(with: .opacity))
       }

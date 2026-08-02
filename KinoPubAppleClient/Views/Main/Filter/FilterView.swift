@@ -151,7 +151,7 @@ struct FilterView: View {
         Text(title)
         Spacer()
         Text(String(format: "%.1f", value.wrappedValue))
-          .foregroundStyle(Color.KinoPub.accent)
+          .foregroundStyle(Color.accentColor)
           .monospacedDigit()
       }
       // 0…10 in 0.1 steps.

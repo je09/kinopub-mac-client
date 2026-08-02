@@ -271,19 +271,19 @@ private struct FilterBadgeIcon: View {
   var body: some View {
     if #available(macOS 26.0, *) {
       Image(systemName: "line.3.horizontal.decrease.circle")
-        .foregroundStyle(count > 0 ? Color.KinoPub.accent : Color.KinoPub.text)
+        .foregroundStyle(count > 0 ? Color.accentColor : Color.KinoPub.text)
         .modifier(SystemCountBadge(count: count))
     } else {
       ZStack(alignment: .topTrailing) {
         Image(systemName: "line.3.horizontal.decrease.circle")
-          .foregroundStyle(count > 0 ? Color.KinoPub.accent : Color.KinoPub.text)
+          .foregroundStyle(count > 0 ? Color.accentColor : Color.KinoPub.text)
         if count > 0 {
           Text("\(count)")
             .font(.system(size: 11, weight: .bold))
             .foregroundStyle(.white)
             .padding(.horizontal, count >= 10 ? 3 : 0)
             .frame(minWidth: 14, minHeight: 14)
-            .background(Capsule(style: .continuous).fill(Color.KinoPub.accent))
+            .background(Capsule(style: .continuous).fill(Color.accentColor))
             .offset(x: 6, y: -6)
         }
       }
@@ -299,7 +299,7 @@ private struct SortDotIcon: View {
       Image(systemName: "arrow.up.arrow.down")
       if active {
         Circle()
-          .fill(Color.KinoPub.accent)
+          .fill(Color.accentColor)
           .frame(width: 7, height: 7)
           .offset(x: 5, y: -4)
       }

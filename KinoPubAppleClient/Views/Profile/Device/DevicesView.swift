@@ -118,7 +118,7 @@ struct DevicesView: View {
       }
       Spacer()
       if isCurrent {
-        Text("This device".localized).font(.caption).foregroundStyle(Color.KinoPub.accent)
+        Text("This device".localized).font(.caption).foregroundStyle(Color.accentColor)
       } else {
         Button(role: .destructive) {
           pendingRemove = device

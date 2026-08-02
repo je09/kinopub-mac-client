@@ -86,7 +86,7 @@ public struct DownloadedItemView: View {
           VStack(spacing: 2) {
             Image(systemName: "arrow.clockwise.circle.fill")
               .font(.system(size: 22))
-              .foregroundStyle(.white, Color.KinoPub.accent)
+              .foregroundStyle(.white, Color.accentColor)
             Text("Re-download".localized)
               .font(.system(size: 10, weight: .medium))
               .foregroundStyle(Color.KinoPub.subtitle)
@@ -96,7 +96,7 @@ public struct DownloadedItemView: View {
           // Clear "downloaded" indicator for finished files.
           Image(systemName: "checkmark.circle.fill")
             .font(.system(size: 20))
-            .foregroundStyle(Color.KinoPub.accent)
+            .foregroundStyle(Color.accentColor)
             .padding(.trailing, 16)
         }
       }

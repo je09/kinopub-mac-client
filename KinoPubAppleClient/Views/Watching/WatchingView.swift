@@ -168,7 +168,7 @@ struct WatchingSerialView: View {
       .foregroundStyle(Color.white)
       .padding(.horizontal, 7)
       .padding(.vertical, 3)
-      .background(Color.KinoPub.accent)
+      .background(Color.accentColor)
       .clipShape(Capsule())
       .padding(6)
   }

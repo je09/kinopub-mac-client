@@ -25,13 +25,13 @@ struct Sidebar: View {
 
   var body: some View {
     List(selection: selectionBinding) {
+      // Apple TV keeps its two primary destinations above the first labeled group.
       Section {
+        row(.search)
         row(.new)
         ForEach(visibility.discoverItems) { item in
           if isEditingSections || visibility.isVisible(item) { row(item) }
         }
-      } header: {
-        sectionHeader("Discover")
       }
 
       Section {
@@ -59,18 +59,15 @@ struct Sidebar: View {
         }
       }
 
-      Section {
-        row(.profile)
-      } header: {
-        sectionHeader("Account")
-      }
-
     }
     .listStyle(.sidebar)
+    .safeAreaInset(edge: .bottom, spacing: 0) {
+      profileRow
+    }
     .environment(\.defaultMinListRowHeight, appearance.sidebarDensity.rowHeight)
     .modifier(SidebarBackground(style: appearance.sidebarAppearance,
                                 accent: appearance.accent.color))
-    .navigationTitle("KinoPub")
+    .navigationTitle(Text(verbatim: "\u{200B}"))
     .navigationSplitViewColumnWidth(min: 200,
                                     ideal: appearance.sidebarDensity.idealWidth,
                                     max: 340)
@@ -94,6 +91,35 @@ struct Sidebar: View {
         if let newValue { navigationState.popToRoot(for: newValue) }
       }
     )
+  }
+
+  private var profileRow: some View {
+    Button {
+      selection = .profile
+      navigationState.popToRoot(for: .profile)
+    } label: {
+      Label {
+        Text("Profile".localized)
+          .foregroundStyle(Color.primary)
+        Spacer(minLength: 0)
+      } icon: {
+        Image(systemName: "person.crop.circle.fill")
+          .font(.system(size: 24))
+          .symbolRenderingMode(.hierarchical)
+          .foregroundStyle(selection == .profile ? Color.white : iconColor(for: .profile))
+          .frame(width: 26)
+      }
+      .padding(.horizontal, 8)
+      .frame(height: 36)
+      .contentShape(Rectangle())
+      .background {
+        RoundedRectangle(cornerRadius: 7, style: .continuous)
+          .fill(selection == .profile ? appearance.accent.color : Color.clear)
+      }
+    }
+    .buttonStyle(.plain)
+    .padding(.horizontal, 8)
+    .padding(.vertical, 8)
   }
 
   @ViewBuilder
@@ -266,6 +292,8 @@ private struct SidebarBackground: ViewModifier {
     switch style {
     case .system:
       content
+        .scrollContentBackground(.hidden)
+        .background(.ultraThinMaterial)
     case .tinted:
       content
         .scrollContentBackground(.hidden)

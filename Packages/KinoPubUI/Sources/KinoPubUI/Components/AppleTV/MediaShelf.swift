@@ -25,7 +25,7 @@ public struct MediaShelf<Content: View>: View {
   public init(title: String,
               showsChevron: Bool = true,
               spacing: CGFloat = 14,
-              horizontalPadding: CGFloat = 20,
+              horizontalPadding: CGFloat = 36,
               headerValue: (any Hashable)? = nil,
               onHeaderTap: (() -> Void)? = nil,
               @ViewBuilder content: () -> Content) {
@@ -65,7 +65,7 @@ public struct MediaShelf<Content: View>: View {
   private var headerLabel: some View {
     HStack(spacing: 6) {
       Text(title)
-        .font(.system(size: 22, weight: .bold))
+        .font(.system(size: 20, weight: .bold))
         .foregroundStyle(Color.KinoPub.text)
       if showsChevron && (onHeaderTap != nil || headerValue != nil) {
         Image(systemName: "chevron.right")

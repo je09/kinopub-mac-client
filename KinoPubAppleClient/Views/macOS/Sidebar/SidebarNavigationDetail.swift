@@ -21,8 +21,10 @@ struct SidebarNavigationDetail: View {
 
   var body: some View {
     let selected = selection ?? .new
+    // Let each destination's native ScrollView establish its own initial position. Forcing an
+    // AppKit offset during split-view reconciliation caused newly selected screens to inherit the
+    // previous screen's scroll position and visibly jump after layout.
     destination(for: selected)
-      .rememberScreenScrollPosition(selected.id)
   }
 
   @ViewBuilder

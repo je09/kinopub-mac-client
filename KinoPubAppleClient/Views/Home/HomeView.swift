@@ -18,7 +18,7 @@ struct HomeView: View {
   @ObservedObject private var visibility = SectionVisibilityStore.shared
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var featuredIndex = 0
-  @State private var carouselPaused = false
+  @State private var heroHovered = false
 
   init(model: @autoclosure @escaping () -> HomeModel) {
     _model = StateObject(wrappedValue: model())
@@ -27,56 +27,81 @@ struct HomeView: View {
   var body: some View {
     NavigationStack(path: $navigationState.homeRoutes) {
       ScrollView(.vertical) {
-        LazyVStack(alignment: .leading, spacing: 28) {
+        LazyVStack(alignment: .leading, spacing: 0) {
+          // Media itself is rendered once at the split-view/window level, from the left window edge
+          // to the right. This layer supplies only hero gradients, controls and text.
           heroSection
-          if model.continueWatchingLoading {
-            continueWatchingPlaceholderShelf
-          } else if !model.continueWatching.isEmpty {
-            continueWatchingShelf
-          }
-          ForEach(model.shelves) { shelf in
-            if isShelfVisible(shelf) {
-              shelfView(shelf)
+
+          LazyVStack(alignment: .leading, spacing: 28) {
+            if model.continueWatchingLoading {
+              continueWatchingPlaceholderShelf
+            } else if !model.continueWatching.isEmpty {
+              continueWatchingShelf
+            }
+            ForEach(model.shelves) { shelf in
+              if isShelfVisible(shelf) {
+                shelfView(shelf)
+              }
             }
           }
+          .padding(.top, 28)
+          .padding(.bottom, 24)
+          .background(Color.KinoPub.background)
         }
-        .padding(.bottom, 24)
       }
-      .background(Color.KinoPub.background)
+      .background(Color.clear)
       .refreshable { await model.refresh() }
       .task { await model.refreshContinueWatchingIfStale() }
-      .navigationTitle("Home".localized)
+      // A zero-width verbatim title suppresses AppKit's fallback window title ("KinoPub") without
+      // looking up the localization catalog's empty-string key.
+      .navigationTitle(Text(verbatim: "\u{200B}"))
       // The native macOS toolbar owns the titlebar material.
       .heroNavBar()
       .routeDestinations()
       .handleError(state: $errorHandler.state)
+      .preference(key: WindowHeroMediaPreferenceKey.self, value: windowBackdropMedia)
     }
   }
 
-  private var heroHeight: CGFloat { 460 }
+  // Apple TV devotes roughly three quarters of its standard window to the feature stage.
+  private var heroHeight: CGFloat { 620 }
 
   @ViewBuilder
   private var heroSection: some View {
     if model.featured.isEmpty {
-      HeroBackdrop(imageURL: nil, height: heroHeight) { EmptyView() }
+      HeroBackdrop(imageURL: nil,
+                   height: heroHeight,
+                   blurReduction: heroHeight,
+                   transparentBase: true) { EmptyView() }
     } else {
       GeometryReader { proxy in
-        ZStack(alignment: .bottomTrailing) {
+        ZStack {
           if let hero = currentFeaturedItem {
             heroPage(hero)
               .id(hero.id)
               .frame(width: max(600, proxy.size.width))
               .transition(.opacity.combined(with: .scale(scale: 1.01)))
           }
-          homeCarouselControls
-            .padding(.trailing, 32)
-            .padding(.bottom, 22)
+
+          HStack {
+            carouselArrow(offset: -1)
+            Spacer()
+            carouselArrow(offset: 1)
+          }
+          .padding(.horizontal, 14)
+
+          VStack {
+            Spacer()
+            homeCarouselControls
+              .padding(.bottom, 18)
+          }
         }
         .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .onHover { heroHovered = $0 }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.8), value: featuredIndex)
       }
       .frame(height: heroHeight)
-      .task(id: model.featured.map(\.id)) { await runFeaturedCarousel() }
       .onChange(of: model.featured.count) { count in
         if featuredIndex >= count { featuredIndex = 0 }
       }
@@ -88,43 +113,41 @@ struct HomeView: View {
     return model.featured[featuredIndex]
   }
 
-  private var homeCarouselControls: some View {
-    HStack(spacing: 10) {
-      Button { carouselPaused.toggle() } label: {
-        Image(systemName: carouselPaused ? "play.fill" : "pause.fill")
-      }
-      .help(carouselPaused ? "Play carousel".localized : "Pause carousel".localized)
-
-      Button { selectFeatured(offset: -1) } label: { Image(systemName: "chevron.left") }
-
-      HStack(spacing: 6) {
-        ForEach(model.featured.indices, id: \.self) { index in
-          Button { selectFeatured(index: index) } label: {
-            Capsule()
-              .fill(index == featuredIndex ? Color.white : Color.white.opacity(0.4))
-              .frame(width: index == featuredIndex ? 18 : 6, height: 6)
-          }
-          .buttonStyle(.plain)
-        }
-      }
-
-      Button { selectFeatured(offset: 1) } label: { Image(systemName: "chevron.right") }
-    }
-    .buttonStyle(.plain)
-    .foregroundStyle(.white)
-    .padding(.horizontal, 13)
-    .padding(.vertical, 9)
-    .background(.ultraThinMaterial, in: Capsule())
+  /// Advertise exactly one visual to the window backdrop. A playable trailer replaces—not blends
+  /// with—the poster, including beneath the sidebar.
+  private var windowBackdropMedia: WindowHeroMedia? {
+    guard let item = currentFeaturedItem else { return nil }
+    let trailerURL = item.trailer?.url
+    let trailer = (!reduceMotion && !(trailerURL?.isEmpty ?? true)) ? trailerURL : nil
+    let poster = trailer == nil ? (item.posters.wide ?? item.posters.big) : nil
+    return WindowHeroMedia(posterURL: poster, videoURL: trailer)
   }
 
-  @MainActor
-  private func runFeaturedCarousel() async {
-    guard model.featured.count > 1, !reduceMotion else { return }
-    while !Task.isCancelled {
-      try? await Task.sleep(nanoseconds: 7_000_000_000)
-      guard !Task.isCancelled else { return }
-      if !carouselPaused { selectFeatured(offset: 1) }
+  private var homeCarouselControls: some View {
+    HStack(spacing: 7) {
+      ForEach(model.featured.indices, id: \.self) { index in
+        Button { selectFeatured(index: index) } label: {
+          Circle()
+            .fill(index == featuredIndex ? Color.white : Color.white.opacity(0.42))
+            .frame(width: 6, height: 6)
+        }
+        .buttonStyle(.plain)
+      }
     }
+    .padding(8)
+  }
+
+  private func carouselArrow(offset: Int) -> some View {
+    Button { selectFeatured(offset: offset) } label: {
+      Image(systemName: offset < 0 ? "chevron.left" : "chevron.right")
+        .font(.system(size: 27, weight: .semibold))
+        .frame(width: 34, height: 54)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .foregroundStyle(.white.opacity(0.75))
+    .opacity(heroHovered && model.featured.count > 1 ? 1 : 0)
+    .animation(.easeOut(duration: 0.15), value: heroHovered)
   }
 
   private func selectFeatured(offset: Int) {
@@ -142,29 +165,45 @@ struct HomeView: View {
     NavigationLink(value: Route.details(hero)) {
       HeroBackdrop(imageURL: hero.posters.wide ?? hero.posters.big,
                    videoURL: hero.trailer?.url,
-                   height: heroHeight) {
+                   height: heroHeight,
+                   blurReduction: heroHeight,
+                   transparentBase: true) {
         VStack(alignment: .leading, spacing: 10) {
           Text(hero.localizedTitle)
             .font(.system(size: 34, weight: .bold))
             .foregroundStyle(.white)
             .lineLimit(2)
-          Text(hero.genres.compactMap { $0.title }.joined(separator: " · "))
-            .font(.subheadline)
-            .foregroundStyle(.white.opacity(0.85))
-            .lineLimit(1)
-          Label("Details".localized, systemImage: "info.circle")
-            .font(.headline)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 10)
-            .background(Color.white.opacity(0.18))
-            .clipShape(Capsule())
+
+          HStack(spacing: 5) {
+            Image(systemName: "play.tv.fill")
+            Text(hero.isSeries ? "TV Show".localized : "Movie".localized)
+            if let genre = hero.genres.compactMap({ $0.title }).first {
+              Text("·")
+              Text(genre)
+            }
+          }
+          .font(.subheadline)
+          .foregroundStyle(.white.opacity(0.9))
+          .lineLimit(1)
+
+          if !hero.plot.isEmpty {
+            Text(hero.plot)
+              .font(.system(size: 15, weight: .medium))
+              .foregroundStyle(.white.opacity(0.72))
+              .lineLimit(2)
+              .frame(maxWidth: 390, alignment: .leading)
+          }
+
+          Label("More Info".localized, systemImage: "info.circle")
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(.black)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 11)
+            .background(Color.white, in: Capsule())
             .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        // Extra bottom inset lifts the hero text/button off the page-indicator dots so there's
-        // clear breathing room above the dots (they sit at the very bottom of the TabView).
-        .padding(.bottom, 44)
+        .padding(.bottom, 42)
       }
     }
     .buttonStyle(PlainButtonStyle())
@@ -210,12 +249,13 @@ struct HomeView: View {
                onHeaderTap: shelf.filter.map { filter in
                  { navigationState.homeRoutes.append(.filteredCatalog(filter, shelf.title)) }
                }) {
-      ForEach(shelf.items) { item in
+      ForEach(Array(shelf.items.enumerated()), id: \.element.id) { index, item in
         NavigationLink(value: Route.details(item)) {
+          // Apple TV's Home shelves let artwork carry the row; titles and ratings belong on detail
+          // screens. Popular rows add the oversized chart number directly over the poster.
           PosterCard(imageURL: item.posters.medium,
-                     title: item.localizedTitle,
-                     imdbRating: item.imdbRating,
-                     kinopoiskRating: item.kinopoiskRating)
+                     rank: shelf.ranked ? index + 1 : nil,
+                     width: 160)
           .overlay(alignment: .topTrailing) { MediaCardStatusBadge(item: item) }
         }
         .buttonStyle(.plain)

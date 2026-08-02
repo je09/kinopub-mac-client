@@ -22,6 +22,7 @@ struct SidebarView: View {
 
   @State private var sectionBeforeOffline: SidebarItem?
   @State private var showReconnected = false
+  @State private var windowHeroMedia: WindowHeroMedia?
 
   var body: some View {
     // Show auth as full-window content (not a modal sheet): a macOS sheet disables the window's
@@ -49,17 +50,27 @@ struct SidebarView: View {
           }
         }
     }
-    .background(InitialFocusReset())
-    .toolbar {
-      if navigationState.sidebarSelection != .search {
-        ToolbarItem(placement: .primaryAction) {
-          Button(action: openSearch) {
-            Label("Search".localized, systemImage: "magnifyingglass")
+    .background {
+      ZStack {
+        Color.KinoPub.background
+        if let video = windowHeroMedia?.videoURL, let url = URL(string: video) {
+          CinematicBackdropVideo(url: url)
+        } else if let poster = windowHeroMedia?.posterURL {
+          CachedAsyncImage(url: URL(string: poster)) { image in
+            image
+              .resizable()
+              .renderingMode(.original)
+              .aspectRatio(contentMode: .fill)
+          } placeholder: {
+            Color.KinoPub.background
           }
-          .help("Search".localized)
         }
       }
+      .clipped()
+      .ignoresSafeArea()
     }
+    .background(InitialFocusReset())
+    .onPreferenceChange(WindowHeroMediaPreferenceKey.self) { windowHeroMedia = $0 }
     .animation(.easeInOut(duration: 0.25), value: networkMonitor.isOnline)
     .animation(.easeInOut(duration: 0.25), value: showReconnected)
     .onChange(of: networkMonitor.isOnline) { online in
@@ -79,24 +90,6 @@ struct SidebarView: View {
     .environmentObject(errorHandler)
     .task {
       await authState.check()
-    }
-  }
-
-  private func openSearch() {
-    navigationState.sidebarSelection = .search
-    focusToolbarSearchField()
-  }
-
-  /// The searchable field belongs to AVKit's/AppKit's merged window toolbar and appears one run-loop
-  /// after the detail destination changes. Retry briefly, then hand it first responder status.
-  private func focusToolbarSearchField(attemptsRemaining: Int = 6) {
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-      if let window = NSApp.keyWindow,
-         let item = window.toolbar?.items.compactMap({ $0 as? NSSearchToolbarItem }).first {
-        window.makeFirstResponder(item.searchField)
-      } else if attemptsRemaining > 1 {
-        self.focusToolbarSearchField(attemptsRemaining: attemptsRemaining - 1)
-      }
     }
   }
 

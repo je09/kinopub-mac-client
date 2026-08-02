@@ -12926,9 +12926,6 @@
         }
       }
     },
-    "KinoPub" : {
-
-    },
     "KinoPub Red" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16108,6 +16105,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "%@ dan yana"
+          }
+        }
+      }
+    },
+    "More Info" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More Info"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подробнее"
           }
         }
       }

@@ -154,7 +154,7 @@ struct MediaItemDescriptionCard: View {
   
   func image(imageName: String) -> some View {
     Image(systemName: imageName)
-      .foregroundStyle(Color.KinoPub.accent)
+      .foregroundStyle(Color.accentColor)
       .font(.title)
       .skeleton(enabled: isSkeleton, size: CGSize(width: 30, height: 30))
   }

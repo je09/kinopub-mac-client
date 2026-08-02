@@ -117,7 +117,7 @@ struct CollectionsView: View {
           VStack(spacing: 8) {
             Image(systemName: "arrow.right.circle.fill")
               .font(.system(size: 30))
-              .foregroundStyle(Color.KinoPub.accent)
+              .foregroundStyle(Color.accentColor)
             Text("+\(count)")
               .font(.system(size: 20, weight: .bold))
               .foregroundStyle(Color.KinoPub.text)

@@ -22,7 +22,7 @@ public enum KinoPubButtonColor: Equatable {
   public var color: Color {
     switch self {
     case .green:
-      return Color.KinoPub.accent
+      return Color.accentColor
     case .red:
       return Color.KinoPub.accentRed
     case .gray:

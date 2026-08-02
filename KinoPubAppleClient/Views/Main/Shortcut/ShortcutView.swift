@@ -29,7 +29,7 @@ struct SortSelectionView: View {
               Spacer()
               if sort == option {
                 Image(systemName: "checkmark")
-                  .foregroundStyle(Color.KinoPub.accent)
+                  .foregroundStyle(Color.accentColor)
                   .fontWeight(.semibold)
               }
             }

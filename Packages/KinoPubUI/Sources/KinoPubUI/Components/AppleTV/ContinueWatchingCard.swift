@@ -66,7 +66,7 @@ public struct ContinueWatchingCard: View {
         GeometryReader { geo in
           ZStack(alignment: .leading) {
             Capsule().fill(Color.white.opacity(0.3))
-            Capsule().fill(Color.KinoPub.accent)
+            Capsule().fill(Color.accentColor)
               .frame(width: geo.size.width * min(max(progress, 0), 1))
           }
         }

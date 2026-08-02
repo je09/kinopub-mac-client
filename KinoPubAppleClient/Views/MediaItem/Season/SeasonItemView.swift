@@ -80,7 +80,7 @@ public struct SeasonItemView: View {
   func indicatorImage(systemName: String) -> some View {
     Image(systemName: systemName)
       .font(.system(size: 18))
-      .foregroundStyle(Color.KinoPub.accent)
+      .foregroundStyle(Color.accentColor)
       .padding(4)
       .background(Color.black.opacity(0.6))
       .clipShape(Circle())

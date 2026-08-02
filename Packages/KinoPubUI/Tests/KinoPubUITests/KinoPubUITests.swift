@@ -18,7 +18,7 @@ final class KinoPubUITests: XCTestCase {
   }
 
   func testButtonColor_MapsToExpectedColors() {
-    XCTAssertEqual(KinoPubButton.ButtonColor.green.color, Color.KinoPub.accent)
+    XCTAssertEqual(KinoPubButton.ButtonColor.green.color, Color.accentColor)
     XCTAssertEqual(KinoPubButton.ButtonColor.red.color, Color.KinoPub.accentRed)
     XCTAssertEqual(KinoPubButton.ButtonColor.blue.color, Color.KinoPub.accentBlue)
     XCTAssertEqual(KinoPubButton.ButtonColor.gray.color, Color.KinoPub.selectionBackground)

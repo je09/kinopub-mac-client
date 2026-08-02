@@ -17,6 +17,8 @@ public struct HeroBackdrop<Overlay: View>: View {
   private let height: CGFloat
   private let tallBlur: Bool
   private let blurReduction: CGFloat
+  private let leadingScrim: Bool
+  private let transparentBase: Bool
   private let overlay: Overlay
 
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -30,12 +32,16 @@ public struct HeroBackdrop<Overlay: View>: View {
               height: CGFloat = 460,
               tallBlur: Bool = false,
               blurReduction: CGFloat = 0,
+              leadingScrim: Bool = false,
+              transparentBase: Bool = false,
               @ViewBuilder overlay: () -> Overlay) {
     self.init(imageURLs: imageURL.map { [$0] } ?? [],
               videoURL: videoURL,
               height: height,
               tallBlur: tallBlur,
               blurReduction: blurReduction,
+              leadingScrim: leadingScrim,
+              transparentBase: transparentBase,
               overlay: overlay)
   }
 
@@ -45,6 +51,8 @@ public struct HeroBackdrop<Overlay: View>: View {
               height: CGFloat = 460,
               tallBlur: Bool = false,
               blurReduction: CGFloat = 0,
+              leadingScrim: Bool = false,
+              transparentBase: Bool = false,
               @ViewBuilder overlay: () -> Overlay) {
     var seen = Set<String>()
     self.imageURLs = imageURLs.filter { !$0.isEmpty && seen.insert($0).inserted }
@@ -52,62 +60,44 @@ public struct HeroBackdrop<Overlay: View>: View {
     self.height = height
     self.tallBlur = tallBlur
     self.blurReduction = blurReduction
+    self.leadingScrim = leadingScrim
+    self.transparentBase = transparentBase
     self.overlay = overlay()
   }
 
   public var body: some View {
     // A base view pinned to the available width keeps every layer (artwork, scrims,
     // and the bottom-leading overlay) anchored to the screen.
-    Color.KinoPub.background
+    (transparentBase ? Color.clear : Color.KinoPub.background)
       .frame(maxWidth: .infinity)
       .frame(height: height)
-      .overlay { animatedArtwork }
+      // A trailer and poster are mutually exclusive. Layering a translucent video over artwork
+      // produces ghosted faces/titles whenever their compositions differ.
       .overlay {
-        if let videoURL, let url = URL(string: videoURL), !reduceMotion {
+        if !transparentBase && playableVideoURL == nil { animatedArtwork }
+      }
+      .overlay {
+        if !transparentBase, let url = playableVideoURL {
           LoopingBackdropVideo(url: url, isPlaying: !videoPaused)
-            .opacity(0.9)
-            .transition(.opacity)
         }
       }
-      .overlay(alignment: .bottom) {
-        // Frosted blur over the lower portion so overlay text never mixes with busy artwork.
-        Rectangle()
-          .fill(.ultraThinMaterial)
-          .frame(height: max(height - blurReduction, 0))
-          .mask(
-            LinearGradient(colors: tallBlur ? [.clear, .black, .black] : [.clear, .clear, .black],
-                           startPoint: .top,
-                           endPoint: .bottom)
-          )
+      .overlay(alignment: .topTrailing) {
+        if !transparentBase { carouselControls }
       }
-      .overlay {
-        LinearGradient(
-          colors: [
-            Color.KinoPub.background.opacity(0.0),
-            Color.KinoPub.background.opacity(0.5),
-            Color.KinoPub.background
-          ],
-          startPoint: .center,
-          endPoint: .bottom
-        )
-      }
-      .overlay(alignment: .top) {
-        // Keep titlebar labels legible while artwork still visibly extends beneath the glass.
-        LinearGradient(colors: [Color.black.opacity(0.48), Color.black.opacity(0.16), .clear],
-                       startPoint: .top,
-                       endPoint: .bottom)
-          .frame(height: 120)
-      }
-      .overlay(alignment: .topTrailing) { carouselControls }
       .overlay(alignment: .bottomLeading) {
         overlay
-          .padding(.horizontal, 20)
+          .padding(.horizontal, 36)
           .padding(.bottom, 16)
       }
       .frame(height: height)
       .clipped()
       .allowsHitTesting(true)
       .task(id: imageURLs) { await runCarousel() }
+  }
+
+  private var playableVideoURL: URL? {
+    guard !reduceMotion, let videoURL, !videoURL.isEmpty else { return nil }
+    return URL(string: videoURL)
   }
 
   private var currentImageURL: String? {
@@ -203,6 +193,21 @@ public struct HeroBackdrop<Overlay: View>: View {
   }
 }
 
+/// A control-free, muted, looping video intended for a full-window cinematic backdrop.
+public struct CinematicBackdropVideo: View {
+  private let url: URL
+  private let isPlaying: Bool
+
+  public init(url: URL, isPlaying: Bool = true) {
+    self.url = url
+    self.isPlaying = isPlaying
+  }
+
+  public var body: some View {
+    LoopingBackdropVideo(url: url, isPlaying: isPlaying)
+  }
+}
+
 /// Control-free, muted and looping—the Apple TV-style preview remains decorative while the real
 /// trailer button opens the normal player with sound and transport controls.
 private struct LoopingBackdropVideo: NSViewRepresentable {
@@ -235,9 +240,8 @@ private final class BackdropVideoView: NSView {
   override init(frame frameRect: NSRect) {
     super.init(frame: frameRect)
     wantsLayer = true
-    // Trailers are usually 16:9 while the hero is much wider. Preserve the authored frame—burned-in
-    // titles and faces near the top/bottom otherwise get visibly chopped by aspect-fill cropping.
-    playerLayer.videoGravity = .resizeAspect
+    // Apple TV fills the cinematic stage edge-to-edge. Crop the trailer as needed rather than
+    // introducing letterbox bars above/below a very wide hero.
     playerLayer.backgroundColor = NSColor.clear.cgColor
     layer?.addSublayer(playerLayer)
   }
@@ -246,13 +250,8 @@ private final class BackdropVideoView: NSView {
 
   override func layout() {
     super.layout()
-    // Fill the hero's full width while preserving a typical trailer's 16:9 composition. Align the
-    // oversized video to the top so titles/faces there remain visible; only the lower edge crops.
-    let videoHeight = max(bounds.height, bounds.width * 9 / 16)
-    playerLayer.frame = NSRect(x: 0,
-                               y: bounds.height - videoHeight,
-                               width: bounds.width,
-                               height: videoHeight)
+    playerLayer.frame = bounds
+    playerLayer.videoGravity = .resizeAspectFill
   }
 
   func configure(url: URL) {

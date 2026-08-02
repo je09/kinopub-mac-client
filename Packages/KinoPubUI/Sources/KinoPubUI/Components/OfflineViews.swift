@@ -18,7 +18,7 @@ public struct OfflineBanner: View {
     var color: Color {
       switch self {
       case .warning: return Color.orange
-      case .success: return Color.KinoPub.accent
+      case .success: return Color.accentColor
       }
     }
 
@@ -87,7 +87,7 @@ public struct OfflineUnavailableView: View {
           .foregroundStyle(.white)
           .padding(.horizontal, 18)
           .padding(.vertical, 10)
-          .background(Capsule().fill(Color.KinoPub.accent))
+          .background(Capsule().fill(Color.accentColor))
       }
       .buttonStyle(.plain)
       .padding(.top, 4)

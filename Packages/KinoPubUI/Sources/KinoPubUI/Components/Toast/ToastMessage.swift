@@ -17,7 +17,7 @@ public enum ToastStyle: Hashable, Sendable {
 
   public var tint: Color {
     switch self {
-    case .success: return Color.KinoPub.accent      // brand green
+    case .success: return Color.accentColor      // brand green
     case .error:   return Color.KinoPub.accentRed
     case .info:    return Color.KinoPub.accentBlue
     case .warning: return Color.orange

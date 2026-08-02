@@ -201,7 +201,7 @@ struct MediaItemView: View {
               withAnimation { plotExpanded.toggle() }
             }
             .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(Color.KinoPub.accent)
+            .foregroundStyle(Color.accentColor)
             .buttonStyle(.plain)
           }
         }
@@ -495,7 +495,7 @@ struct MediaItemView: View {
     .padding(.horizontal, 22)
     .padding(.vertical, subtitle == nil ? 12 : 8)
     .frame(maxWidth: fullWidth ? .infinity : nil)
-    .background(Capsule().fill(Color.KinoPub.accent))
+    .background(Capsule().fill(Color.accentColor))
   }
 
   /// Resume detail shown under "Continue": "S{n} · E{n} · {time}" for series, just time for movies.
@@ -545,7 +545,7 @@ struct MediaItemView: View {
     case .downloaded:
       Image(systemName: "arrow.down.circle.fill")
         .font(.system(size: 18))
-        .foregroundStyle(.white, Color.KinoPub.accent)
+        .foregroundStyle(.white, Color.accentColor)
         .padding(8)
     case .downloading:
       ProgressView()
@@ -1136,7 +1136,7 @@ struct MediaItemView: View {
         HStack(spacing: 12) {
           Image(systemName: "bubble.left.and.bubble.right.fill")
             .font(.system(size: 18))
-            .foregroundStyle(Color.KinoPub.accent)
+            .foregroundStyle(Color.accentColor)
           Text("Comments".localized)
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(Color.KinoPub.text)
@@ -1204,11 +1204,11 @@ struct MediaItemView: View {
   private func chip(_ text: String) -> some View {
     Text(text)
       .font(.system(size: 12, weight: .semibold))
-      .foregroundStyle(Color.KinoPub.accent)
+      .foregroundStyle(Color.accentColor)
       .padding(.horizontal, 10)
       .padding(.vertical, 5)
       .background(
-        Capsule().fill(Color.KinoPub.accent.opacity(0.15))
+        Capsule().fill(Color.accentColor.opacity(0.15))
       )
   }
 
@@ -1443,7 +1443,7 @@ private struct MediaItemInfoSection: View {
   private func facetValueText(_ value: String, isLink: Bool) -> some View {
     Text(value)
       .font(.system(size: 14, weight: isLink ? .semibold : .regular))
-      .foregroundStyle(isLink ? Color.KinoPub.accent : Color.KinoPub.text)
+      .foregroundStyle(isLink ? Color.accentColor : Color.KinoPub.text)
   }
 
   @ViewBuilder
@@ -1466,11 +1466,11 @@ private struct MediaItemInfoSection: View {
       HStack(spacing: 6) {
         Text(value)
           .font(.system(size: 14, weight: .semibold))
-          .foregroundStyle(isLink ? Color.KinoPub.accent : Color.KinoPub.text)
+          .foregroundStyle(isLink ? Color.accentColor : Color.KinoPub.text)
         if isLink {
           Image(systemName: "arrow.up.right")
             .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(Color.KinoPub.accent)
+            .foregroundStyle(Color.accentColor)
         }
       }
     }
@@ -1751,7 +1751,7 @@ struct ReviewCard: View {
           withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
         }
         .font(.system(size: 13, weight: .semibold))
-        .foregroundStyle(Color.KinoPub.accent)
+        .foregroundStyle(Color.accentColor)
         .buttonStyle(.plain)
       }
     }

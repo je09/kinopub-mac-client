@@ -113,7 +113,7 @@ private struct CommentRow: View {
             Text("\(rating > 0 ? "+" : "")\(rating)")
           }
           .font(.system(size: 12, weight: .semibold))
-          .foregroundStyle(rating > 0 ? Color.KinoPub.accent : Color.red.opacity(0.8))
+          .foregroundStyle(rating > 0 ? Color.accentColor : Color.red.opacity(0.8))
         }
       }
       Text(comment.message)
@@ -134,11 +134,11 @@ private struct CommentRow: View {
       image.resizable().aspectRatio(contentMode: .fill)
     } placeholder: {
       Circle()
-        .fill(Color.KinoPub.accent.opacity(0.25))
+        .fill(Color.accentColor.opacity(0.25))
         .overlay(
           Text(String(comment.user.name.prefix(1)).uppercased())
             .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(Color.KinoPub.accent)
+            .foregroundStyle(Color.accentColor)
         )
     }
     .frame(width: 36, height: 36)

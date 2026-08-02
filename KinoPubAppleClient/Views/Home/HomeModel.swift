@@ -117,6 +117,12 @@ class HomeModel: ObservableObject {
     if !didLoadShelves {
       let specs = HomeModel.shelfSpecs
       let shelfService = itemsService
+      // The website's Новинки → Популярные feed is the source of truth for the Home carousel.
+      // Keep it separate from the shelves so carousel ordering exactly follows `/items/popular`.
+      async let popularCarouselRequest = shelfService.fetch(shortcut: .popular,
+                                                            contentType: .movie,
+                                                            page: nil,
+                                                            forceRefresh: forceRefresh)
       let loaded: [Shelf] = await withTaskGroup(of: (Int, Shelf?).self) { group in
         var iterator = Array(specs.enumerated()).makeIterator()
         func add(_ entry: (offset: Int, element: ShelfSpec)) {
@@ -125,7 +131,10 @@ class HomeModel: ObservableObject {
                                                         page: nil,
                                                         forceRefresh: forceRefresh))?.items ?? []
             let shelf = items.isEmpty ? nil
-              : Shelf(title: entry.element.title.localized, items: items, ranked: false, filter: entry.element.filter)
+              : Shelf(title: entry.element.title.localized,
+                      items: items,
+                      ranked: entry.element.title.hasPrefix("Popular"),
+                      filter: entry.element.filter)
             return (entry.offset, shelf)
           }
         }
@@ -144,16 +153,11 @@ class HomeModel: ObservableObject {
         didLoadShelves = true
         shelves = loaded
 
-        // The banner should surface fresh catalog additions, not whatever older title happens to
-        // lead the monthly-popular shelf. Both shelves above come directly from `/v1/items` with
-        // `sort=created-`; popular entries remain a fallback if the new-content calls are empty.
-        let newShelves = loaded.filter {
-          $0.filter?.sort == "created-" && ($0.filter?.contentType == .movie || $0.filter?.contentType == .serial)
-        }
-        let heroSource = newShelves.isEmpty ? loaded : newShelves
+        let popularItems = (try? await popularCarouselRequest)?.items ?? []
+        // Fall back to loaded shelves only if the dedicated website feed is unavailable.
+        let fallbackItems = loaded.flatMap(\.items)
         var heroSeen = Set<Int>()
-        let featuredItems = heroSource
-          .flatMap(\.items)
+        let featuredItems = (popularItems.isEmpty ? fallbackItems : popularItems)
           .filter { heroSeen.insert($0.id).inserted }
           .prefix(6)
           .map { $0 }

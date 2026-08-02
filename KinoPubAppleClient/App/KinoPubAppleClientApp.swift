@@ -71,6 +71,7 @@ struct KinoPubAppleClientApp: App {
         .environmentObject(windowSettings)
         .environmentObject(appearanceSettings)
         .tint(appearanceSettings.accent.color)
+        .accentColor(appearanceSettings.accent.color)
         .preferredColorScheme(.dark)
     }
   }

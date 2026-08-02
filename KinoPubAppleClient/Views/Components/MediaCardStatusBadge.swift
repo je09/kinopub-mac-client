@@ -42,7 +42,7 @@ struct MediaCardStatusBadge: View {
   private func badge(_ systemName: String) -> some View {
     Image(systemName: systemName)
       .font(.system(size: 16, weight: .semibold))
-      .foregroundStyle(.white, Color.KinoPub.accent)
+      .foregroundStyle(.white, Color.accentColor)
       .padding(3)
       .background(Circle().fill(.black.opacity(0.35)))
   }

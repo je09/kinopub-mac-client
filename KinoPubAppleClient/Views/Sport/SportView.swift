@@ -92,7 +92,7 @@ struct SportView: View {
         HStack(spacing: 6) {
           Image(systemName: "checkmark.circle.fill")
             .font(.system(size: 11))
-            .foregroundStyle(Color.KinoPub.accent)
+            .foregroundStyle(Color.accentColor)
           Text("\("Guide updated".localized) \(EPGTimeFormat.dateTime.string(from: updated))")
             .font(.system(size: 12))
             .foregroundStyle(Color.KinoPub.subtitle)

@@ -52,7 +52,7 @@ public struct FilterChipBar: View {
         .padding(.vertical, 8)
         .background {
           Capsule(style: .continuous)
-            .fill(isSelected ? Color.KinoPub.accent : Color.KinoPub.selectionBackground)
+            .fill(isSelected ? Color.accentColor : Color.KinoPub.selectionBackground)
         }
     }
     .buttonStyle(.plain)

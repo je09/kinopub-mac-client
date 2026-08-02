@@ -168,7 +168,7 @@ struct ProfileView: View {
       Link(destination: link) {
         HStack {
           Image(systemName: systemImage)
-            .foregroundStyle(Color.KinoPub.accent)
+            .foregroundStyle(Color.accentColor)
             .frame(width: 24, alignment: .center)
           Text(title.localized).foregroundStyle(Color.KinoPub.text)
           Spacer()

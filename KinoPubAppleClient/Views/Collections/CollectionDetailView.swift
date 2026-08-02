@@ -93,12 +93,12 @@ struct CollectionDetailView: View {
           .font(.system(size: 16))
         if model.selectedSort != .default {
           Circle()
-            .fill(Color.KinoPub.accent)
+            .fill(Color.accentColor)
             .frame(width: 7, height: 7)
             .offset(x: 5, y: -4)
         }
       }
-      .foregroundStyle(Color.KinoPub.accent)
+      .foregroundStyle(Color.accentColor)
     }
     .menuStyle(.borderlessButton)
   }

@@ -27,6 +27,7 @@ struct SearchView: View {
   /// layout. It is NOT tied to raw focus: incidental focus loss (opening a row's "…" menu, scrolling)
   /// must keep the live list, otherwise a row appears to vanish the moment you interact with it.
   @State private var committed = false
+  @FocusState private var searchFocused: Bool
 
   init(model: @autoclosure @escaping () -> SearchModel) {
     _model = StateObject(wrappedValue: model())
@@ -36,40 +37,63 @@ struct SearchView: View {
 
   var body: some View {
     NavigationStack(path: $navigationState.searchRoutes) {
-      WidthReader { width in
-        ScrollView {
-          if trimmedQuery.isEmpty {
-            discoveryContent
-          } else if committed {
-            sections(width: width)
-          } else {
-            liveList
+      VStack(spacing: 0) {
+        searchField
+        WidthReader { width in
+          ScrollView {
+            if trimmedQuery.isEmpty {
+              discoveryContent
+            } else if committed {
+              sections(width: width)
+            } else {
+              liveList
+            }
           }
         }
       }
-      .searchable(text: $model.query,
-                  placement: .toolbar,
-                  prompt: Text("Shows & Movies".localized))
-      .onSubmit(of: .search) { committed = true }
-      .navigationTitle("Search".localized)
       .background(Color.KinoPub.background)
+      .navigationTitle(Text(verbatim: "\u{200B}"))
       .routeDestinations()
       .handleError(state: $errorHandler.state)
       .onChange(of: model.query) { _ in committed = false }
       .task { await model.loadGenres() }
+      .onAppear {
+        DispatchQueue.main.async { searchFocused = true }
+      }
       .sheet(item: $bookmarkTarget) { target in
         BookmarkActionSheet(item: target.item, actionsService: appContext.actionsService)
       }
     }
   }
 
-  // MARK: - Discovery (empty query): recent + browse
+  private var searchField: some View {
+    HStack(spacing: 8) {
+      Image(systemName: "magnifyingglass")
+        .foregroundStyle(Color.KinoPub.subtitle)
+      TextField("Search".localized, text: $model.query)
+        .textFieldStyle(.plain)
+        .focused($searchFocused)
+        .onSubmit { committed = true }
+    }
+    .font(.system(size: 17, weight: .medium))
+    .padding(.horizontal, 16)
+    .frame(width: 500, height: 44)
+    .background(Color.black.opacity(0.16), in: Capsule())
+    .overlay {
+      Capsule().stroke(searchFocused ? Color.accentColor.opacity(0.8) : Color.white.opacity(0.14),
+                       lineWidth: searchFocused ? 3 : 1)
+    }
+    .padding(.top, 14)
+    .padding(.bottom, 22)
+  }
+
+  // MARK: - Discovery (empty query): browse + recent
 
   @ViewBuilder
   private var discoveryContent: some View {
-    VStack(alignment: .leading, spacing: 24) {
-      if !model.recentItems.isEmpty { recentSection }
+    VStack(alignment: .leading, spacing: 28) {
       if !model.genres.isEmpty { browseSection }
+      if !model.recentItems.isEmpty { recentSection }
       if model.recentItems.isEmpty && model.genres.isEmpty {
         EmptyStateView(systemImage: "magnifyingglass",
                        title: "Search".localized,
@@ -85,7 +109,7 @@ struct SearchView: View {
       HStack {
         Text("Recent").font(Font.KinoPub.subheader).foregroundStyle(Color.KinoPub.text)
         Spacer()
-        Button("Clear") { model.clearRecents() }.foregroundStyle(Color.KinoPub.accent)
+        Button("Clear") { model.clearRecents() }.foregroundStyle(Color.accentColor)
       }
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 12) {
@@ -101,7 +125,7 @@ struct SearchView: View {
   private var browseSection: some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("Browse").font(Font.KinoPub.subheader).foregroundStyle(Color.KinoPub.text)
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 180), spacing: 20)], spacing: 20) {
         ForEach(model.genres, id: \.id) { genre in
           NavigationLink(value: Route.filteredCatalog(
             MediaItemsFilter(contentType: .movie, genres: [genre.id], countries: []),
@@ -119,14 +143,14 @@ struct SearchView: View {
       CachedAsyncImage(url: URL(string: model.genrePosters[genre.id] ?? "")) { image in
         image.resizable().aspectRatio(contentMode: .fill)
       } placeholder: {
-        LinearGradient(colors: [Color.KinoPub.accent.opacity(0.5), Color.black.opacity(0.6)],
+        LinearGradient(colors: [Color.accentColor.opacity(0.5), Color.black.opacity(0.6)],
                        startPoint: .topLeading, endPoint: .bottomTrailing)
       }
       LinearGradient(colors: [.clear, .black.opacity(0.7)], startPoint: .center, endPoint: .bottom)
       Text(genre.title)
         .font(.system(size: 15, weight: .bold)).foregroundStyle(.white).padding(10)
     }
-    .frame(height: 90)
+    .aspectRatio(2.0 / 3.0, contentMode: .fit)
     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
 
@@ -174,7 +198,7 @@ struct SearchView: View {
           DispatchQueue.main.async { committed = true }
         } label: {
           HStack(spacing: 12) {
-            Image(systemName: "magnifyingglass").foregroundStyle(Color.KinoPub.accent)
+            Image(systemName: "magnifyingglass").foregroundStyle(Color.accentColor)
             Text(recent.title).foregroundStyle(Color.KinoPub.text)
             Spacer()
           }
@@ -409,7 +433,7 @@ private struct BookmarkActionSheet: View {
                   Text(folder.title).foregroundStyle(Color.KinoPub.text)
                   Spacer()
                   if inFolders.contains(folder.id) {
-                    Image(systemName: "checkmark").foregroundStyle(Color.KinoPub.accent)
+                    Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
                   }
                 }
               }
