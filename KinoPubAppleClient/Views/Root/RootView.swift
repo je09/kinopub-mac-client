@@ -50,10 +50,9 @@ private struct ScreenScrollPositionProbe: NSViewRepresentable {
   }
 
   func updateNSView(_ view: ProbeView, context: Context) {
-    context.coordinator.id = id
     DispatchQueue.main.async { [weak coordinator = context.coordinator, weak view] in
       guard let view else { return }
-      coordinator?.connect(from: view)
+      coordinator?.update(id: id, from: view)
     }
   }
 
@@ -69,6 +68,16 @@ private struct ScreenScrollPositionProbe: NSViewRepresentable {
     init(id: String) { self.id = id }
     deinit { disconnect(saving: true) }
 
+    func update(id newID: String, from probe: NSView) {
+      if id != newID {
+        // Save under the outgoing page's key before changing IDs. SwiftUI commonly reuses the same
+        // NSScrollView for the next destination, so merely changing `id` leaks its offset forward.
+        disconnect(saving: true)
+        id = newID
+      }
+      connect(from: probe)
+    }
+
     func connect(from probe: NSView) {
       guard let found = primaryScrollView(near: probe) else { return }
       if scrollView === found { return }
@@ -77,13 +86,12 @@ private struct ScreenScrollPositionProbe: NSViewRepresentable {
 
       let clipView = found.contentView
       clipView.postsBoundsChangedNotifications = true
-      if let saved = ScreenScrollPositionStore.shared.positions[id] {
-        let maxX = max(0, (found.documentView?.bounds.width ?? 0) - clipView.bounds.width)
-        let maxY = max(0, (found.documentView?.bounds.height ?? 0) - clipView.bounds.height)
-        clipView.scroll(to: NSPoint(x: min(max(saved.x, 0), maxX),
-                                    y: min(max(saved.y, 0), maxY)))
-        found.reflectScrolledClipView(clipView)
-      }
+      let requested = ScreenScrollPositionStore.shared.positions[id] ?? .zero
+      let maxX = max(0, (found.documentView?.bounds.width ?? 0) - clipView.bounds.width)
+      let maxY = max(0, (found.documentView?.bounds.height ?? 0) - clipView.bounds.height)
+      clipView.scroll(to: NSPoint(x: min(max(requested.x, 0), maxX),
+                                  y: min(max(requested.y, 0), maxY)))
+      found.reflectScrolledClipView(clipView)
       boundsObserver = NotificationCenter.default.addObserver(
         forName: NSView.boundsDidChangeNotification,
         object: clipView,
