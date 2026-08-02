@@ -197,14 +197,16 @@ public struct HeroBackdrop<Overlay: View>: View {
 public struct CinematicBackdropVideo: View {
   private let url: URL
   private let isPlaying: Bool
+  private let onReady: () -> Void
 
-  public init(url: URL, isPlaying: Bool = true) {
+  public init(url: URL, isPlaying: Bool = true, onReady: @escaping () -> Void = {}) {
     self.url = url
     self.isPlaying = isPlaying
+    self.onReady = onReady
   }
 
   public var body: some View {
-    LoopingBackdropVideo(url: url, isPlaying: isPlaying)
+    LoopingBackdropVideo(url: url, isPlaying: isPlaying, onReady: onReady)
   }
 }
 
@@ -213,15 +215,18 @@ public struct CinematicBackdropVideo: View {
 private struct LoopingBackdropVideo: NSViewRepresentable {
   let url: URL
   let isPlaying: Bool
+  var onReady: () -> Void = {}
 
   func makeNSView(context: Context) -> BackdropVideoView {
     let view = BackdropVideoView()
+    view.onReady = onReady
     view.configure(url: url)
     view.setPlaying(isPlaying)
     return view
   }
 
   func updateNSView(_ view: BackdropVideoView, context: Context) {
+    view.onReady = onReady
     view.configure(url: url)
     view.setPlaying(isPlaying)
   }
@@ -236,6 +241,9 @@ private final class BackdropVideoView: NSView {
   private var player: AVQueuePlayer?
   private var looper: AVPlayerLooper?
   private var currentURL: URL?
+  private var readyObservation: NSKeyValueObservation?
+  private var didReportReady = false
+  var onReady: () -> Void = {}
 
   override init(frame frameRect: NSRect) {
     super.init(frame: frameRect)
@@ -244,6 +252,11 @@ private final class BackdropVideoView: NSView {
     // introducing letterbox bars above/below a very wide hero.
     playerLayer.backgroundColor = NSColor.clear.cgColor
     layer?.addSublayer(playerLayer)
+    readyObservation = playerLayer.observe(\.isReadyForDisplay, options: [.new]) { [weak self] layer, _ in
+      guard layer.isReadyForDisplay, let self, !self.didReportReady else { return }
+      self.didReportReady = true
+      DispatchQueue.main.async { [weak self] in self?.onReady() }
+    }
   }
 
   required init?(coder: NSCoder) { nil }
@@ -258,12 +271,18 @@ private final class BackdropVideoView: NSView {
     guard currentURL != url else { return }
     stop()
     currentURL = url
+    didReportReady = false
     let item = AVPlayerItem(url: url)
+    item.preferredForwardBufferDuration = 5
+    item.canUseNetworkResourcesForLiveStreamingWhilePaused = true
     let player = AVQueuePlayer()
     player.isMuted = true
     player.actionAtItemEnd = .none
+    player.automaticallyWaitsToMinimizeStalling = true
     self.player = player
     looper = AVPlayerLooper(player: player, templateItem: item)
+    // Attaching the paused player starts asset/first-frame loading. Do not call `preroll` until the
+    // player is ready—AVFoundation raises an Objective-C exception rather than returning an error.
     playerLayer.player = player
   }
 

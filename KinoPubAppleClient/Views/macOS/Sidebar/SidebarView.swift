@@ -23,6 +23,7 @@ struct SidebarView: View {
   @State private var sectionBeforeOffline: SidebarItem?
   @State private var showReconnected = false
   @State private var windowHeroMedia: WindowHeroMedia?
+  @State private var readyHeroVideoURL: String?
 
   var body: some View {
     // Show auth as full-window content (not a modal sheet): a macOS sheet disables the window's
@@ -53,9 +54,17 @@ struct SidebarView: View {
     .background {
       ZStack {
         Color.KinoPub.background
+
         if let video = windowHeroMedia?.videoURL, let url = URL(string: video) {
-          CinematicBackdropVideo(url: url)
-        } else if let poster = windowHeroMedia?.posterURL {
+          CinematicBackdropVideo(url: url,
+                                 isPlaying: windowHeroMedia?.revealVideo == true) {
+            guard windowHeroMedia?.videoURL == video else { return }
+            withAnimation(.easeInOut(duration: 0.7)) { readyHeroVideoURL = video }
+          }
+          .id(video)
+        }
+
+        if let poster = windowHeroMedia?.posterURL {
           CachedAsyncImage(url: URL(string: poster)) { image in
             image
               .resizable()
@@ -64,13 +73,21 @@ struct SidebarView: View {
           } placeholder: {
             Color.KinoPub.background
           }
+          .id(poster)
+          .transition(.opacity)
+          .opacity(shouldRevealHeroVideo ? 0 : 1)
         }
       }
+      .animation(.easeInOut(duration: 0.7), value: windowHeroMedia?.posterURL)
+      .animation(.easeInOut(duration: 0.7), value: shouldRevealHeroVideo)
       .clipped()
       .ignoresSafeArea()
     }
     .background(InitialFocusReset())
-    .onPreferenceChange(WindowHeroMediaPreferenceKey.self) { windowHeroMedia = $0 }
+    .onPreferenceChange(WindowHeroMediaPreferenceKey.self) { media in
+      if media?.videoURL != windowHeroMedia?.videoURL { readyHeroVideoURL = nil }
+      withAnimation(.easeInOut(duration: 0.7)) { windowHeroMedia = media }
+    }
     .animation(.easeInOut(duration: 0.25), value: networkMonitor.isOnline)
     .animation(.easeInOut(duration: 0.25), value: showReconnected)
     .onChange(of: networkMonitor.isOnline) { online in
@@ -91,6 +108,11 @@ struct SidebarView: View {
     .task {
       await authState.check()
     }
+  }
+
+  private var shouldRevealHeroVideo: Bool {
+    guard let media = windowHeroMedia, media.revealVideo, let video = media.videoURL else { return false }
+    return readyHeroVideoURL == video
   }
 
   // MARK: - Offline mode

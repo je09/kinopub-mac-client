@@ -17,6 +17,7 @@ private struct SectionEmbeddedKey: EnvironmentKey {
 struct WindowHeroMedia: Equatable {
   let posterURL: String?
   let videoURL: String?
+  let revealVideo: Bool
 }
 
 struct WindowHeroMediaPreferenceKey: PreferenceKey {

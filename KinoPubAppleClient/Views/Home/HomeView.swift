@@ -19,6 +19,7 @@ struct HomeView: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var featuredIndex = 0
   @State private var heroHovered = false
+  @State private var trailerReadyItemID: Int?
 
   init(model: @autoclosure @escaping () -> HomeModel) {
     _model = StateObject(wrappedValue: model())
@@ -52,6 +53,17 @@ struct HomeView: View {
       .background(Color.clear)
       .refreshable { await model.refresh() }
       .task { await model.refreshContinueWatchingIfStale() }
+      // Include the trailer URL in the task identity: list items initially have no playable trailer
+      // and are enriched asynchronously without changing their media id.
+      .task(id: featuredPreviewTaskID) {
+        trailerReadyItemID = nil
+        guard let item = currentFeaturedItem,
+              !reduceMotion,
+              !(item.trailer?.url?.isEmpty ?? true) else { return }
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
+        guard !Task.isCancelled, currentFeaturedItem?.id == item.id else { return }
+        trailerReadyItemID = item.id
+      }
       // A zero-width verbatim title suppresses AppKit's fallback window title ("KinoPub") without
       // looking up the localization catalog's empty-string key.
       .navigationTitle(Text(verbatim: "\u{200B}"))
@@ -113,14 +125,20 @@ struct HomeView: View {
     return model.featured[featuredIndex]
   }
 
-  /// Advertise exactly one visual to the window backdrop. A playable trailer replaces—not blends
-  /// with—the poster, including beneath the sidebar.
+  private var featuredPreviewTaskID: String {
+    guard let item = currentFeaturedItem else { return "none" }
+    return "\(item.id)|\(item.trailer?.url ?? "")"
+  }
+
+  /// Publish poster and trailer together so the window can preload video behind the poster. The
+  /// poster remains fully visible for three seconds and until the trailer reports a renderable frame.
   private var windowBackdropMedia: WindowHeroMedia? {
     guard let item = currentFeaturedItem else { return nil }
     let trailerURL = item.trailer?.url
     let trailer = (!reduceMotion && !(trailerURL?.isEmpty ?? true)) ? trailerURL : nil
-    let poster = trailer == nil ? (item.posters.wide ?? item.posters.big) : nil
-    return WindowHeroMedia(posterURL: poster, videoURL: trailer)
+    return WindowHeroMedia(posterURL: item.posters.wide ?? item.posters.big,
+                           videoURL: trailer,
+                           revealVideo: trailerReadyItemID == item.id)
   }
 
   private var homeCarouselControls: some View {
