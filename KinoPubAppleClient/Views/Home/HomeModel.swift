@@ -152,11 +152,15 @@ class HomeModel: ObservableObject {
         }
         let heroSource = newShelves.isEmpty ? loaded : newShelves
         var heroSeen = Set<Int>()
-        featured = heroSource
+        let featuredItems = heroSource
           .flatMap(\.items)
           .filter { heroSeen.insert($0.id).inserted }
-          .prefix(10)
+          .prefix(6)
           .map { $0 }
+        featured = featuredItems
+        // Catalog rows frequently omit the playable trailer URL. Enrich this small hero set from
+        // item details so Home can show real muted Apple TV-style previews without a large fan-out.
+        Task { await loadFeaturedPreviews(for: featuredItems) }
       }
     }
 
@@ -224,6 +228,32 @@ class HomeModel: ObservableObject {
 
   /// Refresh mutable Home data after returning to this cached sidebar screen, without repeatedly
   /// rebuilding the catalog shelves during quick navigation.
+  private func loadFeaturedPreviews(for items: [MediaItem]) async {
+    let service = itemsService
+    let enriched: [(Int, MediaItem)] = await withTaskGroup(of: (Int, MediaItem).self) { group in
+      var iterator = Array(items.enumerated()).makeIterator()
+      func add(_ entry: (offset: Int, element: MediaItem)) {
+        group.addTask {
+          let detail = try? await service.fetchDetails(for: "\(entry.element.id)").item
+          return (entry.offset, detail ?? entry.element)
+        }
+      }
+
+      // Two detail requests at a time keep preview loading below the API's rate-limit threshold.
+      for _ in 0..<2 { if let entry = iterator.next() { add(entry) } }
+      var result: [(Int, MediaItem)] = []
+      while let entry = await group.next() {
+        result.append(entry)
+        if let next = iterator.next() { add(next) }
+      }
+      return result
+    }
+
+    // Ignore completion if a refresh replaced the featured set while details were loading.
+    guard featured.map(\.id) == items.map(\.id) else { return }
+    featured = enriched.sorted { $0.0 < $1.0 }.map(\.1)
+  }
+
   func refreshContinueWatchingIfStale() async {
     guard didLoadShelves,
           lastContinueWatchingRefresh.map({ Date().timeIntervalSince($0) >= 30 }) ?? true else { return }
