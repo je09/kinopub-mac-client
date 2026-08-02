@@ -110,6 +110,8 @@ class PlayerManager: ObservableObject {
   @Published var playbackError: String?
   @Published private(set) var hasNextEpisode = false
   @Published private(set) var hasPreviousEpisode = false
+  /// Signals the player route to pop after a movie or the final queued episode completes.
+  @Published private(set) var shouldReturnToContent = false
   
   /// Whether the playing title is a 3D (stereoscopic) release, so the player offers 3D view modes.
   var is3D: Bool { FeatureFlags.threeDEnabled && (playItem as? MediaItem)?.type.lowercased() == "3d" }
@@ -306,26 +308,32 @@ class PlayerManager: ObservableObject {
 
   // MARK: - Episode navigation
 
-  func playNextEpisode() { playAdjacentEpisode(offset: 1) }
-  func playPreviousEpisode() { playAdjacentEpisode(offset: -1) }
+  func playNextEpisode() { _ = playAdjacentEpisode(offset: 1) }
+  func playPreviousEpisode() { _ = playAdjacentEpisode(offset: -1) }
 
   private func playbackDidFinish() {
     guard !didHandlePlaybackEnd else { return }
     didHandlePlaybackEnd = true
     markFinished()
-    playNextEpisode()
+    if !playAdjacentEpisode(offset: 1) {
+      player.pause()
+      shouldReturnToContent = true
+    }
   }
 
-  private func playAdjacentEpisode(offset: Int) {
+  /// Returns whether an adjacent episode was found and started.
+  @discardableResult
+  private func playAdjacentEpisode(offset: Int) -> Bool {
     guard let current = playItem as? Episode,
-          let index = episodeQueue.firstIndex(where: { $0.id == current.id }) else { return }
+          let index = episodeQueue.firstIndex(where: { $0.id == current.id }) else { return false }
     let targetIndex = index + offset
-    guard episodeQueue.indices.contains(targetIndex) else { return }
+    guard episodeQueue.indices.contains(targetIndex) else { return false }
     player.pause()
     playItem = episodeQueue[targetIndex]
     continueTime = nil
     replacePlayerItem()
     player.play()
+    return true
   }
 
   private func updateEpisodeNavigation() {

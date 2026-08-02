@@ -36,6 +36,9 @@ struct PlayerView: View {
           playerManager.seekToContinueWatching()
         }
       }
+      .onChange(of: playerManager.shouldReturnToContent) { shouldReturn in
+        if shouldReturn { closePlayer() }
+      }
       .onDisappear { restoreSidebarAfterPlayback() }
     .playbackErrorAlert($playerManager.playbackError, onDismiss: { closePlayer() })
   }
