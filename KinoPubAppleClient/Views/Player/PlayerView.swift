@@ -14,6 +14,7 @@ struct PlayerView: View {
   @StateObject private var playerManager: PlayerManager
   @Environment(\.dismiss) private var dismiss
   @EnvironmentObject var navigationState: NavigationState
+  @State private var columnVisibilityBeforePlayback: NavigationSplitViewVisibility?
 
   init(manager: @autoclosure @escaping () -> PlayerManager) {
     _playerManager = StateObject(wrappedValue: manager())
@@ -28,23 +29,35 @@ struct PlayerView: View {
       .ignoresSafeArea(.all)
       .onExitCommand { closePlayer() }
       .onAppear {
-        toggleSidebar()
+        hideSidebarForPlayback()
         playerManager.player.play()
         Task {
           await playerManager.fetchWatchMark()
           playerManager.seekToContinueWatching()
         }
       }
-    .playbackErrorAlert($playerManager.playbackError, onDismiss: { dismiss() })
+      .onDisappear { restoreSidebarAfterPlayback() }
+    .playbackErrorAlert($playerManager.playbackError, onDismiss: { closePlayer() })
   }
 
   private func closePlayer() {
     playerManager.player.pause()
+    restoreSidebarAfterPlayback()
     dismiss()
   }
 
-  private func toggleSidebar() {
+  private func hideSidebarForPlayback() {
+    guard columnVisibilityBeforePlayback == nil else { return }
+    columnVisibilityBeforePlayback = navigationState.columnVisibility
     navigationState.columnVisibility = .detailOnly
+  }
+
+  private func restoreSidebarAfterPlayback() {
+    guard let previous = columnVisibilityBeforePlayback else { return }
+    withAnimation(.easeInOut(duration: 0.25)) {
+      navigationState.columnVisibility = previous
+    }
+    columnVisibilityBeforePlayback = nil
   }
 }
 
@@ -53,26 +66,51 @@ struct PlayerView: View {
 private struct MacNativePlayer: NSViewRepresentable {
   let player: AVPlayer
 
-  func makeNSView(context: Context) -> PlayerChromeView {
-    let view = PlayerChromeView()
-    view.player = player
-    view.controlsStyle = .floating
-    view.showsFullScreenToggleButton = true
-    view.allowsPictureInPicturePlayback = true
-    view.videoGravity = .resizeAspect
-    view.observeToolbar(for: player)
+  func makeNSView(context: Context) -> PlayerContainerView {
+    let view = PlayerContainerView()
+    view.playerView.player = player
+    view.playerView.observeToolbar(for: player)
     return view
   }
 
-  func updateNSView(_ view: PlayerChromeView, context: Context) {
-    if view.player !== player { view.player = player }
-    view.observeToolbar(for: player)
+  func updateNSView(_ view: PlayerContainerView, context: Context) {
+    if view.playerView.player !== player { view.playerView.player = player }
+    view.playerView.observeToolbar(for: player)
   }
 
-  static func dismantleNSView(_ view: PlayerChromeView, coordinator: ()) {
-    view.restoreToolbar()
-    view.player?.pause()
-    view.player = nil
+  static func dismantleNSView(_ view: PlayerContainerView, coordinator: ()) {
+    view.playerView.restoreToolbar()
+    view.playerView.player?.pause()
+    view.playerView.player = nil
+    view.unmountPlayer()
+  }
+}
+
+/// Keep AVKit below a regular AppKit container rather than making it SwiftUI's representable root.
+private final class PlayerContainerView: NSView {
+  let playerView = PlayerChromeView()
+
+  override init(frame frameRect: NSRect) {
+    super.init(frame: frameRect)
+    playerView.controlsStyle = .floating
+    playerView.showsFullScreenToggleButton = true
+    playerView.allowsPictureInPicturePlayback = true
+    playerView.videoGravity = .resizeAspect
+    playerView.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(playerView)
+    NSLayoutConstraint.activate([
+      playerView.leadingAnchor.constraint(equalTo: leadingAnchor),
+      playerView.trailingAnchor.constraint(equalTo: trailingAnchor),
+      playerView.topAnchor.constraint(equalTo: topAnchor),
+      playerView.bottomAnchor.constraint(equalTo: bottomAnchor)
+    ])
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) { nil }
+
+  func unmountPlayer() {
+    playerView.removeFromSuperview()
   }
 }
 
@@ -83,16 +121,34 @@ private final class PlayerChromeView: AVPlayerView {
   private var rateObservation: NSKeyValueObservation?
   private weak var observedPlayer: AVPlayer?
   private var hideWorkItem: DispatchWorkItem?
+  private weak var hostWindow: NSWindow?
   private var originalStyleMask: NSWindow.StyleMask?
   private var originalTitleVisibility: NSWindow.TitleVisibility?
   private var originalTitlebarTransparency: Bool?
   private var originalToolbarVisibility: Bool?
+  private var didClearInitialControlFocus = false
 
   deinit { hideWorkItem?.cancel() }
 
+  override var acceptsFirstResponder: Bool { true }
+
   override func viewDidMoveToWindow() {
     super.viewDidMoveToWindow()
-    configureOverlayTitlebar()
+    // AVKit can temporarily attach parts of the player to its own PiP window. Keep all titlebar
+    // changes scoped to the app window; mutating the private PiP window can crash AVKit and leave
+    // the app toolbar hidden when playback closes.
+    if hostWindow == nil { hostWindow = window }
+    if window === hostWindow { configureOverlayTitlebar() }
+    // AVKit focuses the play/pause button when playback opens, leaving an accent-colored selection
+    // behind even though the user did not navigate to it. Keep keyboard handling on the player view
+    // itself while leaving the controls visually neutral.
+    if !didClearInitialControlFocus {
+      didClearInitialControlFocus = true
+      DispatchQueue.main.async { [weak self] in
+        guard let self, let window = self.window else { return }
+        window.makeFirstResponder(self)
+      }
+    }
   }
 
   override func updateTrackingAreas() {
@@ -118,7 +174,7 @@ private final class PlayerChromeView: AVPlayerView {
   }
 
   func restoreToolbar() {
-    guard let window, let originalStyleMask else { return }
+    guard let window = hostWindow, let originalStyleMask else { return }
     window.styleMask = originalStyleMask
     window.titleVisibility = originalTitleVisibility ?? .visible
     window.titlebarAppearsTransparent = originalTitlebarTransparency ?? false
@@ -127,7 +183,7 @@ private final class PlayerChromeView: AVPlayerView {
   }
 
   private func configureOverlayTitlebar() {
-    guard let window else { return }
+    guard let window = hostWindow, self.window === window else { return }
     if originalStyleMask == nil {
       originalStyleMask = window.styleMask
       originalTitleVisibility = window.titleVisibility
@@ -155,13 +211,13 @@ private final class PlayerChromeView: AVPlayerView {
   private func showWindowControls() {
     hideWorkItem?.cancel()
     configureOverlayTitlebar()
-    guard let window else { return }
+    guard let window = hostWindow else { return }
     setWindowButtons(hidden: false, in: window)
     if observedPlayer?.rate ?? 0 > 0 { updateWindowControls(forPlaying: true) }
   }
 
   private func hideWindowControls() {
-    guard observedPlayer?.rate ?? 0 > 0, let window else { return }
+    guard observedPlayer?.rate ?? 0 > 0, let window = hostWindow else { return }
     setWindowButtons(hidden: true, in: window)
   }
 

@@ -99,6 +99,7 @@ enum WatchMode {
   case trailer
 }
 
+@MainActor
 class PlayerManager: ObservableObject {
   
   @Published var isPlaying: Bool = false
@@ -232,10 +233,13 @@ class PlayerManager: ObservableObject {
     if watchMode == .media {
       audioObservation = player.currentItem?.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
         guard item.status == .readyToPlay else { return }
-        self?.applyPreferredAudio()
-        self?.restorePreferredSubtitle(for: item)
-        self?.audioObservation?.invalidate()
-        self?.audioObservation = nil
+        DispatchQueue.main.async {
+          guard let self, self.player.currentItem === item else { return }
+          self.applyPreferredAudio()
+          self.restorePreferredSubtitle(for: item)
+          self.audioObservation?.invalidate()
+          self.audioObservation = nil
+        }
       }
     }
 
@@ -248,8 +252,10 @@ class PlayerManager: ObservableObject {
     observeMediaSelection(on: player.currentItem)
 
     playerTimeObserver = PlayerTimeObserver(player: player, period: 10.0, timeUpdateHandler: { [weak self] time in
-      self?.saveWatchMark(time: time)
-      self?.captureCurrentMediaSelection()
+      DispatchQueue.main.async {
+        self?.saveWatchMark(time: time)
+        self?.captureCurrentMediaSelection()
+      }
     })
 
     // Playing to the very end marks the title watched (see `markFinished`).
@@ -316,13 +322,11 @@ class PlayerManager: ObservableObject {
     guard !episodeQueue.isEmpty else { return }
     let commands = MPRemoteCommandCenter.shared()
     previousTrackCommandTarget = commands.previousTrackCommand.addTarget { [weak self] _ in
-      guard let self, self.hasPreviousEpisode else { return .commandFailed }
-      self.playPreviousEpisode()
+      DispatchQueue.main.async { self?.playPreviousEpisode() }
       return .success
     }
     nextTrackCommandTarget = commands.nextTrackCommand.addTarget { [weak self] _ in
-      guard let self, self.hasNextEpisode else { return .commandFailed }
-      self.playNextEpisode()
+      DispatchQueue.main.async { self?.playNextEpisode() }
       return .success
     }
     commands.previousTrackCommand.isEnabled = hasPreviousEpisode
@@ -343,11 +347,14 @@ class PlayerManager: ObservableObject {
       DispatchQueue.main.async { self?.reportPlaybackFailure(item) }
     }
     audioObservation = item.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
-      guard self?.watchMode == .media, item.status == .readyToPlay else { return }
-      self?.applyPreferredAudio()
-      self?.restorePreferredSubtitle(for: item)
-      self?.audioObservation?.invalidate()
-      self?.audioObservation = nil
+      guard item.status == .readyToPlay else { return }
+      DispatchQueue.main.async {
+        guard let self, self.watchMode == .media, self.player.currentItem === item else { return }
+        self.applyPreferredAudio()
+        self.restorePreferredSubtitle(for: item)
+        self.audioObservation?.invalidate()
+        self.audioObservation = nil
+      }
     }
     observeMediaSelection(on: item)
     endOfPlaybackObserver = NotificationCenter.default.addObserver(
@@ -382,21 +389,35 @@ class PlayerManager: ObservableObject {
 
   // MARK: - Audio track preference (озвучка)
 
-  /// Apply the audio option the user last selected for this item/series, matching the AVPlayer's own
-  /// media-selection options (by display name, then language, then position) so it round-trips reliably.
+  /// Restore the user's audio choice. On first playback, prefer a track explicitly marked as the
+  /// original language instead of whichever dub happens to be first in the HLS playlist.
   private func applyPreferredAudio() {
     guard watchMode == .media,
           let item = player.currentItem,
-          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .audible),
-          let preference = AppContext.shared.libraryState.audioPreference(itemId: playItem.metadata.id)
+          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .audible)
     else { return }
+
     let options = group.options
-    let match = options.first(where: { $0.displayName == preference.displayName })
-      ?? options.first(where: { $0.extendedLanguageTag != nil && $0.extendedLanguageTag == preference.languageTag })
-      ?? (options.indices.contains(preference.index) ? options[preference.index] : nil)
-    if let match {
-      item.select(match, in: group)
+    let preference = AppContext.shared.libraryState.audioPreference(itemId: playItem.metadata.id)
+    let desired: AVMediaSelectionOption?
+    if let preference {
+      desired = options.first(where: { $0.displayName == preference.displayName })
+        ?? options.first(where: {
+          $0.extendedLanguageTag != nil && $0.extendedLanguageTag == preference.languageTag
+        })
+        ?? (options.indices.contains(preference.index) ? options[preference.index] : nil)
+    } else {
+      desired = options.first(where: isOriginalAudioOption) ?? group.defaultOption
     }
+
+    if let desired { item.select(desired, in: group) }
+  }
+
+  private func isOriginalAudioOption(_ option: AVMediaSelectionOption) -> Bool {
+    let name = option.displayName
+      .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+      .lowercased()
+    return name.contains("original") || name.contains("оригинал")
   }
 
   /// Restore the user's subtitle track, including an explicit Off choice. If no preference exists,
@@ -578,9 +599,12 @@ class PlayerManager: ObservableObject {
     } else {
       seekObservation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
         guard item.status == .readyToPlay else { return }
-        self?.player.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
-        self?.seekObservation?.invalidate()
-        self?.seekObservation = nil
+        DispatchQueue.main.async {
+          guard let self, self.player.currentItem === item else { return }
+          self.player.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
+          self.seekObservation?.invalidate()
+          self.seekObservation = nil
+        }
       }
     }
   }
