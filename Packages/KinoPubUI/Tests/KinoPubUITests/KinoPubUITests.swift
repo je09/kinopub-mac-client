@@ -43,14 +43,3 @@ final class KinoPubUITests: XCTestCase {
     XCTAssertNotNil(Color.KinoPub.skeleton)
   }
 }
-
-extension KinoPubButton.ButtonColor: Equatable {
-  public static func == (lhs: KinoPubButton.ButtonColor, rhs: KinoPubButton.ButtonColor) -> Bool {
-    switch (lhs, rhs) {
-    case (.green, .green), (.gray, .gray), (.red, .red), (.blue, .blue):
-      return true
-    default:
-      return false
-    }
-  }
-}

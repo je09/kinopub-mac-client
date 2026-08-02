@@ -166,10 +166,16 @@ struct HistoryItemCell: View {
           .font(.system(size: 16.0, weight: .medium))
           .foregroundStyle(Color.KinoPub.text)
         // For series, show the watched season/episode; otherwise the original title.
-        Text(historyItem.episodeSubtitle ?? mediaItem.originalTitle)
-          .lineLimit(1)
-          .font(.system(size: 14.0, weight: .medium))
-          .foregroundStyle(Color.KinoPub.subtitle)
+        Group {
+          if let subtitle = historyItem.episodeSubtitle {
+            Text(subtitle)
+          } else {
+            Text(mediaItem.originalTitle)
+          }
+        }
+        .lineLimit(1)
+        .font(.system(size: 14.0, weight: .medium))
+        .foregroundStyle(Color.KinoPub.subtitle)
       }
       .padding(.horizontal, 8)
     }

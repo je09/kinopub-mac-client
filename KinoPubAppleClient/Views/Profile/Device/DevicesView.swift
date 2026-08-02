@@ -95,7 +95,7 @@ struct DevicesView: View {
         if let device = pendingRemove { Task { await model.remove(device) } }
       }
     } message: {
-      Text(pendingRemove.map { displayName($0) } ?? "")
+      if let device = pendingRemove { Text(displayName(device)) }
     }
   }
 

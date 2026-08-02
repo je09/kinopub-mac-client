@@ -12,7 +12,7 @@ import SwiftUI
 ///
 /// Each case maps to a concrete SwiftUI `Color` from the `Color.KinoPub` palette
 /// via the ``color`` property, keeping the visual styling in a single place.
-public enum KinoPubButtonColor {
+public enum KinoPubButtonColor: Equatable {
   case green
   case gray
   case red

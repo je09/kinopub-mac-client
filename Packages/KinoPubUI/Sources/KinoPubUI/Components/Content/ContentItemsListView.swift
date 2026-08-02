@@ -77,7 +77,7 @@ public struct ContentItemsListView: View {
       .padding(.horizontal, 20)
       .padding(.top, 8)
     }
-    .refreshable(action: onRefresh)
+    .refreshable { await onRefresh() }
   }
 
   @ViewBuilder

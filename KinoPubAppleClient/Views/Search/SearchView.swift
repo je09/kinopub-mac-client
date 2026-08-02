@@ -105,7 +105,7 @@ struct SearchView: View {
         ForEach(model.genres, id: \.id) { genre in
           NavigationLink(value: Route.filteredCatalog(
             MediaItemsFilter(contentType: .movie, genres: [genre.id], countries: []),
-            genre.title ?? "")) {
+            genre.title)) {
             browseCard(genre)
           }
           .buttonStyle(.plain)
@@ -123,7 +123,7 @@ struct SearchView: View {
                        startPoint: .topLeading, endPoint: .bottomTrailing)
       }
       LinearGradient(colors: [.clear, .black.opacity(0.7)], startPoint: .center, endPoint: .bottom)
-      Text(genre.title ?? "")
+      Text(genre.title)
         .font(.system(size: 15, weight: .bold)).foregroundStyle(.white).padding(10)
     }
     .frame(height: 90)

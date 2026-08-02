@@ -137,13 +137,17 @@ struct SportView: View {
     ScrollView {
       LazyVStack(spacing: 6) {
         ForEach(model.channels) { channel in
-          ChannelEPGRow(channel: channel,
-                        current: model.currentProgram(for: channel, at: now),
-                        next: model.nextProgram(for: channel, at: now),
-                        now: now,
-                        isSelected: channel.id == model.selectedChannel?.id,
-                        isLoadingGuide: model.isLoadingGuide)
-            .onTapGesture { model.selectedChannel = channel }
+          Button { model.selectedChannel = channel } label: {
+            ChannelEPGRow(channel: channel,
+                          current: model.currentProgram(for: channel, at: now),
+                          next: model.nextProgram(for: channel, at: now),
+                          now: now,
+                          isSelected: channel.id == model.selectedChannel?.id,
+                          isLoadingGuide: model.isLoadingGuide)
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel(channel.title)
+          .accessibilityAddTraits(channel.id == model.selectedChannel?.id ? .isSelected : [])
         }
       }
       .frame(maxWidth: listMaxWidth)
