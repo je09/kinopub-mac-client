@@ -2,18 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- This unsigned sideloaded build deliberately runs outside App Sandbox. AVKit's macOS PiP
-	     service contacts audioanalyticsd; under ad-hoc sandbox signing that triggers a system
-	     precondition failure because the private mach-lookup entitlement cannot be granted. -->
+	<!-- PiP is disabled in the player, so the app does not need AVKit's problematic private PiP
+	     service lookup. Keep the ad-hoc distributed app sandboxed. -->
 	<key>com.apple.security.app-sandbox</key>
-	<false/>
+	<true/>
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>
 	<key>com.apple.security.files.user-selected.read-only</key>
 	<true/>
 	<key>com.apple.security.network.client</key>
-	<true/>
-	<key>com.apple.security.network.server</key>
 	<true/>
 </dict>
 </plist>

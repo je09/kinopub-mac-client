@@ -128,11 +128,9 @@ struct AppContext: AppContextProtocol {
   
   private static func makeApiClient(with baseURL: String, accessTokenService: AccessTokenService) -> APIClient {
     APIClient(baseUrl: baseURL,
-              plugins: [
-                CURLLoggingPlugin(),
-                ResponseLoggingPlugin(),
-                AccessTokenPlugin(accessTokenService: accessTokenService)
-              ],
+              // Never install the cURL/response debug plugins here: they include bearer tokens,
+              // OAuth responses, and account data in unified logs.
+              plugins: [AccessTokenPlugin(accessTokenService: accessTokenService)],
               cache: ResponseCache())
   }
 }
