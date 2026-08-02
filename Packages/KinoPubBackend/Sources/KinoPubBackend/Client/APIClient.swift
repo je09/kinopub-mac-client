@@ -47,22 +47,51 @@ public class APIClient {
     // Notify plugins
     plugins.forEach { $0.willSend(preparedRequest) }
 
-    let (data, response) = try await session.data(for: preparedRequest)
+    var attempt = 0
+    while true {
+      let (data, response) = try await session.data(for: preparedRequest)
 
-    // Notify plugins
-    plugins.forEach { $0.didReceive(response, data: data) }
+      // Notify plugins
+      plugins.forEach { $0.didReceive(response, data: data) }
 
-    let result = try decode(T.self, from: data, throwDecodingErrorImmediately: false)
-    // Cache only successfully decoded responses (never error bodies), per the request's policy.
-    if let cacheable, let ttl = policy.ttl {
-      cache?.store(data, for: cacheable.cacheKey, ttl: ttl, persist: policy.persistsToDisk)
+      if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+        let retryAfter = Self.retryAfter(from: http)
+        // A 429 response means the server rejected the request before processing it. Retry only a
+        // small bounded number of times and honor Retry-After; never blindly retry other mutations.
+        if http.statusCode == 429, attempt < 2 {
+          attempt += 1
+          let delay = min(max(retryAfter ?? pow(2, Double(attempt - 1)), 1), 60)
+          try await Task.sleep(for: .seconds(delay))
+          continue
+        }
+        if let backendError = try? JSONDecoder().decode(BackendError.self, from: data) {
+          throw APIClientError.networkError(backendError)
+        }
+        throw APIClientError.httpError(statusCode: http.statusCode, retryAfter: retryAfter)
+      }
+
+      let result = try decode(T.self, from: data, throwDecodingErrorImmediately: false)
+      // Cache only successfully decoded 2xx responses (never error bodies), per the request's policy.
+      if let cacheable, let ttl = policy.ttl {
+        cache?.store(data, for: cacheable.cacheKey, ttl: ttl, persist: policy.persistsToDisk)
+      }
+      return result
     }
-    return result
   }
 
   /// Drops all cached responses. Call on logout so the next user never sees cached data.
   public func clearCache() {
     cache?.clear()
+  }
+
+  private static func retryAfter(from response: HTTPURLResponse) -> TimeInterval? {
+    guard let value = response.value(forHTTPHeaderField: "Retry-After") else { return nil }
+    if let seconds = TimeInterval(value) { return max(0, seconds) }
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.dateFormat = "EEE',' dd MMM yyyy HH':'mm':'ss z"
+    return formatter.date(from: value).map { max(0, $0.timeIntervalSinceNow) }
   }
 
   private func decode<T: Decodable>(_ type: T.Type,

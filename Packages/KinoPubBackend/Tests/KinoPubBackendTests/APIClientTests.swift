@@ -86,6 +86,34 @@ class APIClientTests: XCTestCase {
     XCTAssertEqual(response.items.first?.count, "15")
   }
 
+  func testPerformRequest_Non2xxNeverDecodesAsSuccess() async {
+    let json = """
+        {
+            "code": "should-not-succeed",
+            "user_code": "ABCD-1234",
+            "verification_uri": "https://example.com/activate",
+            "expires_in": 12345,
+            "interval": 5
+        }
+        """
+    sessionMock.data = Data(json.utf8)
+    sessionMock.response = HTTPURLResponse(url: URL(string: "https://api.example.com/token")!,
+                                           statusCode: 500,
+                                           httpVersion: nil,
+                                           headerFields: nil)
+
+    do {
+      let _: VerificationResponse = try await apiClient.performRequest(
+        with: RequestData(path: "/token", method: "GET"),
+        decodingType: VerificationResponse.self)
+      XCTFail("Expected HTTP error")
+    } catch APIClientError.httpError(let statusCode, _) {
+      XCTAssertEqual(statusCode, 500)
+    } catch {
+      XCTFail("Expected HTTP error but got \(error)")
+    }
+  }
+
   func testPerformRequest_WhenNonErrorPayloadDecodingFails_ThrowsOriginalDecodingError() async {
     let json = """
         {

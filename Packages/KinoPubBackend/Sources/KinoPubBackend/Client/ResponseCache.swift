@@ -110,22 +110,25 @@ public final class ResponseCache: ResponseCaching {
     }
     lock.unlock()
 
-    // Fall back to disk for persisted entries.
-    guard let url = fileURL(for: key),
-          let raw = try? Data(contentsOf: url),
-          let entry = try? PropertyListDecoder().decode(DiskEntry.self, from: raw),
-          entry.key == key else {
-      return nil
+    // Serialize disk reads with writes/removals/clear. In particular, logout's `clear()` must finish
+    // before a request for a different account can observe a persisted response.
+    return ioQueue.sync {
+      guard let url = fileURL(for: key),
+            let raw = try? Data(contentsOf: url),
+            let entry = try? PropertyListDecoder().decode(DiskEntry.self, from: raw),
+            entry.key == key else {
+        return nil
+      }
+      if entry.expiry < Date() {
+        try? FileManager.default.removeItem(at: url)
+        return nil
+      }
+      // Promote back into memory for fast subsequent hits.
+      lock.lock()
+      memory[key] = MemoryEntry(data: entry.payload, expiry: entry.expiry)
+      lock.unlock()
+      return entry.payload
     }
-    if entry.expiry < Date() {
-      try? FileManager.default.removeItem(at: url)
-      return nil
-    }
-    // Promote back into memory for fast subsequent hits.
-    lock.lock()
-    memory[key] = MemoryEntry(data: entry.payload, expiry: entry.expiry)
-    lock.unlock()
-    return entry.payload
   }
 
   public func store(_ data: Data, for key: String, ttl: TimeInterval, persist: Bool) {
@@ -153,11 +156,14 @@ public final class ResponseCache: ResponseCaching {
   }
 
   public func clear() {
-    lock.lock()
-    memory.removeAll()
-    lock.unlock()
-    guard let directory else { return }
-    ioQueue.async {
+    // Synchronous by design: AuthorizationService calls this during logout, and returning before
+    // disk deletion could expose the previous account's cached response to the next account. Take
+    // the I/O queue before the memory lock, matching the disk-read promotion path.
+    ioQueue.sync {
+      lock.lock()
+      memory.removeAll()
+      lock.unlock()
+      guard let directory else { return }
       let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                    includingPropertiesForKeys: nil)) ?? []
       contents.forEach { try? FileManager.default.removeItem(at: $0) }

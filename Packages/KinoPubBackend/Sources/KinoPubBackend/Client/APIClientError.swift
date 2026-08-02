@@ -11,6 +11,7 @@ public enum APIClientError: Error {
   case urlError
   case invalidUrlParams
   case networkError(Error)
+  case httpError(statusCode: Int, retryAfter: TimeInterval?)
   case decodingError(Error)
 }
 
@@ -46,6 +47,12 @@ extension APIClientError: LocalizedError {
       default:
         return "KinoPub server error: \(backendError.errorCode.rawValue)"
       }
+    case .httpError(let statusCode, let retryAfter):
+      if statusCode == 429 {
+        if let retryAfter { return "Too many requests. Try again in \(Int(retryAfter.rounded(.up))) seconds." }
+        return "Too many requests. Please try again shortly."
+      }
+      return "The KinoPub server returned HTTP \(statusCode)."
     case .decodingError(let error):
       return "The KinoPub server returned an unexpected response: \(error.localizedDescription)"
     }

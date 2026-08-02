@@ -31,6 +31,17 @@ final class ResponseCacheTests: XCTestCase {
     let cache = ResponseCache(directoryName: "test-cache-\(UUID().uuidString)")
     XCTAssertNil(cache.data(for: "absent"))
   }
+
+  func testClearSynchronouslyRemovesPersistedAccountData() {
+    let directory = "test-cache-\(UUID().uuidString)"
+    let cache = ResponseCache(directoryName: directory)
+    cache.store(Data("account-a".utf8), for: "catalog", ttl: 60, persist: true)
+    cache.clear()
+
+    // A fresh cache instance simulates the next account and bypasses the old memory dictionary.
+    let nextAccountCache = ResponseCache(directoryName: directory)
+    XCTAssertNil(nextAccountCache.data(for: "catalog"))
+  }
 }
 
 // MARK: - APIClient cache integration
