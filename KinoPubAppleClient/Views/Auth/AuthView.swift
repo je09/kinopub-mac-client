@@ -6,7 +6,6 @@
 //
 import SwiftUI
 import KinoPubUI
-import PopupView
 import AppKit
 
 struct AuthView: View {
