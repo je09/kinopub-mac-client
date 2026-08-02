@@ -131,17 +131,17 @@ class HomeModel: ObservableObject {
         didLoadShelves = true
         shelves = loaded
 
-        // Build the hero gallery from the lead item of each shelf (deduplicated), so the
-        // top of Home is a swipeable carousel of varied features rather than a single title.
+        // The banner should surface fresh catalog additions, not whatever older title happens to
+        // lead the monthly-popular shelf. Both shelves above come directly from `/v1/items` with
+        // `sort=created-`; popular entries remain a fallback if the new-content calls are empty.
+        let newShelves = loaded.filter { $0.title == "Новые фильмы" || $0.title == "Новые сериалы" }
+        let heroSource = newShelves.isEmpty ? loaded : newShelves
         var heroSeen = Set<Int>()
-        var featuredItems: [MediaItem] = []
-        for shelf in loaded {
-          if let first = shelf.items.first, !heroSeen.contains(first.id) {
-            heroSeen.insert(first.id)
-            featuredItems.append(first)
-          }
-        }
-        featured = featuredItems
+        featured = heroSource
+          .flatMap(\.items)
+          .filter { heroSeen.insert($0.id).inserted }
+          .prefix(10)
+          .map { $0 }
       }
     }
 

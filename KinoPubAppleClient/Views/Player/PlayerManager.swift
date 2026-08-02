@@ -11,6 +11,7 @@ import Combine
 import KinoPubBackend
 import KinoPubKit
 import AVFoundation
+import MediaPlayer
 import CoreImage
 import KinoPubLogging
 import OSLog
@@ -107,6 +108,8 @@ class PlayerManager: ObservableObject {
   /// Human-readable diagnosis shown when the item can't be played (the native "crossed-out play"),
   /// so failures (e.g. an HLS stream AVPlayer rejects) surface on-device instead of silently.
   @Published var playbackError: String?
+  @Published private(set) var hasNextEpisode = false
+  @Published private(set) var hasPreviousEpisode = false
   
   /// Whether the playing title is a 3D (stereoscopic) release, so the player offers 3D view modes.
   var is3D: Bool { FeatureFlags.threeDEnabled && (playItem as? MediaItem)?.type.lowercased() == "3d" }
@@ -181,6 +184,10 @@ class PlayerManager: ObservableObject {
   private var failureObservation: NSKeyValueObservation?
   private var endOfPlaybackObserver: NSObjectProtocol?
   private var actionsService: UserActionsService
+  private let episodeQueue: [Episode]
+  private var didHandlePlaybackEnd = false
+  private var nextTrackCommandTarget: Any?
+  private var previousTrackCommandTarget: Any?
   
   private var fileURL: URL? {
     switch watchMode {
@@ -229,11 +236,13 @@ class PlayerManager: ObservableObject {
   init(playItem: any PlayableItem,
        watchMode: WatchMode,
        downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>,
-       actionsService: UserActionsService) {
+       actionsService: UserActionsService,
+       episodeQueue: [Episode] = []) {
     self.playItem = playItem
     self.watchMode = watchMode
     self.actionsService = actionsService
     self.downloadedFilesDatabase = downloadedFilesDatabase
+    self.episodeQueue = episodeQueue
     // A 3D title starts in the user's last-chosen mode (default: one eye as 2D, so it's watchable —
     // raw packed stereo would show a doubled image).
     if watchMode == .media, is3D {
@@ -261,6 +270,7 @@ class PlayerManager: ObservableObject {
       audioObservation = player.currentItem?.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
         guard item.status == .readyToPlay else { return }
         self?.applyPreferredAudio()
+        self?.activateDefaultSubtitle(for: item)
         self?.audioObservation?.invalidate()
         self?.audioObservation = nil
       }
@@ -270,7 +280,6 @@ class PlayerManager: ObservableObject {
     // so an unplayable stream is diagnosable on-device instead of failing silently.
     failureObservation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
       guard item.status == .failed else { return }
-        self?.activateDefaultSubtitle(for: item)
       DispatchQueue.main.async { self?.reportPlaybackFailure(item) }
     }
 
@@ -283,13 +292,107 @@ class PlayerManager: ObservableObject {
     if watchMode == .media {
       endOfPlaybackObserver = NotificationCenter.default.addObserver(
         forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { [weak self] _ in
-          self?.markFinished()
+          self?.playbackDidFinish()
       }
     }
+    updateEpisodeNavigation()
+    configureRemoteCommands()
   }
 
   deinit {
     if let endOfPlaybackObserver { NotificationCenter.default.removeObserver(endOfPlaybackObserver) }
+    let commands = MPRemoteCommandCenter.shared()
+    if let nextTrackCommandTarget { commands.nextTrackCommand.removeTarget(nextTrackCommandTarget) }
+    if let previousTrackCommandTarget { commands.previousTrackCommand.removeTarget(previousTrackCommandTarget) }
+  }
+
+  // MARK: - Episode navigation
+
+  func playNextEpisode() { playAdjacentEpisode(offset: 1) }
+  func playPreviousEpisode() { playAdjacentEpisode(offset: -1) }
+
+  private func playbackDidFinish() {
+    guard !didHandlePlaybackEnd else { return }
+    didHandlePlaybackEnd = true
+    markFinished()
+    playNextEpisode()
+  }
+
+  private func playAdjacentEpisode(offset: Int) {
+    guard let current = playItem as? Episode,
+          let index = episodeQueue.firstIndex(where: { $0.id == current.id }) else { return }
+    let targetIndex = index + offset
+    guard episodeQueue.indices.contains(targetIndex) else { return }
+    player.pause()
+    playItem = episodeQueue[targetIndex]
+    continueTime = nil
+    replacePlayerItem()
+    player.play()
+  }
+
+  private func updateEpisodeNavigation() {
+    guard let current = playItem as? Episode,
+          let index = episodeQueue.firstIndex(where: { $0.id == current.id }) else {
+      hasNextEpisode = false
+      hasPreviousEpisode = false
+      let commands = MPRemoteCommandCenter.shared()
+      commands.previousTrackCommand.isEnabled = false
+      commands.nextTrackCommand.isEnabled = false
+      return
+    }
+    hasPreviousEpisode = index > 0
+    hasNextEpisode = index + 1 < episodeQueue.count
+    let commands = MPRemoteCommandCenter.shared()
+    commands.previousTrackCommand.isEnabled = hasPreviousEpisode
+    commands.nextTrackCommand.isEnabled = hasNextEpisode
+  }
+
+  private func configureRemoteCommands() {
+    guard !episodeQueue.isEmpty else { return }
+    let commands = MPRemoteCommandCenter.shared()
+    previousTrackCommandTarget = commands.previousTrackCommand.addTarget { [weak self] _ in
+      guard let self, self.hasPreviousEpisode else { return .commandFailed }
+      self.playPreviousEpisode()
+      return .success
+    }
+    nextTrackCommandTarget = commands.nextTrackCommand.addTarget { [weak self] _ in
+      guard let self, self.hasNextEpisode else { return .commandFailed }
+      self.playNextEpisode()
+      return .success
+    }
+    commands.previousTrackCommand.isEnabled = hasPreviousEpisode
+    commands.nextTrackCommand.isEnabled = hasNextEpisode
+  }
+
+  private func replacePlayerItem() {
+    guard let url = fileURL else { return }
+    let item = AVPlayerItem(url: url)
+    if watchMode == .media, let maxResolution = StreamQuality.current.maxResolution {
+      item.preferredMaximumResolution = maxResolution
+    }
+    #if !os(macOS)
+    item.externalMetadata = externalMetadata()
+    #endif
+    if let endOfPlaybackObserver { NotificationCenter.default.removeObserver(endOfPlaybackObserver) }
+    didHandlePlaybackEnd = false
+    player.replaceCurrentItem(with: item)
+    failureObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+      guard item.status == .failed else { return }
+      DispatchQueue.main.async { self?.reportPlaybackFailure(item) }
+    }
+    audioObservation = item.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
+      guard self?.watchMode == .media, item.status == .readyToPlay else { return }
+      self?.applyPreferredAudio()
+      self?.activateDefaultSubtitle(for: item)
+      self?.audioObservation?.invalidate()
+      self?.audioObservation = nil
+    }
+    endOfPlaybackObserver = NotificationCenter.default.addObserver(
+      forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
+    ) { [weak self] _ in
+      self?.playbackDidFinish()
+    }
+    updateEpisodeNavigation()
   }
 
   // MARK: - Failure diagnostics
@@ -331,6 +434,25 @@ class PlayerManager: ObservableObject {
     if let match {
       item.select(match, in: group)
     }
+  }
+
+  /// Explicitly select the HLS playlist's default subtitle option after the item becomes ready.
+  /// AVPlayer sometimes exposes that option as selected in its native menu without starting its
+  /// renderer. Repeat on the next run loop after AVKit attaches its rendering pipeline.
+  private func activateDefaultSubtitle(for item: AVPlayerItem) {
+    applyDefaultSubtitle(to: item)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
+      guard let self, let item, self.player.currentItem === item else { return }
+      self.applyDefaultSubtitle(to: item)
+    }
+  }
+
+  private func applyDefaultSubtitle(to item: AVPlayerItem) {
+    guard watchMode == .media,
+          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible),
+          let defaultOption = group.defaultOption
+    else { return }
+    item.select(defaultOption, in: group)
   }
 
   /// Remember the audio option currently selected in the player, so the next episode/launch resumes it.
@@ -381,13 +503,14 @@ class PlayerManager: ObservableObject {
     guard watchMode == .media else { return }
     let duration = player.currentItem?.duration.seconds ?? 0
     guard duration.isFinite, duration > 0 else { return }
-    AppContext.shared.localProgressStore.clear(id: playItem.metadata.id)
-    Task.detached(priority: .utility) { [weak self] in
-      guard let self else { return }
+    let metadata = playItem.metadata
+    let actionsService = actionsService
+    AppContext.shared.localProgressStore.clear(id: metadata.id)
+    Task.detached(priority: .utility) {
       do {
-        try await self.actionsService.markWatch(id: self.playItem.metadata.id,
-                                                time: Int(duration), video: self.playItem.metadata.video,
-                                                season: self.playItem.metadata.season)
+        try await actionsService.markWatch(id: metadata.id,
+                                           time: Int(duration), video: metadata.video,
+                                           season: metadata.season)
       } catch {
         Logger.app.error("Failed to mark finished: \(error)")
       }
@@ -436,25 +559,6 @@ class PlayerManager: ObservableObject {
       seekObservation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
         guard item.status == .readyToPlay else { return }
         self?.player.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
-  /// Explicitly select the HLS playlist's default subtitle option after the item becomes ready.
-  /// AVPlayer sometimes exposes that option as selected in its native menu without starting its
-  /// renderer. Repeat on the next run loop after AVKit attaches its rendering pipeline.
-  private func activateDefaultSubtitle(for item: AVPlayerItem) {
-    applyDefaultSubtitle(to: item)
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
-      guard let self, let item, self.player.currentItem === item else { return }
-      self.applyDefaultSubtitle(to: item)
-    }
-  }
-
-  private func applyDefaultSubtitle(to item: AVPlayerItem) {
-    guard watchMode == .media,
-          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible),
-          let defaultOption = group.defaultOption
-    else { return }
-    item.select(defaultOption, in: group)
-  }
-
         self?.seekObservation?.invalidate()
         self?.seekObservation = nil
       }

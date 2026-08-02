@@ -31,11 +31,16 @@ struct SeasonView: View {
     [GridItem(.adaptive(minimum: cellSize), spacing: 16, alignment: .top)]
   }
   
+  private var episodeQueue: [Episode] {
+    model.season.episodes.map { model.filledEpisode($0) }
+  }
+
   var listView: some View {
     ScrollView {
       LazyVGrid(columns: gridLayout, content: {
         ForEach(model.season.episodes, id: \.id) { item in
-          NavigationLink(value: model.linkProvider.player(for: model.filledEpisode(item))) {
+          NavigationLink(value: model.linkProvider.episodePlayer(for: model.filledEpisode(item),
+                                                                  queue: episodeQueue)) {
             SeasonItemView(episode: item, onDownload: { file in
               model.startDownload(episode: item, file: file)
             })

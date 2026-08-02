@@ -51,6 +51,7 @@ struct PlayerView: View {
     // and PiP — the standard QuickTime-style experience. No custom close button; exit with Esc, or the
     // standard back button in the window toolbar once out of fullscreen.
     MacNativePlayer(player: playerManager.player)
+      // The window titlebar is a transient overlay; video fills its reserved safe area beneath it.
       .ignoresSafeArea(.all)
       .onExitCommand { closePlayer() }
       .onAppear {
@@ -91,39 +92,122 @@ struct PlayerView: View {
 private struct MacNativePlayer: NSViewRepresentable {
   let player: AVPlayer
 
-  func makeCoordinator() -> Coordinator { Coordinator() }
-
-  func makeNSView(context: Context) -> AVPlayerView {
-    let view = AVPlayerView()
+  func makeNSView(context: Context) -> PlayerChromeView {
+    let view = PlayerChromeView()
     view.player = player
     view.controlsStyle = .floating
     view.showsFullScreenToggleButton = true
     view.allowsPictureInPicturePlayback = true
     view.videoGravity = .resizeAspect
-    // Open straight into fullscreen, like a system video player. Toggle the window once it's attached;
-    // remember we did it so closing the player leaves fullscreen too.
-    DispatchQueue.main.async { [weak view] in
-      guard let window = view?.window, !window.styleMask.contains(.fullScreen) else { return }
-      context.coordinator.enteredFullScreen = true
-      window.toggleFullScreen(nil)
-    }
+    view.observeToolbar(for: player)
     return view
   }
 
-  func updateNSView(_ view: AVPlayerView, context: Context) {
+  func updateNSView(_ view: PlayerChromeView, context: Context) {
     if view.player !== player { view.player = player }
+    view.observeToolbar(for: player)
   }
 
-  static func dismantleNSView(_ view: AVPlayerView, coordinator: Coordinator) {
-    if coordinator.enteredFullScreen, let window = view.window, window.styleMask.contains(.fullScreen) {
-      window.toggleFullScreen(nil)
-    }
+  static func dismantleNSView(_ view: PlayerChromeView, coordinator: ()) {
+    view.restoreToolbar()
     view.player?.pause()
     view.player = nil
   }
+}
 
-  final class Coordinator {
-    var enteredFullScreen = false
+/// Makes titlebar controls a transient overlay, like AVKit's controls, without changing the
+/// content layout. `fullSizeContentView` is the AppKit-supported way to avoid a toolbar resize.
+private final class PlayerChromeView: AVPlayerView {
+  private var trackingArea: NSTrackingArea?
+  private var rateObservation: NSKeyValueObservation?
+  private weak var observedPlayer: AVPlayer?
+  private var hideWorkItem: DispatchWorkItem?
+  private var originalStyleMask: NSWindow.StyleMask?
+  private var originalTitleVisibility: NSWindow.TitleVisibility?
+  private var originalTitlebarTransparency: Bool?
+  private var originalToolbarVisibility: Bool?
+
+  deinit { hideWorkItem?.cancel() }
+
+  override func viewDidMoveToWindow() {
+    super.viewDidMoveToWindow()
+    configureOverlayTitlebar()
+  }
+
+  override func updateTrackingAreas() {
+    super.updateTrackingAreas()
+    if let trackingArea { removeTrackingArea(trackingArea) }
+    let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect], owner: self)
+    addTrackingArea(area)
+    trackingArea = area
+  }
+
+  override func mouseMoved(with event: NSEvent) { showWindowControls() }
+  override func mouseDown(with event: NSEvent) {
+    showWindowControls()
+    super.mouseDown(with: event)
+  }
+
+  func observeToolbar(for player: AVPlayer) {
+    guard player !== observedPlayer else { return }
+    observedPlayer = player
+    rateObservation = player.observe(\.rate, options: [.initial, .new]) { [weak self] player, _ in
+      DispatchQueue.main.async { self?.updateWindowControls(forPlaying: player.rate > 0) }
+    }
+  }
+
+  func restoreToolbar() {
+    guard let window, let originalStyleMask else { return }
+    window.styleMask = originalStyleMask
+    window.titleVisibility = originalTitleVisibility ?? .visible
+    window.titlebarAppearsTransparent = originalTitlebarTransparency ?? false
+    if let originalToolbarVisibility { window.toolbar?.isVisible = originalToolbarVisibility }
+    setWindowButtons(hidden: false, in: window)
+  }
+
+  private func configureOverlayTitlebar() {
+    guard let window else { return }
+    if originalStyleMask == nil {
+      originalStyleMask = window.styleMask
+      originalTitleVisibility = window.titleVisibility
+      originalTitlebarTransparency = window.titlebarAppearsTransparent
+      originalToolbarVisibility = window.toolbar?.isVisible
+    }
+    window.styleMask.insert(.fullSizeContentView)
+    window.titlebarAppearsTransparent = true
+    window.titleVisibility = .hidden
+    // Hide the app navigation toolbar permanently in playback; only native traffic lights overlay.
+    window.toolbar?.isVisible = false
+  }
+
+  private func updateWindowControls(forPlaying isPlaying: Bool) {
+    hideWorkItem?.cancel()
+    guard isPlaying else {
+      showWindowControls()
+      return
+    }
+    let work = DispatchWorkItem { [weak self] in self?.hideWindowControls() }
+    hideWorkItem = work
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: work)
+  }
+
+  private func showWindowControls() {
+    hideWorkItem?.cancel()
+    configureOverlayTitlebar()
+    guard let window else { return }
+    setWindowButtons(hidden: false, in: window)
+    if observedPlayer?.rate ?? 0 > 0 { updateWindowControls(forPlaying: true) }
+  }
+
+  private func hideWindowControls() {
+    guard observedPlayer?.rate ?? 0 > 0, let window else { return }
+    setWindowButtons(hidden: true, in: window)
+  }
+
+  private func setWindowButtons(hidden: Bool, in window: NSWindow) {
+    window.standardWindowButton(.closeButton)?.isHidden = hidden
+    window.standardWindowButton(.miniaturizeButton)?.isHidden = hidden
+    window.standardWindowButton(.zoomButton)?.isHidden = hidden
   }
 }
 #endif

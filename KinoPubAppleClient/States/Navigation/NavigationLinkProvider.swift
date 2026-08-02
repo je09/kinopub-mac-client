@@ -13,6 +13,7 @@ import KinoPubUI
 protocol NavigationLinkProvider {
   func link(for item: MediaItem) -> any Hashable
   func player(for item: any PlayableItem) -> any Hashable
+  func episodePlayer(for episode: Episode, queue: [Episode]) -> any Hashable
   func trailerPlayer(for item: any PlayableItem) -> any Hashable
   func seasons(for seasons: [Season]) -> any Hashable
   func season(for season: Season) -> any Hashable
@@ -26,6 +27,9 @@ protocol NavigationLinkProvider {
 struct RouteLinkProvider: NavigationLinkProvider {
   func link(for item: MediaItem) -> any Hashable { Route.details(item) }
   func player(for item: any PlayableItem) -> any Hashable { Route.player(item) }
+  func episodePlayer(for episode: Episode, queue: [Episode]) -> any Hashable {
+    Route.episodePlayer(episode, queue)
+  }
   func trailerPlayer(for item: any PlayableItem) -> any Hashable { Route.trailerPlayer(item) }
   func seasons(for seasons: [Season]) -> any Hashable { Route.seasons(seasons) }
   func season(for season: Season) -> any Hashable { Route.season(season) }
@@ -70,6 +74,8 @@ struct RouteDestinationView: View {
       SeasonView(model: SeasonModel(season: season, linkProvider: RouteLinkProvider()))
     case .player(let item):
       player(item, mode: .media)
+    case .episodePlayer(let episode, let queue):
+      player(episode, mode: .media, episodeQueue: queue)
     case .trailerPlayer(let item):
       player(item, mode: .trailer)
     case .filteredCatalog(let filter, let title):
@@ -119,11 +125,14 @@ struct RouteDestinationView: View {
   }
 
   @ViewBuilder
-  private func player(_ item: any PlayableItem, mode: WatchMode) -> some View {
+  private func player(_ item: any PlayableItem,
+                      mode: WatchMode,
+                      episodeQueue: [Episode] = []) -> some View {
     PlayerView(manager: PlayerManager(playItem: item,
                                       watchMode: mode,
                                       downloadedFilesDatabase: appContext.downloadedFilesDatabase,
-                                      actionsService: appContext.actionsService))
+                                      actionsService: appContext.actionsService,
+                                      episodeQueue: episodeQueue))
   }
 }
 

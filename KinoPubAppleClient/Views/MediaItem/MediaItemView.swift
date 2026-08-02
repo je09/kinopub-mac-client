@@ -445,7 +445,7 @@ struct MediaItemView: View {
     // On a narrow screen the play button spans the full width on its own row.
     let fullWidth = !usesSidebarSections
     if mediaItem.isSeries, let episode = seriesPlayEpisode {
-      NavigationLink(value: itemModel.linkProvider.player(for: episode)) {
+      NavigationLink(value: itemModel.linkProvider.episodePlayer(for: episode, queue: episodeQueue)) {
         playLabel(title, subtitle: resumeSubtitle, fullWidth: fullWidth)
       }
       .buttonStyle(.plain)
@@ -694,10 +694,12 @@ struct MediaItemView: View {
   private var firstPlayableEpisode: Episode? {
     guard let season = mediaItem.seasons?.first,
           let episode = season.episodes.first else { return nil }
-    episode.seasonNumber = season.number
-    episode.mediaId = season.mediaId ?? mediaItem.id
-    episode.mediaTitle = mediaItem.localizedTitle
-    return episode
+    return filledEpisode(episode, in: season)
+  }
+
+  /// Every episode in playback order, with the parent metadata needed for watch sync.
+  private var episodeQueue: [Episode] {
+    mediaItem.orderedEpisodes.map { filledEpisode($0.episode, in: $0.season) }
   }
 
   // MARK: - Episodes
@@ -712,7 +714,8 @@ struct MediaItemView: View {
           ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(alignment: .top, spacing: 14) {
               ForEach(season.episodes, id: \.id) { episode in
-                NavigationLink(value: itemModel.linkProvider.player(for: filledEpisode(episode, in: season))) {
+                NavigationLink(value: itemModel.linkProvider.episodePlayer(for: filledEpisode(episode, in: season),
+                                                                            queue: episodeQueue)) {
                   EpisodeCard(imageURL: episode.thumbnail,
                               overline: "\("Episode".localized) \(episode.number)",
                               title: episode.fixedTitle,
