@@ -18,6 +18,7 @@ public struct HeroBackdrop<Overlay: View>: View {
   private let tallBlur: Bool
   private let blurReduction: CGFloat
   private let leadingScrim: Bool
+  private let bottomScrim: Bool
   private let transparentBase: Bool
   private let overlay: Overlay
 
@@ -33,6 +34,7 @@ public struct HeroBackdrop<Overlay: View>: View {
               tallBlur: Bool = false,
               blurReduction: CGFloat = 0,
               leadingScrim: Bool = false,
+              bottomScrim: Bool = true,
               transparentBase: Bool = false,
               @ViewBuilder overlay: () -> Overlay) {
     self.init(imageURLs: imageURL.map { [$0] } ?? [],
@@ -41,6 +43,7 @@ public struct HeroBackdrop<Overlay: View>: View {
               tallBlur: tallBlur,
               blurReduction: blurReduction,
               leadingScrim: leadingScrim,
+              bottomScrim: bottomScrim,
               transparentBase: transparentBase,
               overlay: overlay)
   }
@@ -52,6 +55,7 @@ public struct HeroBackdrop<Overlay: View>: View {
               tallBlur: Bool = false,
               blurReduction: CGFloat = 0,
               leadingScrim: Bool = false,
+              bottomScrim: Bool = true,
               transparentBase: Bool = false,
               @ViewBuilder overlay: () -> Overlay) {
     var seen = Set<String>()
@@ -61,6 +65,7 @@ public struct HeroBackdrop<Overlay: View>: View {
     self.tallBlur = tallBlur
     self.blurReduction = blurReduction
     self.leadingScrim = leadingScrim
+    self.bottomScrim = bottomScrim
     self.transparentBase = transparentBase
     self.overlay = overlay()
   }
@@ -81,8 +86,13 @@ public struct HeroBackdrop<Overlay: View>: View {
           LoopingBackdropVideo(url: url, isPlaying: !videoPaused)
         }
       }
+      .overlay {
+        if leadingScrim { leadingTextScrim }
+      }
       .overlay(alignment: .bottom) {
-        if !transparentBase { textLegibilityGradient }
+        // Keep this in the scrolling hero even when its media is rendered at window level. It
+        // follows the title during scrolling/rubber-banding, so the text never outruns its scrim.
+        if bottomScrim { textLegibilityGradient }
       }
       .overlay(alignment: .topTrailing) {
         if !transparentBase { carouselControls }
@@ -96,6 +106,26 @@ public struct HeroBackdrop<Overlay: View>: View {
       .clipped()
       .allowsHitTesting(true)
       .task(id: imageURLs) { await runCarousel() }
+  }
+
+  /// Detail heroes can contain several lines of text reaching well above the normal bottom fade.
+  /// Keep a dark baseline across the full stage, then strengthen it behind the leading content.
+  /// This also works when the artwork itself is rendered at the window level (`transparentBase`).
+  private var leadingTextScrim: some View {
+    ZStack {
+      LinearGradient(stops: [
+        .init(color: .black.opacity(0.48), location: 0),
+        .init(color: .black.opacity(0.52), location: 0.58),
+        .init(color: .black.opacity(0.88), location: 1)
+      ], startPoint: .top, endPoint: .bottom)
+
+      LinearGradient(stops: [
+        .init(color: .black.opacity(0.28), location: 0),
+        .init(color: .black.opacity(0.12), location: 0.62),
+        .init(color: .clear, location: 1)
+      ], startPoint: .leading, endPoint: .trailing)
+    }
+    .allowsHitTesting(false)
   }
 
   /// A full-width vertical scrim—not a text-sized pill—keeps every hero overlay readable over

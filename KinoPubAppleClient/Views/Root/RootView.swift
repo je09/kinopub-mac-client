@@ -19,6 +19,8 @@ struct WindowHeroMedia: Equatable {
   let videoURL: String?
   let revealVideo: Bool
   let height: CGFloat
+  /// Keeps the detail-page text scrim fixed to the window during scroll rubber-banding.
+  let strongTextScrim: Bool
 }
 
 struct WindowHeroMediaPreferenceKey: PreferenceKey {

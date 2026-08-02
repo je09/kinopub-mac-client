@@ -181,7 +181,8 @@ struct MediaItemView: View {
     return WindowHeroMedia(posterURL: poster,
                            videoURL: trailer,
                            revealVideo: trailer != nil,
-                           height: heroHeight)
+                           height: heroHeight,
+                           strongTextScrim: true)
   }
 
   private var hero: some View {
@@ -189,6 +190,7 @@ struct MediaItemView: View {
                  height: heroHeight,
                  tallBlur: true,
                  blurReduction: 50,
+                 bottomScrim: false,
                  transparentBase: true) {
       VStack(alignment: .leading, spacing: 10) {
         Text(mediaItem.localizedTitle)
@@ -217,7 +219,7 @@ struct MediaItemView: View {
           }
         }
 
-        MetadataRow(items: heroBadges)
+        MetadataRow(items: heroBadges, textColor: .white.opacity(0.82))
 
         // kino.pub / КП / IMDb badges in the hero (no background pill here).
         // Ratings + the user's like/dislike, side by side — wraps to two rows on narrow screens.

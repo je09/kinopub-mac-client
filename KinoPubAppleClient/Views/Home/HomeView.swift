@@ -139,7 +139,8 @@ struct HomeView: View {
     return WindowHeroMedia(posterURL: item.posters.wide ?? item.posters.big,
                            videoURL: trailer,
                            revealVideo: trailerReadyItemID == item.id,
-                           height: heroHeight)
+                           height: heroHeight,
+                           strongTextScrim: false)
   }
 
   private var homeCarouselControls: some View {

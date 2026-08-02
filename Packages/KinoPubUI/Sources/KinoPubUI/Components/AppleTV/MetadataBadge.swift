@@ -48,9 +48,11 @@ public struct MetadataRow: View {
   }
 
   private let items: [Item]
+  private let textColor: Color
 
-  public init(items: [Item]) {
+  public init(items: [Item], textColor: Color = Color.KinoPub.subtitle) {
     self.items = items
+    self.textColor = textColor
   }
 
   public var body: some View {
@@ -61,7 +63,7 @@ public struct MetadataRow: View {
         } else {
           Text(item.text)
             .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(Color.KinoPub.subtitle)
+            .foregroundStyle(textColor)
         }
       }
     }

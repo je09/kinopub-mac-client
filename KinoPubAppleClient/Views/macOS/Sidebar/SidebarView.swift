@@ -78,7 +78,9 @@ struct SidebarView: View {
           .opacity(shouldRevealHeroVideo ? 0 : 1)
         }
 
-        if let media = windowHeroMedia { windowHeroTextGradient(height: media.height) }
+        if let media = windowHeroMedia {
+          windowHeroTextGradient(height: media.height, strong: media.strongTextScrim)
+        }
       }
       .animation(.easeInOut(duration: 0.7), value: windowHeroMedia?.posterURL)
       .animation(.easeInOut(duration: 0.7), value: shouldRevealHeroVideo)
@@ -119,20 +121,50 @@ struct SidebarView: View {
 
   /// Window-level artwork needs a window-level scrim so both poster/video and their gradient span
   /// behind the sidebar and detail column. The lower edge follows each screen's hero height.
-  private func windowHeroTextGradient(height: CGFloat) -> some View {
-    let gradientHeight = min(height * 0.76, 420)
-    return VStack(spacing: 0) {
-      Spacer().frame(height: max(height - gradientHeight, 0))
-      LinearGradient(stops: [
-        .init(color: .clear, location: 0),
-        .init(color: .black.opacity(0.22), location: 0.42),
-        .init(color: .black.opacity(0.82), location: 1)
-      ], startPoint: .top, endPoint: .bottom)
-        .frame(maxWidth: .infinity)
-        .frame(height: gradientHeight)
-      Spacer(minLength: 0)
+  @ViewBuilder
+  private func windowHeroTextGradient(height: CGFloat, strong: Bool) -> some View {
+    if strong {
+      // Keep this scrim at window level rather than inside the ScrollView. It therefore continues
+      // behind the hero when macOS rubber-bands the detail page downward instead of exposing a
+      // bright, unshaded strip above the moving content.
+      GeometryReader { proxy in
+        // The artwork/video is window-sized, so its scrim must be window-sized too. Keep the
+        // original hero ramp, then hold its darkest value below the hero rather than ending it.
+        // Drawing here (outside NavigationSplitView's columns) also carries it beneath the sidebar
+        // and titlebar instead of clipping it to the detail page.
+        let heroEnd = min(max(height / max(proxy.size.height, 1), 0), 1)
+        ZStack {
+          LinearGradient(stops: [
+            .init(color: .black.opacity(0.48), location: 0),
+            .init(color: .black.opacity(0.52), location: heroEnd * 0.58),
+            .init(color: .black.opacity(0.88), location: heroEnd),
+            .init(color: .black.opacity(0.88), location: 1)
+          ], startPoint: .top, endPoint: .bottom)
+
+          LinearGradient(stops: [
+            .init(color: .black.opacity(0.28), location: 0),
+            .init(color: .black.opacity(0.12), location: 0.62),
+            .init(color: .clear, location: 1)
+          ], startPoint: .leading, endPoint: .trailing)
+        }
+        .frame(width: proxy.size.width, height: proxy.size.height)
+      }
+      .allowsHitTesting(false)
+    } else {
+      let gradientHeight = min(height * 0.76, 420)
+      VStack(spacing: 0) {
+        Spacer().frame(height: max(height - gradientHeight, 0))
+        LinearGradient(stops: [
+          .init(color: .clear, location: 0),
+          .init(color: .black.opacity(0.22), location: 0.42),
+          .init(color: .black.opacity(0.82), location: 1)
+        ], startPoint: .top, endPoint: .bottom)
+          .frame(maxWidth: .infinity)
+          .frame(height: gradientHeight)
+        Spacer(minLength: 0)
+      }
+      .allowsHitTesting(false)
     }
-    .allowsHitTesting(false)
   }
 
   // MARK: - Offline mode
