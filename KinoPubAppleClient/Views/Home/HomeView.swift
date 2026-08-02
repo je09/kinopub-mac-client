@@ -16,6 +16,9 @@ struct HomeView: View {
   @Environment(\.appContext) var appContext
   @StateObject private var model: HomeModel
   @ObservedObject private var visibility = SectionVisibilityStore.shared
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @State private var featuredIndex = 0
+  @State private var carouselPaused = false
 
   init(model: @autoclosure @escaping () -> HomeModel) {
     _model = StateObject(wrappedValue: model())
@@ -58,24 +61,88 @@ struct HomeView: View {
       HeroBackdrop(imageURL: nil, height: heroHeight) { EmptyView() }
     } else {
       GeometryReader { proxy in
-        ScrollView(.horizontal, showsIndicators: false) {
-          LazyHStack(spacing: 16) {
-            ForEach(model.featured) { hero in
-              heroPage(hero)
-                .frame(width: max(600, proxy.size.width - 48))
-            }
+        ZStack(alignment: .bottomTrailing) {
+          if let hero = currentFeaturedItem {
+            heroPage(hero)
+              .id(hero.id)
+              .frame(width: max(600, proxy.size.width - 32))
+              .transition(.opacity.combined(with: .scale(scale: 1.01)))
           }
-          .padding(.horizontal, 16)
+          homeCarouselControls
+            .padding(.trailing, 32)
+            .padding(.bottom, 22)
         }
+        .frame(maxWidth: .infinity)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.8), value: featuredIndex)
       }
       .frame(height: heroHeight)
+      .task(id: model.featured.map(\.id)) { await runFeaturedCarousel() }
+      .onChange(of: model.featured.count) { count in
+        if featuredIndex >= count { featuredIndex = 0 }
+      }
     }
+  }
+
+  private var currentFeaturedItem: MediaItem? {
+    guard model.featured.indices.contains(featuredIndex) else { return model.featured.first }
+    return model.featured[featuredIndex]
+  }
+
+  private var homeCarouselControls: some View {
+    HStack(spacing: 10) {
+      Button { carouselPaused.toggle() } label: {
+        Image(systemName: carouselPaused ? "play.fill" : "pause.fill")
+      }
+      .help(carouselPaused ? "Play carousel".localized : "Pause carousel".localized)
+
+      Button { selectFeatured(offset: -1) } label: { Image(systemName: "chevron.left") }
+
+      HStack(spacing: 6) {
+        ForEach(model.featured.indices, id: \.self) { index in
+          Button { selectFeatured(index: index) } label: {
+            Capsule()
+              .fill(index == featuredIndex ? Color.white : Color.white.opacity(0.4))
+              .frame(width: index == featuredIndex ? 18 : 6, height: 6)
+          }
+          .buttonStyle(.plain)
+        }
+      }
+
+      Button { selectFeatured(offset: 1) } label: { Image(systemName: "chevron.right") }
+    }
+    .buttonStyle(.plain)
+    .foregroundStyle(.white)
+    .padding(.horizontal, 13)
+    .padding(.vertical, 9)
+    .background(.ultraThinMaterial, in: Capsule())
+  }
+
+  @MainActor
+  private func runFeaturedCarousel() async {
+    guard model.featured.count > 1, !reduceMotion else { return }
+    while !Task.isCancelled {
+      try? await Task.sleep(nanoseconds: 7_000_000_000)
+      guard !Task.isCancelled else { return }
+      if !carouselPaused { selectFeatured(offset: 1) }
+    }
+  }
+
+  private func selectFeatured(offset: Int) {
+    guard !model.featured.isEmpty else { return }
+    selectFeatured(index: (featuredIndex + offset + model.featured.count) % model.featured.count)
+  }
+
+  private func selectFeatured(index: Int) {
+    guard model.featured.indices.contains(index) else { return }
+    withAnimation(.easeInOut(duration: 0.8)) { featuredIndex = index }
   }
 
   @ViewBuilder
   private func heroPage(_ hero: MediaItem) -> some View {
     NavigationLink(value: Route.details(hero)) {
-      HeroBackdrop(imageURL: hero.posters.wide ?? hero.posters.big, height: heroHeight) {
+      HeroBackdrop(imageURL: hero.posters.wide ?? hero.posters.big,
+                   videoURL: hero.trailer?.url,
+                   height: heroHeight) {
         VStack(alignment: .leading, spacing: 10) {
           Text(hero.localizedTitle)
             .font(.system(size: 34, weight: .bold))
