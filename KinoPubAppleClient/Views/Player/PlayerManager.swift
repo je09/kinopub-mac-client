@@ -128,6 +128,7 @@ class PlayerManager: ObservableObject {
   lazy var player: AVPlayer = {
     guard let fileURL else { return AVPlayer() }
     let item = AVPlayerItem(url: fileURL)
+    configureBuffering(for: item, sourceURL: fileURL)
     if is3D, let comp = ThreeDVideoComposition.make(for: item.asset, mode: threeDMode) {
       item.videoComposition = comp
     }
@@ -142,8 +143,16 @@ class PlayerManager: ObservableObject {
     // can replace that selection while the player is starting, yielding a checked but invisible
     // subtitle track in AVKit's menu.
     player.appliesMediaSelectionCriteriaAutomatically = false
+    // Let AVPlayer delay/recover playback until enough media is available instead of repeatedly
+    // starting and stalling on variable-bandwidth streams.
+    player.automaticallyWaitsToMinimizeStalling = true
     return player
   }()
+
+  /// Keep roughly a minute ahead, while AVPlayer's adaptive bitrate controller independently lowers
+  /// or raises rendition quality from observed throughput—similar to YouTube's buffer + ABR model.
+  /// This remains a hint: AVFoundation may shorten it for live streams or memory pressure.
+  private static let streamingBufferDuration: TimeInterval = 60
 
   private var playerTimeObserver: PlayerTimeObserver?
   private var playItem: any PlayableItem
@@ -354,6 +363,7 @@ class PlayerManager: ObservableObject {
   private func replacePlayerItem() {
     guard let url = fileURL else { return }
     let item = AVPlayerItem(url: url)
+    configureBuffering(for: item, sourceURL: url)
     if watchMode == .media, let maxResolution = StreamQuality.current.maxResolution {
       item.preferredMaximumResolution = maxResolution
     }
@@ -381,6 +391,14 @@ class PlayerManager: ObservableObject {
       Task { @MainActor in self?.playbackDidFinish() }
     }
     updateEpisodeNavigation()
+  }
+
+  /// Keep a forward buffer for remote playback. Local downloads bypass this to avoid pointless
+  /// read-ahead, while remote HLS/progressive streams can continue filling even during a pause.
+  private func configureBuffering(for item: AVPlayerItem, sourceURL: URL) {
+    guard !sourceURL.isFileURL else { return }
+    item.preferredForwardBufferDuration = Self.streamingBufferDuration
+    item.canUseNetworkResourcesForLiveStreamingWhilePaused = true
   }
 
   // MARK: - Failure diagnostics
