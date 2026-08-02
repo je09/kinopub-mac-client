@@ -5352,23 +5352,6 @@
         }
       }
     },
-    "Comfortable" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comfortable"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Стандартно"
-          }
-        }
-      }
-    },
     "Colorful" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5382,6 +5365,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Цветные"
+          }
+        }
+      }
+    },
+    "Comfortable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comfortable"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стандартно"
           }
         }
       }
@@ -6632,295 +6632,6 @@
         }
       }
     },
-    "Edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изменить"
-          }
-        }
-      }
-    },
-    "Tinted" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tinted"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "С оттенком"
-          }
-        }
-      }
-    },
-    "System" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Системный"
-          }
-        }
-      }
-    },
-    "Spacious" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spacious"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Просторно"
-          }
-        }
-      }
-    },
-    "Solid" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Solid"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сплошной"
-          }
-        }
-      }
-    },
-    "Sidebar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sidebar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Боковая панель"
-          }
-        }
-      }
-    },
-    "Show section headers" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show section headers"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показывать заголовки разделов"
-          }
-        }
-      }
-    },
-    "Restore Defaults" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore Defaults"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Восстановить настройки"
-          }
-        }
-      }
-    },
-    "Purple" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Purple"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Фиолетовый"
-          }
-        }
-      }
-    },
-    "Pink" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pink"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Розовый"
-          }
-        }
-      }
-    },
-    "Orange" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Orange"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оранжевый"
-          }
-        }
-      }
-    },
-    "Monochrome" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monochrome"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Монохромные"
-          }
-        }
-      }
-    },
-    "KinoPub Red" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KinoPub Red"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Красный KinoPub"
-          }
-        }
-      }
-    },
-    "Icons" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Icons"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Значки"
-          }
-        }
-      }
-    },
-    "Green" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Green"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зелёный"
-          }
-        }
-      }
-    },
-    "Discover" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discover"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обзор"
-          }
-        }
-      }
-    },
-    "Density" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Density"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Плотность"
-          }
-        }
-      }
-    },
     "days" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7321,6 +7032,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Jildni oʻchirish"
+          }
+        }
+      }
+    },
+    "Density" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Density"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плотность"
           }
         }
       }
@@ -8027,6 +7755,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Rejissyorlar"
+          }
+        }
+      }
+    },
+    "Discover" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discover"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обзор"
           }
         }
       }
@@ -9540,6 +9285,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Davomiyligi"
+          }
+        }
+      }
+    },
+    "Edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить"
           }
         }
       }
@@ -11699,6 +11461,23 @@
         }
       }
     },
+    "Green" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Green"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зелёный"
+          }
+        }
+      }
+    },
     "Guide updated" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12116,6 +11895,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Qaynoq"
+          }
+        }
+      }
+    },
+    "Icons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icons"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значки"
           }
         }
       }
@@ -13132,6 +12928,23 @@
     },
     "KinoPub" : {
 
+    },
+    "KinoPub Red" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KinoPub Red"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Красный KinoPub"
+          }
+        }
+      }
     },
     "Language" : {
       "localizations" : {
@@ -15979,6 +15792,23 @@
         }
       }
     },
+    "Monochrome" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monochrome"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Монохромные"
+          }
+        }
+      }
+    },
     "Month" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -17194,6 +17024,57 @@
         }
       }
     },
+    "New Concerts" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Concerts"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые концерты"
+          }
+        }
+      }
+    },
+    "New Documentary Movies" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Documentary Movies"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые документальные фильмы"
+          }
+        }
+      }
+    },
+    "New Documentary Series" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Documentary Series"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые документальные сериалы"
+          }
+        }
+      }
+    },
     "New episodes" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -17594,6 +17475,74 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Yangi jild…"
+          }
+        }
+      }
+    },
+    "New in 3D" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New in 3D"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новое в 3D"
+          }
+        }
+      }
+    },
+    "New Movies" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Movies"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые фильмы"
+          }
+        }
+      }
+    },
+    "New Series" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Series"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые сериалы"
+          }
+        }
+      }
+    },
+    "New TV Shows" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New TV Shows"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые ТВ-шоу"
           }
         }
       }
@@ -19263,6 +19212,23 @@
         }
       }
     },
+    "Orange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orange"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оранжевый"
+          }
+        }
+      }
+    },
     "Original" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -19562,6 +19528,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Davr"
+          }
+        }
+      }
+    },
+    "Pink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pink"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розовый"
           }
         }
       }
@@ -19970,6 +19953,40 @@
         }
       }
     },
+    "Popular Movies" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular Movies"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Популярные фильмы"
+          }
+        }
+      }
+    },
+    "Popular Series" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular Series"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Популярные сериалы"
+          }
+        }
+      }
+    },
     "Portuguese" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -20370,6 +20387,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Profil"
+          }
+        }
+      }
+    },
+    "Purple" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purple"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фиолетовый"
           }
         }
       }
@@ -22186,6 +22220,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Ilova yopilmoqda"
+          }
+        }
+      }
+    },
+    "Restore Defaults" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Defaults"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить настройки"
           }
         }
       }
@@ -24024,6 +24075,23 @@
         }
       }
     },
+    "Show section headers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show section headers"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать заголовки разделов"
+          }
+        }
+      }
+    },
     "Shows & Movies" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -24125,6 +24193,40 @@
         }
       }
     },
+    "Sidebar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidebar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Боковая панель"
+          }
+        }
+      }
+    },
+    "Solid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solid"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сплошной"
+          }
+        }
+      }
+    },
     "Sort" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -24222,6 +24324,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Saralash"
+          }
+        }
+      }
+    },
+    "Spacious" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spacious"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Просторно"
           }
         }
       }
@@ -25236,6 +25355,23 @@
         }
       }
     },
+    "System" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системный"
+          }
+        }
+      }
+    },
     "The app will restart to apply the language change." : {
       "localizations" : {
         "az" : {
@@ -25836,6 +25972,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Jild butunlay oʻchiriladi."
+          }
+        }
+      }
+    },
+    "Tinted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tinted"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С оттенком"
           }
         }
       }
