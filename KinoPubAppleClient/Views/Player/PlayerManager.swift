@@ -160,6 +160,23 @@ class PlayerManager: ObservableObject {
   private var didHandlePlaybackEnd = false
   private var nextTrackCommandTarget: Any?
   private var previousTrackCommandTarget: Any?
+
+  /// Serial, coalescing queue for marktime calls. Independent detached requests can complete out of
+  /// order, and an old tick used to read `playItem` after an episode switch. Snapshot every mark and
+  /// send one at a time instead.
+  private struct PendingWatchMark {
+    let id: Int
+    let video: Int?
+    let season: Int?
+    var time: Int
+
+    func matches(_ other: PendingWatchMark) -> Bool {
+      id == other.id && video == other.video && season == other.season
+    }
+  }
+  private var watchMarkQueue: [PendingWatchMark] = []
+  private var latestWatchMarkTimes: [String: Int] = [:]
+  private var watchMarkWorker: Task<Void, Never>?
   
   private var fileURL: URL? {
     switch watchMode {
@@ -233,10 +250,10 @@ class PlayerManager: ObservableObject {
     if watchMode == .media {
       audioObservation = player.currentItem?.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
         guard item.status == .readyToPlay else { return }
-        DispatchQueue.main.async {
+        Task { @MainActor in
           guard let self, self.player.currentItem === item else { return }
-          self.applyPreferredAudio()
-          self.restorePreferredSubtitle(for: item)
+          await self.applyPreferredAudio()
+          await self.restorePreferredSubtitle(for: item)
           self.audioObservation?.invalidate()
           self.audioObservation = nil
         }
@@ -252,9 +269,9 @@ class PlayerManager: ObservableObject {
     observeMediaSelection(on: player.currentItem)
 
     playerTimeObserver = PlayerTimeObserver(player: player, period: 10.0, timeUpdateHandler: { [weak self] time in
-      DispatchQueue.main.async {
+      Task { @MainActor in
         self?.saveWatchMark(time: time)
-        self?.captureCurrentMediaSelection()
+        await self?.captureCurrentMediaSelection()
       }
     })
 
@@ -262,7 +279,7 @@ class PlayerManager: ObservableObject {
     if watchMode == .media {
       endOfPlaybackObserver = NotificationCenter.default.addObserver(
         forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { [weak self] _ in
-          self?.playbackDidFinish()
+          Task { @MainActor in self?.playbackDidFinish() }
       }
     }
     updateEpisodeNavigation()
@@ -270,6 +287,7 @@ class PlayerManager: ObservableObject {
   }
 
   deinit {
+    watchMarkWorker?.cancel()
     if let mediaSelectionObserver { NotificationCenter.default.removeObserver(mediaSelectionObserver) }
     if let endOfPlaybackObserver { NotificationCenter.default.removeObserver(endOfPlaybackObserver) }
     let commands = MPRemoteCommandCenter.shared()
@@ -348,10 +366,10 @@ class PlayerManager: ObservableObject {
     }
     audioObservation = item.observe(\.status, options: [.new, .initial]) { [weak self] item, _ in
       guard item.status == .readyToPlay else { return }
-      DispatchQueue.main.async {
+      Task { @MainActor in
         guard let self, self.watchMode == .media, self.player.currentItem === item else { return }
-        self.applyPreferredAudio()
-        self.restorePreferredSubtitle(for: item)
+        await self.applyPreferredAudio()
+        await self.restorePreferredSubtitle(for: item)
         self.audioObservation?.invalidate()
         self.audioObservation = nil
       }
@@ -360,7 +378,7 @@ class PlayerManager: ObservableObject {
     endOfPlaybackObserver = NotificationCenter.default.addObserver(
       forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
     ) { [weak self] _ in
-      self?.playbackDidFinish()
+      Task { @MainActor in self?.playbackDidFinish() }
     }
     updateEpisodeNavigation()
   }
@@ -391,10 +409,9 @@ class PlayerManager: ObservableObject {
 
   /// Restore the user's audio choice. On first playback, prefer a track explicitly marked as the
   /// original language instead of whichever dub happens to be first in the HLS playlist.
-  private func applyPreferredAudio() {
-    guard watchMode == .media,
-          let item = player.currentItem,
-          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .audible)
+  private func applyPreferredAudio() async {
+    guard watchMode == .media, let item = player.currentItem,
+          let group = try? await item.asset.loadMediaSelectionGroup(for: .audible)
     else { return }
 
     let options = group.options
@@ -423,9 +440,9 @@ class PlayerManager: ObservableObject {
   /// Restore the user's subtitle track, including an explicit Off choice. If no preference exists,
   /// use the playlist default. Repeat only while the selection is unchanged so a quick user choice
   /// is never overwritten while AVKit attaches its renderer.
-  private func restorePreferredSubtitle(for item: AVPlayerItem) {
+  private func restorePreferredSubtitle(for item: AVPlayerItem) async {
     guard watchMode == .media,
-          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
+          let group = try? await item.asset.loadMediaSelectionGroup(for: .legible)
     else { return }
 
     let preference = AppContext.shared.libraryState.subtitlePreference(itemId: playItem.metadata.id)
@@ -447,11 +464,13 @@ class PlayerManager: ObservableObject {
 
     item.select(desired, in: group)
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
-      guard let self, let item, self.player.currentItem === item else { return }
-      let current = item.currentMediaSelection.selectedMediaOption(in: group)
-      let selectionIsUnchanged = (current == nil && desired == nil) || current === desired
-      guard selectionIsUnchanged else { return }
-      item.select(desired, in: group)
+      Task { @MainActor in
+        guard let self, let item, self.player.currentItem === item else { return }
+        let current = item.currentMediaSelection.selectedMediaOption(in: group)
+        let selectionIsUnchanged = (current == nil && desired == nil) || current === desired
+        guard selectionIsUnchanged else { return }
+        item.select(desired, in: group)
+      }
     }
   }
 
@@ -466,21 +485,23 @@ class PlayerManager: ObservableObject {
       object: item,
       queue: .main
     ) { [weak self, weak item] _ in
-      guard let self, let item, self.player.currentItem === item else { return }
-      self.captureCurrentMediaSelection()
+      Task { @MainActor in
+        guard let self, let item, self.player.currentItem === item else { return }
+        await self.captureCurrentMediaSelection()
+      }
     }
   }
 
-  private func captureCurrentMediaSelection() {
-    captureCurrentAudio()
-    captureCurrentSubtitle()
+  private func captureCurrentMediaSelection() async {
+    await captureCurrentAudio()
+    await captureCurrentSubtitle()
   }
 
   /// Remember the audio option currently selected in the player, so the next episode/launch resumes it.
-  private func captureCurrentAudio() {
+  private func captureCurrentAudio() async {
     guard watchMode == .media,
           let item = player.currentItem,
-          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .audible),
+          let group = try? await item.asset.loadMediaSelectionGroup(for: .audible),
           let selected = item.currentMediaSelection.selectedMediaOption(in: group),
           let index = group.options.firstIndex(of: selected)
     else { return }
@@ -491,10 +512,10 @@ class PlayerManager: ObservableObject {
   }
 
   /// Remember the selected subtitle immediately; nil is a meaningful explicit Off selection.
-  private func captureCurrentSubtitle() {
+  private func captureCurrentSubtitle() async {
     guard watchMode == .media,
           let item = player.currentItem,
-          let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
+          let group = try? await item.asset.loadMediaSelectionGroup(for: .legible)
     else { return }
 
     let selected = item.currentMediaSelection.selectedMediaOption(in: group)
@@ -524,16 +545,11 @@ class PlayerManager: ObservableObject {
                                                           episode: playItem.metadata.video)
     }
 
-    Task.detached(priority: .utility) { [weak self] in
-      guard let self else { return }
-      do {
-        try await self.actionsService.markWatch(id: self.playItem.metadata.id,
-                                                time: Int(time), video: self.playItem.metadata.video,
-                                                season: self.playItem.metadata.season)
-      } catch {
-        Logger.app.error("Failed to save watch mark: \(error)")
-      }
-    }
+    let metadata = playItem.metadata
+    enqueueWatchMark(.init(id: metadata.id,
+                           video: metadata.video,
+                           season: metadata.season,
+                           time: Int(time)))
   }
 
   /// Reaching the end marks the title watched. kino.pub derives watched status from the position you
@@ -545,16 +561,40 @@ class PlayerManager: ObservableObject {
     let duration = player.currentItem?.duration.seconds ?? 0
     guard duration.isFinite, duration > 0 else { return }
     let metadata = playItem.metadata
-    let actionsService = actionsService
     AppContext.shared.localProgressStore.clear(id: metadata.id)
-    Task.detached(priority: .utility) {
-      do {
-        try await actionsService.markWatch(id: metadata.id,
-                                           time: Int(duration), video: metadata.video,
-                                           season: metadata.season)
-      } catch {
-        Logger.app.error("Failed to mark finished: \(error)")
+    enqueueWatchMark(.init(id: metadata.id,
+                           video: metadata.video,
+                           season: metadata.season,
+                           time: Int(duration)))
+  }
+
+  private func enqueueWatchMark(_ mark: PendingWatchMark) {
+    let key = "\(mark.id)|\(mark.season.map(String.init) ?? "-")|\(mark.video.map(String.init) ?? "-")"
+    guard mark.time > (latestWatchMarkTimes[key] ?? -1) else { return }
+    latestWatchMarkTimes[key] = mark.time
+    if let index = watchMarkQueue.lastIndex(where: { $0.matches(mark) }) {
+      // Never let a delayed/older periodic callback move this media backwards.
+      watchMarkQueue[index].time = max(watchMarkQueue[index].time, mark.time)
+    } else {
+      watchMarkQueue.append(mark)
+    }
+    guard watchMarkWorker == nil else { return }
+    watchMarkWorker = Task(priority: .utility) { [weak self] in
+      guard let self else { return }
+      while !Task.isCancelled, !watchMarkQueue.isEmpty {
+        let next = watchMarkQueue.removeFirst()
+        do {
+          try await actionsService.markWatch(id: next.id,
+                                             time: next.time,
+                                             video: next.video,
+                                             season: next.season)
+        } catch is CancellationError {
+          break
+        } catch {
+          Logger.app.error("Failed to save watch mark: \(error)")
+        }
       }
+      watchMarkWorker = nil
     }
   }
 

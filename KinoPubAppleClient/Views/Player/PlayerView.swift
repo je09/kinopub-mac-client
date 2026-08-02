@@ -21,9 +21,9 @@ struct PlayerView: View {
   }
 
   var body: some View {
-    // Native macOS player (AVKit): floating controls, scrubber, volume, the system fullscreen toggle
-    // and PiP — the standard QuickTime-style experience. No custom close button; exit with Esc, or the
-    // standard back button in the window toolbar once out of fullscreen.
+    // Native macOS player (AVKit): floating controls, scrubber, volume, and the system fullscreen
+    // toggle. PiP is deliberately disabled: AVKit's PiP service crashes this ad-hoc distributed app
+    // during the window hand-off. Re-enable only after a crash-log-backed lifecycle fix.
     MacNativePlayer(player: playerManager.player)
       // The window titlebar is a transient overlay; video fills its reserved safe area beneath it.
       .ignoresSafeArea(.all)
@@ -61,25 +61,24 @@ struct PlayerView: View {
   }
 }
 
-/// The native macOS video view (AVKit `AVPlayerView`) — floating controls, scrubber, volume, the
-/// system fullscreen toggle and PiP, matching how video plays elsewhere on the system.
+/// The native macOS video view (AVKit `AVPlayerView`) with standard playback controls.
 private struct MacNativePlayer: NSViewRepresentable {
   let player: AVPlayer
 
   func makeNSView(context: Context) -> PlayerContainerView {
     let view = PlayerContainerView()
     view.playerView.player = player
-    view.playerView.observeToolbar(for: player)
+    view.playerView.observeChrome(for: player)
     return view
   }
 
   func updateNSView(_ view: PlayerContainerView, context: Context) {
     if view.playerView.player !== player { view.playerView.player = player }
-    view.playerView.observeToolbar(for: player)
+    view.playerView.observeChrome(for: player)
   }
 
   static func dismantleNSView(_ view: PlayerContainerView, coordinator: ()) {
-    view.playerView.restoreToolbar()
+    view.playerView.restoreWindowChrome()
     view.playerView.player?.pause()
     view.playerView.player = nil
     view.unmountPlayer()
@@ -94,8 +93,9 @@ private final class PlayerContainerView: NSView {
     super.init(frame: frameRect)
     playerView.controlsStyle = .floating
     playerView.showsFullScreenToggleButton = true
-    playerView.allowsPictureInPicturePlayback = true
+    playerView.allowsPictureInPicturePlayback = false
     playerView.videoGravity = .resizeAspect
+    playerView.focusRingType = .none
     playerView.translatesAutoresizingMaskIntoConstraints = false
     addSubview(playerView)
     NSLayoutConstraint.activate([
@@ -114,76 +114,115 @@ private final class PlayerContainerView: NSView {
   }
 }
 
-/// Makes titlebar controls a transient overlay, like AVKit's controls, without changing the
-/// content layout. `fullSizeContentView` is the AppKit-supported way to avoid a toolbar resize.
+/// Keeps the app titlebar in sync with AVKit's floating controls: mouse activity or pause shows
+/// both; after a short period of active playback both disappear. PiP remains disabled, so AVKit
+/// never reparents this view into a private window while we adjust the host window.
 private final class PlayerChromeView: AVPlayerView {
-  private var trackingArea: NSTrackingArea?
-  private var rateObservation: NSKeyValueObservation?
-  private weak var observedPlayer: AVPlayer?
-  private var hideWorkItem: DispatchWorkItem?
   private weak var hostWindow: NSWindow?
+  private weak var observedPlayer: AVPlayer?
+  private var rateObservation: NSKeyValueObservation?
+  private var trackingArea: NSTrackingArea?
+  private var hideWorkItem: DispatchWorkItem?
+  private var mouseUpMonitor: Any?
   private var originalStyleMask: NSWindow.StyleMask?
   private var originalTitleVisibility: NSWindow.TitleVisibility?
   private var originalTitlebarTransparency: Bool?
   private var originalToolbarVisibility: Bool?
   private var didClearInitialControlFocus = false
 
-  deinit { hideWorkItem?.cancel() }
+  deinit {
+    hideWorkItem?.cancel()
+    if let mouseUpMonitor { NSEvent.removeMonitor(mouseUpMonitor) }
+  }
 
   override var acceptsFirstResponder: Bool { true }
 
   override func viewDidMoveToWindow() {
     super.viewDidMoveToWindow()
-    // AVKit can temporarily attach parts of the player to its own PiP window. Keep all titlebar
-    // changes scoped to the app window; mutating the private PiP window can crash AVKit and leave
-    // the app toolbar hidden when playback closes.
+    guard let window else { return }
     if hostWindow == nil { hostWindow = window }
-    if window === hostWindow { configureOverlayTitlebar() }
-    // AVKit focuses the play/pause button when playback opens, leaving an accent-colored selection
-    // behind even though the user did not navigate to it. Keep keyboard handling on the player view
-    // itself while leaving the controls visually neutral.
+    guard window === hostWindow else { return }
+    configureOverlayTitlebar()
+    showWindowChrome()
+
+    // AVKit otherwise auto-focuses and accent-highlights its first playback control on entry. Keep
+    // keyboard events on the player itself without selecting any individual button.
     if !didClearInitialControlFocus {
       didClearInitialControlFocus = true
-      DispatchQueue.main.async { [weak self] in
-        guard let self, let window = self.window else { return }
-        window.makeFirstResponder(self)
+      clearControlFocus(in: window)
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self, weak window] in
+        guard let self, let window, self.window === window else { return }
+        self.clearControlFocus(in: window)
       }
     }
+
+    if mouseUpMonitor == nil {
+      mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self, weak window] event in
+        guard let self, let window, event.window === window else { return event }
+        let point = self.convert(event.locationInWindow, from: nil)
+        guard self.bounds.contains(point) else { return event }
+        // AVKit makes a clicked play/pause/seek control the first responder and leaves it tinted.
+        // Clear that transient selection after AppKit finishes dispatching the click.
+        DispatchQueue.main.async { [weak self, weak window] in
+          guard let self, let window else { return }
+          self.clearControlFocus(in: window)
+        }
+        return event
+      }
+    }
+  }
+
+  private func clearControlFocus(in window: NSWindow) {
+    window.makeFirstResponder(self)
   }
 
   override func updateTrackingAreas() {
     super.updateTrackingAreas()
     if let trackingArea { removeTrackingArea(trackingArea) }
-    let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect], owner: self)
+    let area = NSTrackingArea(rect: .zero,
+                              options: [.mouseMoved, .activeInKeyWindow, .inVisibleRect],
+                              owner: self)
     addTrackingArea(area)
     trackingArea = area
   }
 
-  override func mouseMoved(with event: NSEvent) { showWindowControls() }
+  override func mouseMoved(with event: NSEvent) {
+    showWindowChrome()
+    super.mouseMoved(with: event)
+  }
+
   override func mouseDown(with event: NSEvent) {
-    showWindowControls()
+    showWindowChrome()
     super.mouseDown(with: event)
   }
 
-  func observeToolbar(for player: AVPlayer) {
+  func observeChrome(for player: AVPlayer) {
     guard player !== observedPlayer else { return }
     observedPlayer = player
     rateObservation = player.observe(\.rate, options: [.initial, .new]) { [weak self] player, _ in
-      DispatchQueue.main.async { self?.updateWindowControls(forPlaying: player.rate > 0) }
+      Task { @MainActor in
+        guard let self else { return }
+        if player.rate > 0 {
+          self.scheduleChromeHide()
+        } else {
+          self.showWindowChrome(scheduleHide: false)
+        }
+      }
     }
   }
 
-  func restoreToolbar() {
-    guard let window = hostWindow, let originalStyleMask else { return }
-    window.styleMask = originalStyleMask
+  func restoreWindowChrome() {
+    hideWorkItem?.cancel()
+    guard let window = hostWindow else { return }
+    if let originalStyleMask { window.styleMask = originalStyleMask }
     window.titleVisibility = originalTitleVisibility ?? .visible
     window.titlebarAppearsTransparent = originalTitlebarTransparency ?? false
     if let originalToolbarVisibility { window.toolbar?.isVisible = originalToolbarVisibility }
-    setWindowButtons(hidden: false, in: window)
+    setTrafficLights(hidden: false, in: window)
   }
 
   private func configureOverlayTitlebar() {
-    guard let window = hostWindow, self.window === window else { return }
+    guard let window = hostWindow else { return }
     if originalStyleMask == nil {
       originalStyleMask = window.styleMask
       originalTitleVisibility = window.titleVisibility
@@ -191,37 +230,33 @@ private final class PlayerChromeView: AVPlayerView {
       originalToolbarVisibility = window.toolbar?.isVisible
     }
     window.styleMask.insert(.fullSizeContentView)
-    window.titlebarAppearsTransparent = true
     window.titleVisibility = .hidden
-    // Hide the app navigation toolbar permanently in playback; only native traffic lights overlay.
-    window.toolbar?.isVisible = false
+    window.titlebarAppearsTransparent = true
   }
 
-  private func updateWindowControls(forPlaying isPlaying: Bool) {
+  private func showWindowChrome(scheduleHide: Bool = true) {
     hideWorkItem?.cancel()
-    guard isPlaying else {
-      showWindowControls()
-      return
-    }
-    let work = DispatchWorkItem { [weak self] in self?.hideWindowControls() }
+    configureOverlayTitlebar()
+    guard let window = hostWindow else { return }
+    window.toolbar?.isVisible = originalToolbarVisibility ?? true
+    setTrafficLights(hidden: false, in: window)
+    if scheduleHide, observedPlayer?.rate ?? 0 > 0 { scheduleChromeHide() }
+  }
+
+  private func scheduleChromeHide() {
+    hideWorkItem?.cancel()
+    let work = DispatchWorkItem { [weak self] in self?.hideWindowChrome() }
     hideWorkItem = work
     DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: work)
   }
 
-  private func showWindowControls() {
-    hideWorkItem?.cancel()
-    configureOverlayTitlebar()
-    guard let window = hostWindow else { return }
-    setWindowButtons(hidden: false, in: window)
-    if observedPlayer?.rate ?? 0 > 0 { updateWindowControls(forPlaying: true) }
-  }
-
-  private func hideWindowControls() {
+  private func hideWindowChrome() {
     guard observedPlayer?.rate ?? 0 > 0, let window = hostWindow else { return }
-    setWindowButtons(hidden: true, in: window)
+    window.toolbar?.isVisible = false
+    setTrafficLights(hidden: true, in: window)
   }
 
-  private func setWindowButtons(hidden: Bool, in window: NSWindow) {
+  private func setTrafficLights(hidden: Bool, in window: NSWindow) {
     window.standardWindowButton(.closeButton)?.isHidden = hidden
     window.standardWindowButton(.miniaturizeButton)?.isHidden = hidden
     window.standardWindowButton(.zoomButton)?.isHidden = hidden
@@ -237,7 +272,7 @@ private extension View {
                                set: { if !$0 { error.wrappedValue = nil } })) {
       Button("OK", role: .cancel) { onDismiss() }
     } message: {
-      Text(error.wrappedValue ?? "")
+      if let message = error.wrappedValue { Text(message) }
     }
   }
 }

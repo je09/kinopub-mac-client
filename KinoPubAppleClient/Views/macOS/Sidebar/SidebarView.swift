@@ -49,6 +49,7 @@ struct SidebarView: View {
           }
         }
     }
+    .background(InitialFocusReset())
     .toolbar {
       if navigationState.sidebarSelection != .search {
         ToolbarItem(placement: .primaryAction) {
@@ -135,6 +136,28 @@ struct SidebarView: View {
                               errorHandler: errorHandler))
   }
 
+}
+
+/// NavigationSplitView assigns keyboard focus to its sidebar-toggle toolbar item when the window
+/// first opens. Clear that automatic selection without affecting deliberate keyboard navigation.
+private struct InitialFocusReset: NSViewRepresentable {
+  func makeNSView(context: Context) -> FocusResetView { FocusResetView() }
+  func updateNSView(_ view: FocusResetView, context: Context) {}
+
+  final class FocusResetView: NSView {
+    private var didReset = false
+
+    override func viewDidMoveToWindow() {
+      super.viewDidMoveToWindow()
+      guard !didReset, let window else { return }
+      didReset = true
+      DispatchQueue.main.async { [weak window] in window?.makeFirstResponder(nil) }
+      // SwiftUI installs its automatic toolbar key view one run-loop later.
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak window] in
+        window?.makeFirstResponder(nil)
+      }
+    }
+  }
 }
 
 struct SideBarView_Previews: PreviewProvider {

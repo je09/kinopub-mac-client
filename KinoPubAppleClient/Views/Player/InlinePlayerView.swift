@@ -29,7 +29,8 @@ struct PlatformInlinePlayer: NSViewRepresentable {
     view.player = AVPlayer(url: url)
     view.controlsStyle = .inline
     view.showsFullScreenToggleButton = true
-    view.allowsPictureInPicturePlayback = true
+    // PiP currently crashes the ad-hoc macOS build during AVKit's window hand-off.
+    view.allowsPictureInPicturePlayback = false
     view.player?.play()
     return view
   }
