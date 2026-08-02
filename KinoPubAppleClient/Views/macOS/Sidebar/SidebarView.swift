@@ -77,6 +77,8 @@ struct SidebarView: View {
           .transition(.opacity)
           .opacity(shouldRevealHeroVideo ? 0 : 1)
         }
+
+        if windowHeroMedia != nil { homeHeroTextGradient }
       }
       .animation(.easeInOut(duration: 0.7), value: windowHeroMedia?.posterURL)
       .animation(.easeInOut(duration: 0.7), value: shouldRevealHeroVideo)
@@ -113,6 +115,23 @@ struct SidebarView: View {
   private var shouldRevealHeroVideo: Bool {
     guard let media = windowHeroMedia, media.revealVideo, let video = media.videoURL else { return false }
     return readyHeroVideoURL == video
+  }
+
+  /// Home's artwork lives at the split-view level, so its legibility scrim must live here too in
+  /// order to span behind both the sidebar and detail column. Its lower edge matches Home's 620pt hero.
+  private var homeHeroTextGradient: some View {
+    VStack(spacing: 0) {
+      Spacer().frame(height: 200)
+      LinearGradient(stops: [
+        .init(color: .clear, location: 0),
+        .init(color: .black.opacity(0.22), location: 0.42),
+        .init(color: .black.opacity(0.82), location: 1)
+      ], startPoint: .top, endPoint: .bottom)
+        .frame(maxWidth: .infinity)
+        .frame(height: 420)
+      Spacer(minLength: 0)
+    }
+    .allowsHitTesting(false)
   }
 
   // MARK: - Offline mode

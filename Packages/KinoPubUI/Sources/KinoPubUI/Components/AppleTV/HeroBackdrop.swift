@@ -81,6 +81,9 @@ public struct HeroBackdrop<Overlay: View>: View {
           LoopingBackdropVideo(url: url, isPlaying: !videoPaused)
         }
       }
+      .overlay(alignment: .bottom) {
+        if !transparentBase { textLegibilityGradient }
+      }
       .overlay(alignment: .topTrailing) {
         if !transparentBase { carouselControls }
       }
@@ -93,6 +96,19 @@ public struct HeroBackdrop<Overlay: View>: View {
       .clipped()
       .allowsHitTesting(true)
       .task(id: imageURLs) { await runCarousel() }
+  }
+
+  /// A full-width vertical scrim—not a text-sized pill—keeps every hero overlay readable over
+  /// bright artwork while preserving the unobscured upper image.
+  private var textLegibilityGradient: some View {
+    LinearGradient(stops: [
+      .init(color: .clear, location: 0),
+      .init(color: .black.opacity(0.22), location: 0.42),
+      .init(color: .black.opacity(0.82), location: 1)
+    ], startPoint: .top, endPoint: .bottom)
+      .frame(maxWidth: .infinity)
+      .frame(height: min(height * 0.76, 420))
+      .allowsHitTesting(false)
   }
 
   private var playableVideoURL: URL? {
