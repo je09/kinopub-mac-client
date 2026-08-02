@@ -43,7 +43,7 @@ xcodebuild \
   -destination "platform=macOS" \
   -derivedDataPath "${BUILD_DIR}" \
   -skipPackagePluginValidation \
-  PRODUCT_BUNDLE_IDENTIFIER="${BUNDLE_ID}" \
+  KINO_APP_BUNDLE_IDENTIFIER="${BUNDLE_ID}" \
   MARKETING_VERSION="${MARKETING_VERSION}" \
   CURRENT_PROJECT_VERSION="${BUILD_NUMBER}" \
   CODE_SIGN_IDENTITY="-" \
