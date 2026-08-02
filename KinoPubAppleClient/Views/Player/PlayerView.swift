@@ -129,9 +129,13 @@ private final class PlayerChromeView: AVPlayerView {
   private var originalTitlebarTransparency: Bool?
   private var originalToolbarVisibility: Bool?
   private var didClearInitialControlFocus = false
+  private var gestureSeekTarget: Double?
+  private var wasPlayingBeforeGestureSeek = false
+  private var gestureSeekEndWorkItem: DispatchWorkItem?
 
   deinit {
     hideWorkItem?.cancel()
+    gestureSeekEndWorkItem?.cancel()
     if let mouseUpMonitor { NSEvent.removeMonitor(mouseUpMonitor) }
   }
 
@@ -194,6 +198,66 @@ private final class PlayerChromeView: AVPlayerView {
   override func mouseDown(with event: NSEvent) {
     showWindowChrome()
     super.mouseDown(with: event)
+  }
+
+  /// Two-finger horizontal scrolling scrubs continuously in either direction. Keep one logical
+  /// target across gesture and momentum events so rapid deltas do not repeatedly seek from a stale
+  /// `currentTime`; pause while scrubbing, then resume only if playback was active beforehand.
+  override func scrollWheel(with event: NSEvent) {
+    let horizontal = event.scrollingDeltaX
+    guard abs(horizontal) > abs(event.scrollingDeltaY), abs(horizontal) > 0.01,
+          let player,
+          let item = player.currentItem,
+          item.status == .readyToPlay else {
+      super.scrollWheel(with: event)
+      return
+    }
+
+    let duration = item.duration.seconds
+    guard duration.isFinite, duration > 0 else {
+      super.scrollWheel(with: event)
+      return
+    }
+
+    showWindowChrome()
+    if gestureSeekTarget == nil {
+      gestureSeekTarget = player.currentTime().seconds.isFinite ? player.currentTime().seconds : 0
+      wasPlayingBeforeGestureSeek = player.rate > 0
+      player.pause()
+    }
+
+    // Precise trackpad deltas are points; this gives a deliberate swipe roughly 8–15 seconds while
+    // retaining frame-level control for small movements. Traditional wheel ticks move farther.
+    let sensitivity = event.hasPreciseScrollingDeltas ? 0.10 : 2.0
+    let target = min(max((gestureSeekTarget ?? 0) + horizontal * sensitivity, 0), max(duration - 0.05, 0))
+    gestureSeekTarget = target
+    player.seek(to: CMTime(seconds: target, preferredTimescale: 600),
+                toleranceBefore: CMTime(seconds: 0.12, preferredTimescale: 600),
+                toleranceAfter: CMTime(seconds: 0.12, preferredTimescale: 600))
+
+    gestureSeekEndWorkItem?.cancel()
+    let finish = DispatchWorkItem { [weak self] in self?.finishGestureSeek() }
+    gestureSeekEndWorkItem = finish
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: finish)
+
+    if event.phase == .ended || event.phase == .cancelled || event.momentumPhase == .ended {
+      finishGestureSeek()
+    }
+  }
+
+  private func finishGestureSeek() {
+    gestureSeekEndWorkItem?.cancel()
+    gestureSeekEndWorkItem = nil
+    guard let player, let target = gestureSeekTarget else { return }
+    gestureSeekTarget = nil
+    let resume = wasPlayingBeforeGestureSeek
+    wasPlayingBeforeGestureSeek = false
+    player.seek(to: CMTime(seconds: target, preferredTimescale: 600),
+                toleranceBefore: .zero,
+                toleranceAfter: .zero) { finished in
+      guard finished, resume else { return }
+      DispatchQueue.main.async { [weak player] in player?.play() }
+    }
   }
 
   func observeChrome(for player: AVPlayer) {
