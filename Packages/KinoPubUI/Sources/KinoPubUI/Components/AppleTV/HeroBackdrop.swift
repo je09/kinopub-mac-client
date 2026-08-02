@@ -246,7 +246,13 @@ private final class BackdropVideoView: NSView {
 
   override func layout() {
     super.layout()
-    playerLayer.frame = bounds
+    // Fill the hero's full width while preserving a typical trailer's 16:9 composition. Align the
+    // oversized video to the top so titles/faces there remain visible; only the lower edge crops.
+    let videoHeight = max(bounds.height, bounds.width * 9 / 16)
+    playerLayer.frame = NSRect(x: 0,
+                               y: bounds.height - videoHeight,
+                               width: bounds.width,
+                               height: videoHeight)
   }
 
   func configure(url: URL) {

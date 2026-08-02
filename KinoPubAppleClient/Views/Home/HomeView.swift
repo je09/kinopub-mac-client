@@ -65,7 +65,7 @@ struct HomeView: View {
           if let hero = currentFeaturedItem {
             heroPage(hero)
               .id(hero.id)
-              .frame(width: max(600, proxy.size.width - 32))
+              .frame(width: max(600, proxy.size.width))
               .transition(.opacity.combined(with: .scale(scale: 1.01)))
           }
           homeCarouselControls
