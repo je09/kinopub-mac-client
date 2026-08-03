@@ -2,13 +2,13 @@
 
 # KinoPub for macOS
 
-Native **macOS** client for [kino.pub](https://kino.pub), built with SwiftUI, AppKit, AVKit, and AVFoundation.
+Native **macOS-only** client for [kino.pub](https://kino.pub), built with SwiftUI, AppKit, AVKit, and AVFoundation. The interface has been reworked for the desktop with an Apple TV-inspired browsing experience.
 
-[![CI](https://github.com/dungeon-master-xx/kinopub-apple-client/actions/workflows/ci.yml/badge.svg)](https://github.com/dungeon-master-xx/kinopub-apple-client/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/dungeon-master-xx/kinopub-apple-client?sort=semver)](https://github.com/dungeon-master-xx/kinopub-apple-client/releases/latest)
+[![CI](https://github.com/je09/kinopub-mac-client/actions/workflows/ci.yml/badge.svg)](https://github.com/je09/kinopub-mac-client/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/je09/kinopub-mac-client?sort=semver)](https://github.com/je09/kinopub-mac-client/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-macOS-blue)](#requirements)
 
-🌐 **[Website](https://dungeon-master-xx.github.io/kinopub-apple-client/)** · 📥 **[Download](https://github.com/dungeon-master-xx/kinopub-apple-client/releases/latest)** · 📖 **[Wiki / FAQ](https://github.com/dungeon-master-xx/kinopub-apple-client/wiki)**
+🌐 **[Website](https://je09.github.io/kinopub-mac-client/)** · 📥 **[Download](https://github.com/je09/kinopub-mac-client/releases/latest)** · 📖 **[Wiki / FAQ](https://github.com/je09/kinopub-mac-client/wiki)**
 
 </div>
 
@@ -17,8 +17,9 @@ Native **macOS** client for [kino.pub](https://kino.pub), built with SwiftUI, Ap
 
 ## Features
 
+- Reworked Apple TV-inspired interface with full-width heroes, media shelves, and trailer previews
 - Native macOS sidebar, toolbar, menus, keyboard shortcuts, Settings window, and system notifications
-- Native AVKit player with fullscreen, Picture in Picture, system playback controls, and HDR support
+- Native AVKit player with fullscreen, Picture in Picture, stream quality controls, gesture seeking, system playback controls, and HDR support
 - Catalog, collections, bookmarks, history, and Continue Watching
 - Search by title, cast, and crew
 - Offline MP4 downloads with native download notifications
@@ -27,7 +28,7 @@ Native **macOS** client for [kino.pub](https://kino.pub), built with SwiftUI, Ap
 
 ## Install
 
-Download the latest `.dmg` from [Releases](https://github.com/dungeon-master-xx/kinopub-apple-client/releases/latest),
+Download the latest `.dmg` from [Releases](https://github.com/je09/kinopub-mac-client/releases/latest),
 open it, and drag **KinoPub** to Applications. Release builds are ad-hoc signed rather than notarized;
 the DMG includes a helper command for removing Gatekeeper quarantine when needed.
 
@@ -42,8 +43,8 @@ An active kino.pub subscription is required. Sign in with the device code shown 
 ## Building
 
 ```bash
-git clone https://github.com/dungeon-master-xx/kinopub-apple-client.git
-cd kinopub-apple-client
+git clone https://github.com/je09/kinopub-mac-client.git
+cd kinopub-mac-client
 open KinoPubAppleClient.xcodeproj
 ```
 
