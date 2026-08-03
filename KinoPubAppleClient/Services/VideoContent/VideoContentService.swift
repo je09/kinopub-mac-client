@@ -19,6 +19,8 @@ protocol VideoContentService {
   func fetchGenres(type: MediaType?) async throws -> [MediaGenre]
   func fetchCountries() async throws -> [Country]
   func fetchDetails(for id: String) async throws -> SingleItemData<MediaItem>
+  func fetchMediaLinks(mediaID: Int) async throws -> MediaLinksData
+  func fetchMediaVideoLink(file: String, type: String) async throws -> MediaVideoLinkData
   func fetchBookmarks() async throws -> ArrayData<Bookmark>
   func fetchBookmarkItems(id: String) async throws -> ArrayData<MediaItem>
   func fetchHistory(page: Int?) async throws -> HistoryData
@@ -71,6 +73,14 @@ struct VideoContentServiceMock: VideoContentService {
 
   func fetchDetails(for id: String) async throws -> SingleItemData<MediaItem> {
     return SingleItemData.mock(data: MediaItem.mock())
+  }
+
+  func fetchMediaLinks(mediaID: Int) async throws -> MediaLinksData {
+    MediaLinksData(id: mediaID, files: [], subtitles: nil, thumbnail: nil)
+  }
+
+  func fetchMediaVideoLink(file: String, type: String) async throws -> MediaVideoLinkData {
+    MediaVideoLinkData(url: "")
   }
   
   func fetchBookmarks() async throws -> ArrayData<Bookmark> {

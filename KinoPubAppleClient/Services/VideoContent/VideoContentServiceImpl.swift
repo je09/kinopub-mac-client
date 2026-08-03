@@ -87,6 +87,16 @@ final class VideoContentServiceImpl: VideoContentService {
                                                       decodingType: SingleItemData<MediaItem>.self)
     return response
   }
+
+  func fetchMediaLinks(mediaID: Int) async throws -> MediaLinksData {
+    try await apiClient.performRequest(with: MediaLinksRequest(mediaID: mediaID),
+                                       decodingType: MediaLinksData.self)
+  }
+
+  func fetchMediaVideoLink(file: String, type: String) async throws -> MediaVideoLinkData {
+    try await apiClient.performRequest(with: MediaVideoLinkRequest(file: file, type: type),
+                                       decodingType: MediaVideoLinkData.self)
+  }
   
   func fetchBookmarks() async throws -> ArrayData<Bookmark> {
     let request = BookmarksRequest()

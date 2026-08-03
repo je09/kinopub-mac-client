@@ -13,6 +13,8 @@ public struct FileInfo: Codable, Hashable {
   public let h: Int
   public let quality: String
   public let qualityID: Int
+  /// Stable server-side media path used to mint a fresh signed URL via `media-video-link`.
+  public let file: String?
   public let url: URLInfo
 
   private enum CodingKeys: String, CodingKey {
@@ -21,7 +23,49 @@ public struct FileInfo: Codable, Hashable {
     case h = "h"
     case quality = "quality"
     case qualityID = "quality_id"
-    case url = "url"
+    case file
+    case url
+    case urls
+  }
+
+  public init(codec: String,
+              w: Int,
+              h: Int,
+              quality: String,
+              qualityID: Int,
+              file: String? = nil,
+              url: URLInfo) {
+    self.codec = codec
+    self.w = w
+    self.h = h
+    self.quality = quality
+    self.qualityID = qualityID
+    self.file = file
+    self.url = url
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    codec = try container.decodeIfPresent(String.self, forKey: .codec) ?? ""
+    w = try container.decodeIfPresent(Int.self, forKey: .w) ?? 0
+    h = try container.decodeIfPresent(Int.self, forKey: .h) ?? 0
+    quality = try container.decodeIfPresent(String.self, forKey: .quality) ?? ""
+    qualityID = try container.decodeIfPresent(Int.self, forKey: .qualityID) ?? 0
+    file = try container.decodeIfPresent(String.self, forKey: .file)
+    url = try container.decodeIfPresent(URLInfo.self, forKey: .url)
+      ?? container.decodeIfPresent(URLInfo.self, forKey: .urls)
+      ?? URLInfo(http: "", hls: "", hls4: "", hls2: "")
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(codec, forKey: .codec)
+    try container.encode(w, forKey: .w)
+    try container.encode(h, forKey: .h)
+    try container.encode(quality, forKey: .quality)
+    try container.encode(qualityID, forKey: .qualityID)
+    try container.encodeIfPresent(file, forKey: .file)
+    try container.encode(url, forKey: .url)
   }
 }
 

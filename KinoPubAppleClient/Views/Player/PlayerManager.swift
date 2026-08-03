@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 import KinoPubBackend
 import KinoPubKit
+import KinoPubUI
 import AVFoundation
 import MediaPlayer
 import CoreImage
@@ -99,6 +100,12 @@ enum WatchMode {
   case trailer
 }
 
+private enum RemoteStreamSource {
+  case hls4
+  case hls2
+  case progressive
+}
+
 @MainActor
 class PlayerManager: ObservableObject {
   
@@ -108,13 +115,26 @@ class PlayerManager: ObservableObject {
   /// Human-readable diagnosis shown when the item can't be played (the native "crossed-out play"),
   /// so failures (e.g. an HLS stream AVPlayer rejects) surface on-device instead of silently.
   @Published var playbackError: String?
+  @Published private(set) var playbackErrorTitle = "Playback failed"
   @Published private(set) var hasNextEpisode = false
   @Published private(set) var hasPreviousEpisode = false
   /// Signals the player route to pop after a movie or the final queued episode completes.
   @Published private(set) var shouldReturnToContent = false
+  /// The HLS resolution cap shown by the in-player quality menu.
+  @Published private(set) var streamQuality: StreamQuality = .current
   
   /// Whether the playing title is a 3D (stereoscopic) release, so the player offers 3D view modes.
   var is3D: Bool { FeatureFlags.threeDEnabled && (playItem as? MediaItem)?.type.lowercased() == "3d" }
+  /// Quality selection only affects remote adaptive streams, not trailers, downloads, or 3D MP4s.
+  var offersStreamQualitySelection: Bool {
+    watchMode == .media && !is3D && remoteStreamSource != .progressive
+      && fileURL?.isFileURL == false
+  }
+  /// Highest quality advertised for this title; `quality` handles anamorphic files better than `h`.
+  var maximumStreamResolution: Int? {
+    let resolution = effectiveFiles.map { max($0.resolution, $0.h) }.max() ?? 0
+    return resolution > 0 ? resolution : nil
+  }
   /// Current 3D view mode (Off for non-3D titles).
   @Published var threeDMode: ThreeDMode = .off
 
@@ -130,14 +150,13 @@ class PlayerManager: ObservableObject {
   lazy var player: AVPlayer = {
     guard let fileURL else { return AVPlayer() }
     let item = AVPlayerItem(url: fileURL)
-    configureBuffering(for: item, sourceURL: fileURL)
     if is3D, let comp = ThreeDVideoComposition.make(for: item.asset, mode: threeDMode) {
       item.videoComposition = comp
     }
     // Cap the adaptive HLS stream to the user's chosen quality. kino.pub serves one master
     // playlist with every rendition, so this is the lever that limits quality — `.auto` leaves
     // it untouched. Harmless for local/trailer playback (no effect on non-HLS items).
-    if watchMode == .media, let maxResolution = StreamQuality.current.maxResolution {
+    if watchMode == .media, let maxResolution = streamQuality.maxResolution {
       item.preferredMaximumResolution = maxResolution
     }
     let player = AVPlayer(playerItem: item)
@@ -150,11 +169,6 @@ class PlayerManager: ObservableObject {
     player.automaticallyWaitsToMinimizeStalling = true
     return player
   }()
-
-  /// Keep roughly a minute ahead, while AVPlayer's adaptive bitrate controller independently lowers
-  /// or raises rendition quality from observed throughput—similar to YouTube's buffer + ABR model.
-  /// This remains a hint: AVFoundation may shorten it for live streams or memory pressure.
-  private static let streamingBufferDuration: TimeInterval = 60
 
   private var playerTimeObserver: PlayerTimeObserver?
   private var playItem: any PlayableItem
@@ -169,6 +183,13 @@ class PlayerManager: ObservableObject {
   private var actionsService: UserActionsService
   private let episodeQueue: [Episode]
   private var didHandlePlaybackEnd = false
+  /// Recovery ladder for denied signed URLs: freshly minted HLS4 → HLS2 → one progressive file.
+  private var remoteStreamSource: RemoteStreamSource = .hls4
+  private var refreshedFiles: [FileInfo]?
+  private var generatedStreamURL: URL?
+  private var playbackRecoveryAttempt = 0
+  private var isRecoveringPlayback = false
+  private var playbackRecoveryTask: Task<Void, Never>?
   private var nextTrackCommandTarget: Any?
   private var previousTrackCommandTarget: Any?
 
@@ -188,6 +209,8 @@ class PlayerManager: ObservableObject {
   private var watchMarkQueue: [PendingWatchMark] = []
   private var latestWatchMarkTimes: [String: Int] = [:]
   private var watchMarkWorker: Task<Void, Never>?
+
+  private var effectiveFiles: [FileInfo] { refreshedFiles ?? playItem.files }
   
   private var fileURL: URL? {
     switch watchMode {
@@ -215,7 +238,16 @@ class PlayerManager: ObservableObject {
         let mp4 = BestVideoQualityFinder.bestProgressiveURL(for: playItem.files)
         if !mp4.isEmpty, let url = URL(string: mp4) { return url }
       }
-      let urlString = BestVideoQualityFinder.findBestURL(for: playItem.files)
+      if let generatedStreamURL { return generatedStreamURL }
+      let urlString: String
+      switch remoteStreamSource {
+      case .hls4:
+        urlString = effectiveFiles.first?.url.hls4 ?? ""
+      case .hls2:
+        urlString = effectiveFiles.first?.url.hls2 ?? ""
+      case .progressive:
+        urlString = preferredProgressiveURL()
+      }
       guard !urlString.isEmpty, let url = URL(string: urlString) else { return nil }
       return url
     case .trailer:
@@ -235,6 +267,9 @@ class PlayerManager: ObservableObject {
     self.actionsService = actionsService
     self.downloadedFilesDatabase = downloadedFilesDatabase
     self.episodeQueue = episodeQueue
+    // Release silent Home/detail previews before AVPlayer creates the real CDN session. Keeping a
+    // trailer alive behind this route can consume the account's concurrent-stream allowance.
+    PreviewPlaybackCoordinator.shared.beginExclusivePlayback()
     // A 3D title starts in the user's last-chosen mode (default: one eye as 2D, so it's watchable —
     // raw packed stereo would show a doubled image).
     if watchMode == .media, is3D {
@@ -299,6 +334,7 @@ class PlayerManager: ObservableObject {
 
   deinit {
     watchMarkWorker?.cancel()
+    playbackRecoveryTask?.cancel()
     if let mediaSelectionObserver { NotificationCenter.default.removeObserver(mediaSelectionObserver) }
     if let endOfPlaybackObserver { NotificationCenter.default.removeObserver(endOfPlaybackObserver) }
     let commands = MPRemoteCommandCenter.shared()
@@ -331,6 +367,11 @@ class PlayerManager: ObservableObject {
     player.pause()
     playItem = episodeQueue[targetIndex]
     continueTime = nil
+    remoteStreamSource = .hls4
+    refreshedFiles = nil
+    generatedStreamURL = nil
+    playbackRecoveryAttempt = 0
+    isRecoveringPlayback = false
     replacePlayerItem()
     player.play()
     return true
@@ -368,11 +409,18 @@ class PlayerManager: ObservableObject {
     commands.nextTrackCommand.isEnabled = hasNextEpisode
   }
 
+  /// Applies an HLS quality cap immediately and remembers it for later playback sessions.
+  func setStreamQuality(_ quality: StreamQuality) {
+    streamQuality = quality
+    UserDefaults.standard.set(quality.rawValue, forKey: StreamQuality.userDefaultsKey)
+    guard watchMode == .media else { return }
+    player.currentItem?.preferredMaximumResolution = quality.maxResolution ?? .zero
+  }
+
   private func replacePlayerItem() {
     guard let url = fileURL else { return }
     let item = AVPlayerItem(url: url)
-    configureBuffering(for: item, sourceURL: url)
-    if watchMode == .media, let maxResolution = StreamQuality.current.maxResolution {
+    if watchMode == .media, let maxResolution = streamQuality.maxResolution {
       item.preferredMaximumResolution = maxResolution
     }
     if let endOfPlaybackObserver { NotificationCenter.default.removeObserver(endOfPlaybackObserver) }
@@ -401,18 +449,33 @@ class PlayerManager: ObservableObject {
     updateEpisodeNavigation()
   }
 
-  /// Keep a forward buffer for remote playback. Local downloads bypass this to avoid pointless
-  /// read-ahead, while remote HLS/progressive streams can continue filling even during a pause.
-  private func configureBuffering(for item: AVPlayerItem, sourceURL: URL) {
-    guard !sourceURL.isFileURL else { return }
-    item.preferredForwardBufferDuration = Self.streamingBufferDuration
-    item.canUseNetworkResourcesForLiveStreamingWhilePaused = true
-  }
-
   // MARK: - Failure diagnostics
 
+  func stopPlayback() {
+    playbackRecoveryTask?.cancel()
+    playbackRecoveryTask = nil
+    player.pause()
+    PreviewPlaybackCoordinator.shared.endExclusivePlayback()
+  }
+
   private func reportPlaybackFailure(_ item: AVPlayerItem) {
+    guard player.currentItem === item else { return }
     let error = item.error as NSError?
+    let event = item.errorLog()?.events.last
+    // CDN stream links are signed and can expire while a detail/player route remains alive. A fresh
+    // item response carries a new URL; retry exactly once and preserve the current playback time.
+    let isForbidden = event?.errorStatusCode == 403
+      || event?.errorComment?.localizedCaseInsensitiveContains("403") == true
+      || (error?.domain == NSURLErrorDomain && error?.code == NSURLErrorNoPermissionsToReadFile)
+    if watchMode == .media, fileURL?.isFileURL == false, isForbidden {
+      playbackRecoveryTask?.cancel()
+      player.pause()
+      playbackErrorTitle = "Session limit reached".localized
+      playbackError = "Your kino.pub account has reached its simultaneous viewing session limit. Stop playback on another device, wait a moment, and try again.".localized
+      Logger.app.error("Playback denied: kino.pub user session limit reached")
+      return
+    }
+    playbackErrorTitle = "Playback failed"
     var parts: [String] = []
     if let error {
       parts.append("\(error.domain) \(error.code)")
@@ -422,13 +485,100 @@ class PlayerManager: ObservableObject {
       }
     }
     // The error log carries the server/format comment AVPlayer recorded (often the real reason).
-    if let event = item.errorLog()?.events.last {
+    if let event {
       if let comment = event.errorComment, !comment.isEmpty { parts.append(comment) }
       parts.append("status \(event.errorStatusCode)")
     }
     let message = parts.isEmpty ? "Unknown playback error" : parts.joined(separator: "\n")
     Logger.app.error("Playback failed: \(message)")
     playbackError = message
+  }
+
+  /// Uses the API's dedicated media-link endpoints. Item details are metadata and may keep returning
+  /// the same denied URL; `media-video-link` explicitly mints a new signed URL for the raw file path.
+  private func recoverPlayback(afterFailureOf failedItem: AVPlayerItem) async {
+    let resumeTime = failedItem.currentTime()
+    player.pause()
+    // Detach immediately so AVPlayer stops retrying every denied HLS segment while the API mints a
+    // replacement URL. The old item's late callbacks are ignored by `reportPlaybackFailure`.
+    player.replaceCurrentItem(with: nil)
+    defer { isRecoveringPlayback = false }
+
+    do {
+      // A CDN 403 can represent a concurrent-session slot that has not expired yet. Back off after
+      // releasing the failed AVPlayer instead of immediately opening another server-side session.
+      let delays: [TimeInterval] = [5, 15, 30]
+      try await Task.sleep(for: .seconds(delays[min(playbackRecoveryAttempt, delays.count - 1)]))
+      if refreshedFiles == nil {
+        let mediaID = (playItem as? MediaItem)?.videos?.first?.id ?? playItem.id
+        let links = try await AppContext.shared.contentService.fetchMediaLinks(mediaID: mediaID)
+        guard !links.files.isEmpty else { throw PlaybackRefreshError.missingFiles }
+        refreshedFiles = links.files
+      }
+
+      guard let file = preferredFile(), let rawPath = file.file, !rawPath.isEmpty else {
+        throw PlaybackRefreshError.missingFilePath
+      }
+      let streamType: String
+      switch playbackRecoveryAttempt {
+      case 0:
+        streamType = "hls4"
+        remoteStreamSource = .hls4
+      case 1:
+        streamType = "hls2"
+        remoteStreamSource = .hls2
+      default:
+        streamType = "http"
+        remoteStreamSource = .progressive
+      }
+
+      let link = try await AppContext.shared.contentService
+        .fetchMediaVideoLink(file: rawPath, type: streamType)
+      guard let freshURL = URL(string: link.url), !link.url.isEmpty else {
+        throw PlaybackRefreshError.missingURL
+      }
+      playbackRecoveryAttempt += 1
+      generatedStreamURL = freshURL
+      playbackError = nil
+      replacePlayerItem()
+      if resumeTime.isNumeric, resumeTime.seconds > 0 {
+        await player.seek(to: resumeTime, toleranceBefore: .zero, toleranceAfter: .zero)
+      }
+      player.play()
+      Logger.app.info("Playback URL regenerated as \(streamType)")
+    } catch is CancellationError {
+      return
+    } catch {
+      Logger.app.error("Playback recovery failed: \(error)")
+      playbackError = "HTTP 403: Forbidden\nCould not obtain an accessible playback URL.\n\(error.localizedDescription)"
+    }
+  }
+
+  private func preferredFile() -> FileInfo? {
+    let files = effectiveFiles
+    guard !files.isEmpty else { return nil }
+    let cap = streamQuality.maxResolution.map { Int($0.height) }
+    let eligible = cap.map { limit in files.filter { max($0.resolution, $0.h) <= limit } } ?? files
+    let candidates = eligible.isEmpty ? files : eligible
+    return candidates.max { max($0.resolution, $0.h) < max($1.resolution, $1.h) }
+  }
+
+  private func preferredProgressiveURL() -> String {
+    preferredFile()?.url.http ?? ""
+  }
+
+  private enum PlaybackRefreshError: LocalizedError {
+    case missingFiles
+    case missingFilePath
+    case missingURL
+
+    var errorDescription: String? {
+      switch self {
+      case .missingFiles: return "The media-links response did not include files."
+      case .missingFilePath: return "The media file did not include a path for URL generation."
+      case .missingURL: return "The server did not generate a playback URL."
+      }
+    }
   }
 
   // MARK: - Audio track preference (озвучка)

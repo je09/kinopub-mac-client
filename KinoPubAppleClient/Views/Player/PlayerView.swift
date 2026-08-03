@@ -22,7 +22,11 @@ struct PlayerView: View {
 
   var body: some View {
     // Native macOS player (AVKit): floating controls, scrubber, volume, fullscreen, and PiP.
-    MacNativePlayer(player: playerManager.player)
+    MacNativePlayer(player: playerManager.player,
+                    streamQuality: playerManager.streamQuality,
+                    maximumStreamResolution: playerManager.maximumStreamResolution,
+                    showsQualityControl: playerManager.offersStreamQualitySelection,
+                    onQualityChange: playerManager.setStreamQuality)
       // The window titlebar is a transient overlay; video fills its reserved safe area beneath it.
       .ignoresSafeArea(.all)
       .onExitCommand { closePlayer() }
@@ -37,12 +41,17 @@ struct PlayerView: View {
       .onChange(of: playerManager.shouldReturnToContent) { shouldReturn in
         if shouldReturn { closePlayer() }
       }
-      .onDisappear { restoreSidebarAfterPlayback() }
-    .playbackErrorAlert($playerManager.playbackError, onDismiss: { closePlayer() })
+      .onDisappear {
+        playerManager.stopPlayback()
+        restoreSidebarAfterPlayback()
+      }
+    .playbackErrorAlert(title: playerManager.playbackErrorTitle,
+                        error: $playerManager.playbackError,
+                        onDismiss: { closePlayer() })
   }
 
   private func closePlayer() {
-    playerManager.player.pause()
+    playerManager.stopPlayback()
     restoreSidebarAfterPlayback()
     dismiss()
   }
@@ -65,10 +74,15 @@ struct PlayerView: View {
 /// The native macOS video view (AVKit `AVPlayerView`) with standard playback controls.
 private struct MacNativePlayer: NSViewRepresentable {
   let player: AVPlayer
+  let streamQuality: StreamQuality
+  let maximumStreamResolution: Int?
+  let showsQualityControl: Bool
+  let onQualityChange: (StreamQuality) -> Void
 
   func makeNSView(context: Context) -> PlayerChromeView {
     // PiP inserts an AVKit-owned player-layer view alongside this view. Returning the AVPlayerView
-    // itself prevents AVKit from inserting that layer directly into NSHostingController.view.
+    // itself is required: when it is nested below another representable view, AVKit instead tries
+    // to insert that layer into NSHostingController.view, which AppKit explicitly rejects.
     let view = PlayerChromeView()
     view.controlsStyle = .floating
     view.showsFullScreenToggleButton = true
@@ -78,12 +92,20 @@ private struct MacNativePlayer: NSViewRepresentable {
     view.player = player
     view.pictureInPictureDelegate = view
     view.observeChrome(for: player)
+    view.configureQualityControl(selection: streamQuality,
+                                 maximumResolution: maximumStreamResolution,
+                                 isVisible: showsQualityControl,
+                                 onChange: onQualityChange)
     return view
   }
 
   func updateNSView(_ view: PlayerChromeView, context: Context) {
     if view.player !== player { view.player = player }
     view.observeChrome(for: player)
+    view.configureQualityControl(selection: streamQuality,
+                                 maximumResolution: maximumStreamResolution,
+                                 isVisible: showsQualityControl,
+                                 onChange: onQualityChange)
   }
 
   static func dismantleNSView(_ view: PlayerChromeView, coordinator: ()) {
@@ -114,6 +136,10 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
   private var gestureSeekTarget: Double?
   private var wasPlayingBeforeGestureSeek = false
   private var gestureSeekEndWorkItem: DispatchWorkItem?
+  private var qualityMenu: NSMenu?
+  private var qualityMenuRootItem: NSMenuItem?
+  private var qualityMenuItems: [NSMenuItem] = []
+  private var onQualityChange: ((StreamQuality) -> Void)?
 
   deinit {
     hideWorkItem?.cancel()
@@ -168,8 +194,9 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
     window.makeFirstResponder(self)
   }
 
-  // Keep the SwiftUI route mounted while AVKit hands playback to PiP. Automatic dismissal races
-  // the layer transfer against teardown of the hosting hierarchy.
+  // Keep the SwiftUI player route mounted for the entire PiP session. Letting AVKit automatically
+  // dismiss or miniaturize this host races its layer hand-off against SwiftUI's hosting hierarchy.
+  // The documented delegate also gives AVKit an explicit, synchronous restoration acknowledgement.
   func playerViewShouldAutomaticallyDismissAtPicture(inPictureStart playerView: AVPlayerView) -> Bool {
     false
   }
@@ -182,6 +209,66 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
                   restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
     showWindowChrome(scheduleHide: false)
     completionHandler(true)
+  }
+
+  /// Uses AVKit's native action menu so quality appears with the standard audio, subtitle,
+  /// zoom, and playback-speed controls, including in fullscreen.
+  func configureQualityControl(selection: StreamQuality,
+                               maximumResolution: Int?,
+                               isVisible: Bool,
+                               onChange: @escaping (StreamQuality) -> Void) {
+    self.onQualityChange = onChange
+
+    if qualityMenu == nil {
+      let menu = NSMenu(title: "Video Quality".localized)
+      let qualityItem = NSMenuItem(title: "Video Quality".localized,
+                                   action: nil,
+                                   keyEquivalent: "")
+      let submenu = NSMenu(title: "Video Quality".localized)
+      qualityMenuItems = StreamQuality.allCases.map { quality in
+        let item = NSMenuItem(title: quality.title,
+                              action: #selector(qualitySelectionChanged(_:)),
+                              keyEquivalent: "")
+        item.target = self
+        item.representedObject = quality.rawValue
+        submenu.addItem(item)
+        return item
+      }
+      menu.addItem(qualityItem)
+      menu.setSubmenu(submenu, for: qualityItem)
+      qualityMenuRootItem = qualityItem
+      qualityMenu = menu
+    }
+
+    qualityMenuRootItem?.title = maximumResolution.map {
+      "\("Video Quality".localized) · \($0)p"
+    } ?? "Video Quality".localized
+
+    // A cap above the source maximum has the same effect as Auto for this title. Hide those
+    // impossible choices while preserving the stored preference for titles that do offer them.
+    let effectiveSelection: StreamQuality
+    if let maximumResolution,
+       let selectedCap = selection.maxResolution,
+       Int(selectedCap.height) > maximumResolution {
+      effectiveSelection = .auto
+    } else {
+      effectiveSelection = selection
+    }
+    for item in qualityMenuItems {
+      guard let rawValue = item.representedObject as? String,
+            let quality = StreamQuality(rawValue: rawValue) else { continue }
+      item.isHidden = maximumResolution.map { maximum in
+        quality.maxResolution.map { Int($0.height) > maximum } ?? false
+      } ?? false
+      item.state = quality == effectiveSelection ? .on : .off
+    }
+    actionPopUpButtonMenu = isVisible ? qualityMenu : nil
+  }
+
+  @objc private func qualitySelectionChanged(_ sender: NSMenuItem) {
+    guard let rawValue = sender.representedObject as? String,
+          let quality = StreamQuality(rawValue: rawValue) else { return }
+    onQualityChange?(quality)
   }
 
   override func updateTrackingAreas() {
@@ -376,8 +463,10 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
 private extension View {
   /// Presents the player's failure diagnosis (and pops the player on dismiss) so an unplayable
   /// stream is visible on-device rather than just a silent crossed-out play.
-  func playbackErrorAlert(_ error: Binding<String?>, onDismiss: @escaping () -> Void) -> some View {
-    alert("Playback failed".localized,
+  func playbackErrorAlert(title: String,
+                          error: Binding<String?>,
+                          onDismiss: @escaping () -> Void) -> some View {
+    alert(title.localized,
           isPresented: Binding(get: { error.wrappedValue != nil },
                                set: { if !$0 { error.wrappedValue = nil } })) {
       Button("OK", role: .cancel) { onDismiss() }

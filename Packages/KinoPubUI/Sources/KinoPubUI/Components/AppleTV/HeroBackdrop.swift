@@ -257,6 +257,36 @@ public struct CinematicBackdropVideo: View {
 }
 
 /// Control-free, muted and looping—the Apple TV-style preview remains decorative while the real
+/// Coordinates silent preview players with full-screen/title playback. kino.pub may enforce a
+/// per-account stream-session limit, so a preview must release its AVPlayer before the real player
+/// opens instead of leaving two CDN sessions alive behind the navigation destination.
+@MainActor
+public final class PreviewPlaybackCoordinator {
+  public static let shared = PreviewPlaybackCoordinator()
+
+  public private(set) var hasExclusivePlayback = false
+  private var stopHandlers: [ObjectIdentifier: () -> Void] = [:]
+
+  private init() {}
+
+  fileprivate func register(_ owner: AnyObject, stop: @escaping () -> Void) {
+    stopHandlers[ObjectIdentifier(owner)] = stop
+  }
+
+  fileprivate func unregister(_ owner: AnyObject) {
+    stopHandlers[ObjectIdentifier(owner)] = nil
+  }
+
+  public func beginExclusivePlayback() {
+    hasExclusivePlayback = true
+    Array(stopHandlers.values).forEach { $0() }
+  }
+
+  public func endExclusivePlayback() {
+    hasExclusivePlayback = false
+  }
+}
+
 /// trailer button opens the normal player with sound and transport controls.
 private struct LoopingBackdropVideo: NSViewRepresentable {
   let url: URL
@@ -278,6 +308,7 @@ private struct LoopingBackdropVideo: NSViewRepresentable {
   }
 
   static func dismantleNSView(_ view: BackdropVideoView, coordinator: Void) {
+    view.unregisterPreview()
     view.stop()
   }
 }
@@ -314,13 +345,20 @@ private final class BackdropVideoView: NSView {
   }
 
   func configure(url: URL) {
+    PreviewPlaybackCoordinator.shared.register(self) { [weak self] in self?.stop() }
+    guard !PreviewPlaybackCoordinator.shared.hasExclusivePlayback else {
+      stop()
+      return
+    }
     guard currentURL != url else { return }
     stop()
     currentURL = url
     didReportReady = false
     let item = AVPlayerItem(url: url)
+    // Keep preview read-ahead small and never continue filling while paused. Hero views are often
+    // preloaded off-screen, so aggressive buffering can burst HLS requests without visible playback.
     item.preferredForwardBufferDuration = 5
-    item.canUseNetworkResourcesForLiveStreamingWhilePaused = true
+    item.canUseNetworkResourcesForLiveStreamingWhilePaused = false
     let player = AVQueuePlayer()
     player.isMuted = true
     player.actionAtItemEnd = .none
@@ -332,8 +370,16 @@ private final class BackdropVideoView: NSView {
     playerLayer.player = player
   }
 
+  func unregisterPreview() {
+    PreviewPlaybackCoordinator.shared.unregister(self)
+  }
+
   func setPlaying(_ playing: Bool) {
-    if playing { player?.play() } else { player?.pause() }
+    if playing && !PreviewPlaybackCoordinator.shared.hasExclusivePlayback {
+      player?.play()
+    } else {
+      player?.pause()
+    }
   }
 
   func stop() {

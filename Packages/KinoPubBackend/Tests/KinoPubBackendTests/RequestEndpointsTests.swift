@@ -293,6 +293,28 @@ final class RequestEndpointsTests: XCTestCase {
     XCTAssertEqual(body["refresh_token"], "refresh")
   }
 
+  // MARK: - Fresh media links
+
+  func testMediaLinksRequest_UsesMediaIDInQuery() {
+    let endpoint = MediaLinksRequest(mediaID: 456)
+    let request = requestBuilder.build(with: endpoint)
+
+    XCTAssertEqual(request?.url?.path, "/v1/items/media-links")
+    XCTAssertEqual(request?.httpMethod, "GET")
+    XCTAssertEqual(queryItems(for: endpoint)["mid"], "456")
+  }
+
+  func testMediaVideoLinkRequest_UsesRawPathAndStreamType() {
+    let endpoint = MediaVideoLinkRequest(file: "/b/8c/file.mp4", type: "hls4")
+    let request = requestBuilder.build(with: endpoint)
+    let query = queryItems(for: endpoint)
+
+    XCTAssertEqual(request?.url?.path, "/v1/items/media-video-link")
+    XCTAssertEqual(request?.httpMethod, "GET")
+    XCTAssertEqual(query["file"], "/b/8c/file.mp4")
+    XCTAssertEqual(query["type"], "hls4")
+  }
+
   // MARK: - DeviceNotifyRequest (POST -> form-urlencoded body)
 
   func testDeviceNotifyRequest_PutsDeviceInfoInFormBody() {

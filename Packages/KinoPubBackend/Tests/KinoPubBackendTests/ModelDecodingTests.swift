@@ -54,6 +54,7 @@ final class ModelDecodingTests: XCTestCase {
       "h": 1080,
       "quality": "1080p",
       "quality_id": 5,
+      "file": "/b/8c/file.mp4",
       "url": { "http": "http://x", "hls": "h", "hls4": "h4", "hls2": "h2" }
     }
     """
@@ -64,10 +65,34 @@ final class ModelDecodingTests: XCTestCase {
     XCTAssertEqual(info.h, 1080)
     XCTAssertEqual(info.quality, "1080p")
     XCTAssertEqual(info.qualityID, 5)
+    XCTAssertEqual(info.file, "/b/8c/file.mp4")
     XCTAssertEqual(info.url.http, "http://x")
     XCTAssertEqual(info.url.hls4, "h4")
     // resolution drops the trailing "p" of the quality string.
     XCTAssertEqual(info.resolution, 1080)
+  }
+
+  func testMediaLinks_DecodesUrlsAliasAndNullableURLFields() throws {
+    let json = """
+    {
+      "id": 456,
+      "files": [{
+        "codec": "hevc", "w": 3840, "h": 2160, "quality": "2160p", "quality_id": 6,
+        "file": "/media/movie.mp4",
+        "urls": { "http": "https://cdn/file.mp4", "hls4": "https://cdn/master.m3u8", "hls2": null }
+      }],
+      "subtitles": [{ "lang": "eng", "shift": null, "embed": null, "url": null }],
+      "thumbnail": null
+    }
+    """
+    let links = try decode(MediaLinksData.self, from: json)
+
+    XCTAssertEqual(links.id, 456)
+    XCTAssertEqual(links.files.first?.file, "/media/movie.mp4")
+    XCTAssertEqual(links.files.first?.url.hls4, "https://cdn/master.m3u8")
+    XCTAssertEqual(links.files.first?.url.hls2, "")
+    XCTAssertEqual(links.subtitles?.first?.shift, 0)
+    XCTAssertEqual(links.subtitles?.first?.url, "")
   }
 
   // MARK: - Bookmark (count as Int or String)

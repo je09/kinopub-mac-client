@@ -17,4 +17,16 @@ public struct Subtitle: Codable, Hashable {
   public let forced: Bool?
   /// Server-side file path (alongside the playable `url`).
   public let file: String?
+
+  private enum CodingKeys: String, CodingKey { case lang, shift, embed, url, forced, file }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    lang = try container.decodeIfPresent(String.self, forKey: .lang) ?? ""
+    shift = try container.decodeIfPresent(Int.self, forKey: .shift) ?? 0
+    embed = try container.decodeIfPresent(Bool.self, forKey: .embed) ?? false
+    url = try container.decodeIfPresent(String.self, forKey: .url) ?? ""
+    forced = try container.decodeIfPresent(Bool.self, forKey: .forced)
+    file = try container.decodeIfPresent(String.self, forKey: .file)
+  }
 }
