@@ -19,6 +19,9 @@ public final class ImageCache: @unchecked Sendable {
   public static let shared = ImageCache(ttl: 60 * 60 * 24 * 182)
 
   private let memory = NSCache<NSString, KinoPlatformImage>()
+  /// Short-lived negative cache for permanent-looking HTTP failures (not transport errors). Without
+  /// it, every appearance of the same missing actor/avatar image repeats the same 403 request.
+  private let negativeResponses = NSCache<NSString, NSDate>()
   private let fileManager = FileManager.default
   private let directory: URL
   private let ttl: TimeInterval
@@ -60,6 +63,10 @@ public final class ImageCache: @unchecked Sendable {
     let cacheKey = key(for: url)
     let nsKey = cacheKey as NSString
     if let image = memory.object(forKey: nsKey) { return image }
+    if let expiry = negativeResponses.object(forKey: nsKey) {
+      if expiry.timeIntervalSinceNow > 0 { return nil }
+      negativeResponses.removeObject(forKey: nsKey)
+    }
 
     return await withCheckedContinuation { continuation in
       let shouldStart = inFlightLock.withLock {
@@ -100,11 +107,14 @@ public final class ImageCache: @unchecked Sendable {
       return image
     }
 
-    // Reject non-2xx responses (e.g. the actor portrait CDN returns 403 for a missing photo) so the
-    // caller falls back to its placeholder (initials) instead of a default/error body.
-    guard let (data, response) = try? await URLSession.shared.data(from: url),
-          (response as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) ?? true,
-          let image = KinoPlatformImage(data: data) else { return nil }
+    // Reject non-2xx responses (e.g. the actor portrait CDN returns 403 for a missing photo). Cache
+    // that miss for a day so repeated cards do not keep asking for a resource known to be absent.
+    guard let (data, response) = try? await URLSession.shared.data(from: url) else { return nil }
+    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+      negativeResponses.setObject(NSDate(timeIntervalSinceNow: 86_400), forKey: nsKey)
+      return nil
+    }
+    guard let image = KinoPlatformImage(data: data) else { return nil }
     memory.setObject(image, forKey: nsKey)
     ioQueue.sync { try? data.write(to: file, options: .atomic) }
     return image
@@ -115,6 +125,7 @@ public final class ImageCache: @unchecked Sendable {
   /// Removes every cached entry (memory + disk).
   public func clear() {
     memory.removeAllObjects()
+    negativeResponses.removeAllObjects()
     ioQueue.sync {
       if let items = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
         for item in items { try? fileManager.removeItem(at: item) }
@@ -122,7 +133,19 @@ public final class ImageCache: @unchecked Sendable {
     }
   }
 
-  /// Drops disk entries older than `ttl`. Safe to call on launch.
+  /// Runs the full disk scan at most weekly. Individual reads already evict stale entries, so doing
+  /// this scan on every launch only blocks the serial disk queue—and makes cached Home images appear
+  /// to load slowly—without improving correctness.
+  public func purgeExpiredIfNeeded(minimumInterval: TimeInterval = 7 * 24 * 60 * 60) {
+    let key = "KinoPubImageCacheLastMaintenance"
+    let defaults = UserDefaults.standard
+    let lastRun = defaults.object(forKey: key) as? Date ?? .distantPast
+    guard Date().timeIntervalSince(lastRun) >= minimumInterval else { return }
+    defaults.set(Date(), forKey: key)
+    purgeExpired()
+  }
+
+  /// Drops disk entries older than `ttl` and enforces the disk-size cap.
   public func purgeExpired() {
     ioQueue.async { [self] in
       guard let items = try? fileManager.contentsOfDirectory(

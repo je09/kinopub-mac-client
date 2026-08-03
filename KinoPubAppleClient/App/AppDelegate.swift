@@ -10,7 +10,11 @@ import KinoPubUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
-    ImageCache.shared.purgeExpired()
+    // Let startup image reads win the cache I/O queue. A maintenance scan on every launch used to
+    // serialize ahead of them, making an already-cached Home screen look like a cold network load.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+      ImageCache.shared.purgeExpiredIfNeeded()
+    }
   }
 
   /// Closing the last window quits the app, including from the activation screen.

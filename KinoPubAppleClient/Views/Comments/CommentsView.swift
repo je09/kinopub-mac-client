@@ -130,7 +130,7 @@ private struct CommentRow: View {
 
   @ViewBuilder
   private var avatar: some View {
-    AsyncImage(url: avatarURL) { image in
+    CachedAsyncImage(url: avatarURL) { image in
       image.resizable().aspectRatio(contentMode: .fill)
     } placeholder: {
       Circle()
