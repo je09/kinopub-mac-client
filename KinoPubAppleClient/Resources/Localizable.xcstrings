@@ -23,6 +23,9 @@
         }
       }
     },
+    "​" : {
+
+    },
     " · %@" : {
 
     },
@@ -5807,6 +5810,12 @@
         }
       }
     },
+    "Copied" : {
+
+    },
+    "Copy" : {
+
+    },
     "Couldn't load comments" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7354,6 +7363,9 @@
           }
         }
       }
+    },
+    "Device code" : {
+
     },
     "Device settings" : {
       "extractionState" : "stale",
@@ -19226,6 +19238,12 @@
         }
       }
     },
+    "Open Activation Page" : {
+
+    },
+    "Open the activation page, sign in to kino.pub, and enter this code." : {
+
+    },
     "Orange" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -22137,6 +22155,9 @@
           }
         }
       }
+    },
+    "Requesting a device code…" : {
+
     },
     "Restarting the app" : {
       "localizations" : {
@@ -28362,6 +28383,9 @@
           }
         }
       }
+    },
+    "Waiting for activation…" : {
+
     },
     "Want 4K" : {
       "extractionState" : "stale",

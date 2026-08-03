@@ -49,8 +49,8 @@ final class DeviceServiceImpl: DeviceService {
   }
 
   func registerDeviceName() async {
-    // Use a generic label rather than disclosing the user's local computer name.
-    let title = "KinoPub Apple"
+    let localName = Host.current().localizedName?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let title = (localName?.isEmpty == false ? localName : nil) ?? "Mac"
     let hardware = Self.machineModel
     let software = "macOS \(ProcessInfo.processInfo.operatingSystemVersionString)"
     let request = DeviceNotifyRequest(title: title, hardware: hardware, software: software)
