@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import AVKit
+import QuartzCore
 
 struct PlayerView: View {
 
@@ -125,6 +126,7 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
   private var rateObservation: NSKeyValueObservation?
   private var trackingArea: NSTrackingArea?
   private var hideWorkItem: DispatchWorkItem?
+  private var chromeTransitionGeneration = 0
   private var mouseUpMonitor: Any?
   private var windowFocusObservers: [NSObjectProtocol] = []
   private var displaySleepActivity: NSObjectProtocol?
@@ -275,14 +277,28 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
     super.updateTrackingAreas()
     if let trackingArea { removeTrackingArea(trackingArea) }
     let area = NSTrackingArea(rect: .zero,
-                              options: [.mouseMoved, .activeInKeyWindow, .inVisibleRect],
+                              options: [.mouseEnteredAndExited, .mouseMoved, .activeAlways, .inVisibleRect],
                               owner: self)
     addTrackingArea(area)
     trackingArea = area
   }
 
+  override func mouseEntered(with event: NSEvent) {
+    showWindowChrome(scheduleHide: window?.isKeyWindow ?? true)
+    super.mouseEntered(with: event)
+  }
+
+  override func mouseExited(with event: NSEvent) {
+    if window?.isKeyWindow == false {
+      hideWindowChrome(requiresActivePlayback: false)
+    } else if observedPlayer?.rate ?? 0 > 0 {
+      scheduleChromeHide()
+    }
+    super.mouseExited(with: event)
+  }
+
   override func mouseMoved(with event: NSEvent) {
-    showWindowChrome()
+    showWindowChrome(scheduleHide: window?.isKeyWindow ?? true)
     super.mouseMoved(with: event)
   }
 
@@ -381,6 +397,8 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
         window.styleMask.remove(.fullSizeContentView)
       }
     }
+    chromeTransitionGeneration += 1
+    titlebarContainer(in: window)?.layer?.removeAnimation(forKey: "playerChromeTransition")
     window.titleVisibility = originalTitleVisibility ?? .visible
     window.titlebarAppearsTransparent = originalTitlebarTransparency ?? false
     if let originalToolbarVisibility { window.toolbar?.isVisible = originalToolbarVisibility }
@@ -389,13 +407,27 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
 
   private func observeWindowFocus(_ window: NSWindow) {
     let center = NotificationCenter.default
-    for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification] {
-      windowFocusObservers.append(center.addObserver(forName: name,
-                                                     object: window,
-                                                     queue: .main) { [weak self] _ in
-        self?.updateDisplaySleepPrevention()
-      })
-    }
+    windowFocusObservers.append(center.addObserver(forName: NSWindow.didBecomeKeyNotification,
+                                                    object: window,
+                                                    queue: .main) { [weak self] _ in
+      self?.updateDisplaySleepPrevention()
+    })
+    windowFocusObservers.append(center.addObserver(forName: NSWindow.didResignKeyNotification,
+                                                    object: window,
+                                                    queue: .main) { [weak self] _ in
+      guard let self else { return }
+      self.updateDisplaySleepPrevention()
+      if self.isMouseInsidePlayer(in: window) {
+        self.showWindowChrome(scheduleHide: false)
+      } else {
+        self.hideWindowChrome(requiresActivePlayback: false)
+      }
+    })
+  }
+
+  private func isMouseInsidePlayer(in window: NSWindow) -> Bool {
+    let windowPoint = window.convertPoint(fromScreen: NSEvent.mouseLocation)
+    return bounds.contains(convert(windowPoint, from: nil))
   }
 
   private func updateDisplaySleepPrevention() {
@@ -435,8 +467,17 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
     hideWorkItem?.cancel()
     configureOverlayTitlebar()
     guard let window = hostWindow else { return }
+
+    chromeTransitionGeneration += 1
+    let generation = chromeTransitionGeneration
+    let wasHidden = window.toolbar?.isVisible == false
     window.toolbar?.isVisible = originalToolbarVisibility ?? true
     setTrafficLights(hidden: false, in: window)
+    if wasHidden {
+      animateTitlebar(in: window, showing: true, generation: generation)
+    } else {
+      titlebarContainer(in: window)?.layer?.removeAnimation(forKey: "playerChromeTransition")
+    }
     if scheduleHide, observedPlayer?.rate ?? 0 > 0 { scheduleChromeHide() }
   }
 
@@ -444,13 +485,66 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
     hideWorkItem?.cancel()
     let work = DispatchWorkItem { [weak self] in self?.hideWindowChrome() }
     hideWorkItem = work
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: work)
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: work)
   }
 
-  private func hideWindowChrome() {
-    guard observedPlayer?.rate ?? 0 > 0, let window = hostWindow else { return }
-    window.toolbar?.isVisible = false
-    setTrafficLights(hidden: true, in: window)
+  private func hideWindowChrome(requiresActivePlayback: Bool = true) {
+    if requiresActivePlayback, observedPlayer?.rate ?? 0 <= 0 { return }
+    guard let window = hostWindow else { return }
+    chromeTransitionGeneration += 1
+    animateTitlebar(in: window, showing: false, generation: chromeTransitionGeneration)
+  }
+
+  private func animateTitlebar(in window: NSWindow, showing: Bool, generation: Int) {
+    guard let container = titlebarContainer(in: window) else {
+      if !showing {
+        window.toolbar?.isVisible = false
+        setTrafficLights(hidden: true, in: window)
+      }
+      return
+    }
+    container.wantsLayer = true
+    guard let layer = container.layer else { return }
+    layer.removeAnimation(forKey: "playerChromeTransition")
+
+    let distance = max(container.bounds.height, 44)
+    let translation = CABasicAnimation(keyPath: "transform.translation.y")
+    translation.fromValue = showing ? distance : 0
+    translation.toValue = showing ? 0 : distance
+    let opacity = CABasicAnimation(keyPath: "opacity")
+    opacity.fromValue = showing ? 0 : 1
+    opacity.toValue = showing ? 1 : 0
+
+    let group = CAAnimationGroup()
+    group.animations = [translation, opacity]
+    group.duration = 0.22
+    group.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+    // Keep it hidden until AppKit has actually removes the toolbar
+    if !showing {
+      group.fillMode = .forwards
+      group.isRemovedOnCompletion = false
+    }
+    CATransaction.begin()
+    CATransaction.setCompletionBlock { [weak self, weak window, weak layer] in
+      guard let self, let window,
+            generation == self.chromeTransitionGeneration,
+            !showing else { return }
+      self.setTrafficLights(hidden: true, in: window)
+      window.toolbar?.isVisible = false
+      layer?.removeAnimation(forKey: "playerChromeTransition")
+    }
+    layer.add(group, forKey: "playerChromeTransition")
+    CATransaction.commit()
+  }
+
+  private func titlebarContainer(in window: NSWindow) -> NSView? {
+    guard let frameView = window.contentView?.superview,
+          var candidate = window.standardWindowButton(.closeButton) as NSView? else { return nil }
+    while let parent = candidate.superview, parent !== frameView {
+      candidate = parent
+    }
+    return candidate.superview === frameView ? candidate : nil
   }
 
   private func setTrafficLights(hidden: Bool, in window: NSWindow) {

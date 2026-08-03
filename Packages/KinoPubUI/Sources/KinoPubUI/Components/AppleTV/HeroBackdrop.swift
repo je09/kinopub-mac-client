@@ -196,7 +196,7 @@ public struct HeroBackdrop<Overlay: View>: View {
       .foregroundStyle(.white)
       .padding(.horizontal, 12)
       .padding(.vertical, 8)
-      .background(.ultraThinMaterial, in: Capsule())
+      .systemGlass(in: Capsule())
       .opacity(isHoveringControls ? 1 : 0.72)
       .onHover { hovering in
         withAnimation(.easeOut(duration: 0.15)) { isHoveringControls = hovering }

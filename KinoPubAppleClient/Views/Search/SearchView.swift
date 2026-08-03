@@ -383,14 +383,12 @@ struct SearchView: View {
 }
 
 private extension View {
-  /// Frosted glass background for the sticky search field (content scrolling underneath blurs
-  /// through it). The glass is a *background* layer — applying `glassEffect` to the field itself
-  /// makes it swallow taps (the clear button stops working), so we keep the field's controls in
-  /// front and the material behind.
+  /// System glass background for the sticky search field. Keeping the effect behind the field
+  /// preserves control hit testing while still following the user's Clear/Tinted glass setting.
   func glassSearchField() -> some View {
     let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
     return self
-      .background(shape.fill(.ultraThinMaterial))
+      .systemGlassBackground(in: shape)
       .overlay(shape.strokeBorder(Color.white.opacity(0.10)).allowsHitTesting(false))
   }
 }
