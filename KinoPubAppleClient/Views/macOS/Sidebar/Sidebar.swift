@@ -291,6 +291,8 @@ private struct SidebarBackground: ViewModifier {
   func body(content: Content) -> some View {
     switch style {
     case .system:
+      // Keep the sidebar's structural material seamless with the titlebar. A standalone glass
+      // effect draws its own top edge below the toolbar, which looks like an unwanted divider.
       content
         .scrollContentBackground(.hidden)
         .background(.ultraThinMaterial)

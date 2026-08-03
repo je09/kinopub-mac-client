@@ -42,22 +42,46 @@ public extension View {
     self.contentShape(shape)
   }
 
-  /// Wraps content in a floating capsule "island": real Liquid Glass on OS 26, an ultra-thin material
-  /// capsule on older systems. Use for pinned/sticky section headers so they read as Apple-style
-  /// floating islands over the scrolling content instead of a flat opaque bar.
+  /// Places content on the system Liquid Glass material. Unlike a hand-built blur/material, the
+  /// system effect follows the user's Clear/Tinted Liquid Glass choice and accessibility settings.
+  /// Older macOS releases retain the existing material treatment.
   @ViewBuilder
-  func glassCapsule() -> some View {
+  func systemGlass<S: Shape>(in shape: S) -> some View {
     // `glassEffect` only exists in the macOS 26 SDK (Xcode 26 = Swift 6.2). Compile-time gate so
-    // older toolchains (e.g. CI on Xcode 16) still build, falling back to a material capsule.
+    // older toolchains (e.g. CI on Xcode 16) still build.
 #if compiler(>=6.2)
     if #available(macOS 26.0, *) {
-      self.glassEffect(.regular, in: Capsule())
+      self.glassEffect(.regular, in: shape)
     } else {
-      self.background(.ultraThinMaterial, in: Capsule())
+      self.background(.ultraThinMaterial, in: shape)
     }
 #else
-    self.background(.ultraThinMaterial, in: Capsule())
+    self.background(.ultraThinMaterial, in: shape)
 #endif
+  }
+
+  /// Adds noninteractive system glass behind controls that must remain above the effect layer.
+  @ViewBuilder
+  func systemGlassBackground<S: Shape>(in shape: S) -> some View {
+#if compiler(>=6.2)
+    if #available(macOS 26.0, *) {
+      self.background {
+        shape
+          .fill(.clear)
+          .glassEffect(.regular, in: shape)
+          .allowsHitTesting(false)
+      }
+    } else {
+      self.background(.ultraThinMaterial, in: shape)
+    }
+#else
+    self.background(.ultraThinMaterial, in: shape)
+#endif
+  }
+
+  /// Wraps content in a floating capsule "island" using the system-selected glass appearance.
+  func glassCapsule() -> some View {
+    systemGlass(in: Capsule())
   }
 }
 
