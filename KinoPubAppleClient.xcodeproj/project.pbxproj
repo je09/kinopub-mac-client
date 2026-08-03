@@ -11,10 +11,12 @@
 		D00000000000000000000004 /* LocalWatchProgressStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */; };
 		D00000000000000000000005 /* MediaLibraryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000015 /* MediaLibraryStoreTests.swift */; };
 		D00000000000000000000006 /* KinoPubKit in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7052A6DD119004AFB3F /* KinoPubKit */; };
+		F00000000000000000000001 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = F00000000000000000000002 /* ViewInspector */; };
 		D00000000000000000000007 /* SearchModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000016 /* SearchModelTests.swift */; };
 		D00000000000000000000008 /* PlayerWatchMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000017 /* PlayerWatchMarkTests.swift */; };
 		D00000000000000000000009 /* FixtureContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000018 /* FixtureContractTests.swift */; };
 		D00000000000000000000050 /* AccessibilityContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000051 /* AccessibilityContractTests.swift */; };
+		F00000000000000000000010 /* ScreenHierarchyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000011 /* ScreenHierarchyTests.swift */; };
 		D00000000000000000000002 /* Fixtures in Resources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000011 /* Fixtures */; };
 		D00000000000000000000003 /* KinoPubBackend in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7032A6DD119004AFB3F /* KinoPubBackend */; };
 		004DA870AEAB48D39E765EC5 /* InlinePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0147169BF0594D23A485BA23 /* InlinePlayerView.swift */; };
@@ -143,6 +145,7 @@
 		D00000000000000000000017 /* PlayerWatchMarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerWatchMarkTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000018 /* FixtureContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureContractTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000051 /* AccessibilityContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityContractTests.swift; sourceTree = "<group>"; };
+		F00000000000000000000011 /* ScreenHierarchyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenHierarchyTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000011 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fixtures; sourceTree = "<group>"; };
 		D00000000000000000000012 /* KinoPubAppleClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KinoPubAppleClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0147169BF0594D23A485BA23 /* InlinePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InlinePlayerView.swift; path = KinoPubAppleClient/Views/Player/InlinePlayerView.swift; sourceTree = SOURCE_ROOT; };
@@ -282,6 +285,7 @@
 			files = (
 				D00000000000000000000003 /* KinoPubBackend in Frameworks */,
 				D00000000000000000000006 /* KinoPubKit in Frameworks */,
+				F00000000000000000000001 /* ViewInspector in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -586,6 +590,7 @@
 				D00000000000000000000017 /* PlayerWatchMarkTests.swift */,
 				D00000000000000000000018 /* FixtureContractTests.swift */,
 				D00000000000000000000051 /* AccessibilityContractTests.swift */,
+				F00000000000000000000011 /* ScreenHierarchyTests.swift */,
 				D00000000000000000000011 /* Fixtures */,
 			);
 			path = KinoPubAppleClientTests;
@@ -861,6 +866,7 @@
 			packageProductDependencies = (
 				CC71E7032A6DD119004AFB3F /* KinoPubBackend */,
 				CC71E7052A6DD119004AFB3F /* KinoPubKit */,
+				F00000000000000000000002 /* ViewInspector */,
 			);
 			productName = KinoPubAppleClientTests;
 			productReference = D00000000000000000000012 /* KinoPubAppleClientTests.xctest */;
@@ -935,6 +941,7 @@
 			mainGroup = CC88E1D82A6586E600E9387F;
 			packageReferences = (
 				CCF388332A71C83500242581 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
+				F00000000000000000000003 /* XCRemoteSwiftPackageReference "ViewInspector" */,
 			);
 			productRefGroup = CC88E1E22A6586E600E9387F /* Products */;
 			projectDirPath = "";
@@ -980,6 +987,7 @@
 				D00000000000000000000008 /* PlayerWatchMarkTests.swift in Sources */,
 				D00000000000000000000009 /* FixtureContractTests.swift in Sources */,
 				D00000000000000000000050 /* AccessibilityContractTests.swift in Sources */,
+				F00000000000000000000010 /* ScreenHierarchyTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1361,6 +1369,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		F00000000000000000000003 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nalexn/ViewInspector.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.10.2;
+			};
+		};
 		CCF388332A71C83500242581 /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
@@ -1387,6 +1403,11 @@
 		CC71E7092A6DD119004AFB3F /* KinoPubUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KinoPubUI;
+		};
+		F00000000000000000000002 /* ViewInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F00000000000000000000003 /* XCRemoteSwiftPackageReference "ViewInspector" */;
+			productName = ViewInspector;
 		};
 		CCF388342A71C83500242581 /* KeychainAccess */ = {
 			isa = XCSwiftPackageProductDependency;
