@@ -141,7 +141,7 @@ class DownloadManagerTests: XCTestCase {
 
 // MARK: - Mock Classes
 
-class URLSessionDownloadTaskMock: URLSessionDownloadTask {
+class URLSessionDownloadTaskMock: URLSessionDownloadTask, @unchecked Sendable {
   typealias CompletionHandler = (URL?, URLResponse?, Error?) -> Void
 
   private let completionHandler: CompletionHandler?

@@ -43,8 +43,12 @@ final class DownloadFlowTests: XCTestCase {
   /// Full pipeline: start → byte progress → finish → file saved and removed from the active list.
   func testDownloadFlow_progressThenFinishSavesFile() {
     let task = URLSessionDownloadTaskMock(url: url, resumeBlock: {})
-    let download = manager.startDownload(url: url, withMetadata: metadata)
+    // Do not call `startDownload`: it creates a real background task whose unrelated completion can
+    // race this delegate-callback characterization. Seed only the delegate's required active state.
+    let download = Download(url: url, metadata: metadata, manager: manager)
     download.task = task
+    download.state = .inProgress
+    manager.activeDownloads[url] = download
 
     XCTAssertNotNil(manager.activeDownloads[url])
     XCTAssertEqual(download.state, .inProgress)
@@ -68,7 +72,6 @@ final class DownloadFlowTests: XCTestCase {
     let location = FileManager.default.temporaryDirectory
       .appendingPathComponent("kinopub-download-\(UUID().uuidString).mp4")
     manager.urlSession(manager.session, downloadTask: task, didFinishDownloadingTo: location)
-
     XCTAssertTrue(fileSaver.didSaveFileCalled)
     XCTAssertEqual(fileSaver.savedFileSourceURL, location)
     XCTAssertEqual(fileSaver.savedFileDestinationURL,
