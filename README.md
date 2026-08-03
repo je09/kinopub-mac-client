@@ -36,9 +36,9 @@ An active kino.pub subscription is required. Sign in with the device code shown 
 
 ## Requirements
 
-- macOS **13 Ventura** or newer
+- macOS **13 Ventura** or newer (the project and local packages share this deployment floor)
 - Apple Silicon or Intel Mac
-- Xcode **16+** to build; release automation uses Xcode 26
+- Xcode **16.4+** to build; CI verifies Xcode 16.4 and the pinned Xcode 26.6 release lane
 
 ## Building
 
@@ -61,6 +61,10 @@ xcodebuild -project KinoPubAppleClient.xcodeproj \
 
 The repository intentionally has an empty `DEVELOPMENT_TEAM`. Choose your own team locally if you
 want normal signing; never commit the team identifier.
+
+CI compiles the app with a macOS 13 deployment target on the minimum-Xcode lane and runs the full
+suite on the latest lane. Dependabot checks every local package directory explicitly; package
+references stored only in the Xcode project (currently KeychainAccess) are monitored manually.
 
 ## Project structure
 

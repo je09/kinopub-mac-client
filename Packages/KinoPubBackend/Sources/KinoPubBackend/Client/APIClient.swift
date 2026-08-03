@@ -7,19 +7,37 @@
 
 import Foundation
 
+/// Time is injectable so rate-limit and cancellation behavior can be tested without real sleeps.
+public protocol APIClientClock: Sendable {
+  func now() -> Date
+  func sleep(for interval: TimeInterval) async throws
+}
+
+public struct SystemAPIClientClock: APIClientClock {
+  public init() {}
+
+  public func now() -> Date { Date() }
+
+  public func sleep(for interval: TimeInterval) async throws {
+    try await Task.sleep(for: .seconds(interval))
+  }
+}
+
 /// Spaces request starts across the whole API client and turns a server 429 into a shared cooldown.
 /// A serial gate is intentional: limiting only task concurrency still permits short request bursts.
 private actor APIRequestGate {
   private let minimumInterval: TimeInterval
+  private let clock: any APIClientClock
   private var nextStart = Date.distantPast
 
-  init(minimumInterval: TimeInterval) {
+  init(minimumInterval: TimeInterval, clock: any APIClientClock) {
     self.minimumInterval = max(0, minimumInterval)
+    self.clock = clock
   }
 
   func wait() async throws {
     while true {
-      let now = Date()
+      let now = clock.now()
       let delay = nextStart.timeIntervalSince(now)
       if delay <= 0 {
         nextStart = now.addingTimeInterval(minimumInterval)
@@ -27,12 +45,12 @@ private actor APIRequestGate {
       }
       // Re-check after sleeping: another caller may have taken the slot, or a 429 may have moved
       // `nextStart` farther out while this task was suspended.
-      try await Task.sleep(for: .seconds(delay))
+      try await clock.sleep(for: delay)
     }
   }
 
   func pause(for delay: TimeInterval) {
-    nextStart = max(nextStart, Date().addingTimeInterval(max(0, delay)))
+    nextStart = max(nextStart, clock.now().addingTimeInterval(max(0, delay)))
   }
 }
 
@@ -48,12 +66,13 @@ public class APIClient {
               plugins: [APIClientPlugin] = [],
               session: URLSessionProtocol = URLSessionImpl(session: .shared),
               cache: ResponseCaching? = nil,
-              minimumRequestInterval: TimeInterval = 0) {
+              minimumRequestInterval: TimeInterval = 0,
+              clock: any APIClientClock = SystemAPIClientClock()) {
     self.baseUrl = URL(string: baseUrl)!
     self.plugins = plugins
     self.session = session
     self.cache = cache
-    self.requestGate = APIRequestGate(minimumInterval: minimumRequestInterval)
+    self.requestGate = APIRequestGate(minimumInterval: minimumRequestInterval, clock: clock)
     self.requestBuilder = RequestBuilder(baseURL: self.baseUrl)
   }
 

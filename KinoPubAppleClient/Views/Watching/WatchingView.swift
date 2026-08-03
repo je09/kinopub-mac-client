@@ -8,7 +8,6 @@
 import SwiftUI
 import KinoPubUI
 import KinoPubBackend
-import SkeletonUI
 
 struct WatchingView: View {
   @EnvironmentObject var navigationState: NavigationState

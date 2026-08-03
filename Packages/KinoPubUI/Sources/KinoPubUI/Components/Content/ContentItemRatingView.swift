@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftUI
-import SkeletonUI
 /// Shared brand colours for the IMDb / Kinopoisk / kino.pub badges.
 public enum RatingBrand {
   public static let imdbGold = Color(red: 0.96, green: 0.77, blue: 0.09)   // #F5C518

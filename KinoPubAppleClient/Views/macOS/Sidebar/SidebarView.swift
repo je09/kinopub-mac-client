@@ -113,6 +113,8 @@ struct SidebarView: View {
     .environmentObject(navigationState)
     .environmentObject(errorHandler)
     .task {
+      // Hosted unit tests launch the app; avoid keychain access and token refresh in that process.
+      guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
       await authState.check()
     }
   }

@@ -19,5 +19,8 @@ xcuserdata/
 # macOS
 .DS_Store
 
+# Local implementation/refactoring plans
+plans*
+
 # Local icon exports (sources kept locally, not in the repo)
 AppIcon Exports/

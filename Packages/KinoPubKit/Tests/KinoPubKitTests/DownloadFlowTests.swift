@@ -12,6 +12,7 @@ import Combine
 import XCTest
 @testable import KinoPubKit
 
+@MainActor
 final class DownloadFlowTests: XCTestCase {
 
   var manager: DownloadManager<TestMeta>!
@@ -62,7 +63,10 @@ final class DownloadFlowTests: XCTestCase {
     cancellable.cancel()
 
     // Finishing saves the file to the documents directory and clears the active entry.
-    let location = URL(fileURLWithPath: "/tmp/movie.mp4")
+    // Use a guaranteed-missing temp path. A stale zero-byte `/tmp/movie.mp4` from another run is
+    // intentionally rejected by production as an invalid media file and made this test flaky.
+    let location = FileManager.default.temporaryDirectory
+      .appendingPathComponent("kinopub-download-\(UUID().uuidString).mp4")
     manager.urlSession(manager.session, downloadTask: task, didFinishDownloadingTo: location)
 
     XCTAssertTrue(fileSaver.didSaveFileCalled)

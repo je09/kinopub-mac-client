@@ -38,15 +38,17 @@ final class LocalWatchProgressStore {
   static let minimumSeconds: Double = WatchProgress.startedSeconds
 
   private let fileURL: URL
+  private let now: () -> Date
   private let lock = NSLock()
   /// In-memory snapshots of items the user has opened this session (so episode playback,
   /// whose `PlayableItem` is an `Episode`, can still resolve the parent series artwork).
   private var snapshots: [Int: MediaItem] = [:]
   private var entries: [Int: LocalWatchEntry] = [:]
 
-  init() {
+  init(fileURL: URL? = nil, now: @escaping () -> Date = Date.init) {
     let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    fileURL = directory.appendingPathComponent("local_watch_progress.json")
+    self.fileURL = fileURL ?? directory.appendingPathComponent("local_watch_progress.json")
+    self.now = now
     load()
   }
 
@@ -67,7 +69,7 @@ final class LocalWatchProgressStore {
                                        duration: duration,
                                        season: season,
                                        episode: episode,
-                                       updatedAt: Date().timeIntervalSince1970)
+                                       updatedAt: now().timeIntervalSince1970)
     persist()
   }
 

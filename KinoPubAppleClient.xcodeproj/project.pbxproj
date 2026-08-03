@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D00000000000000000000001 /* AuthModelPollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000010 /* AuthModelPollingTests.swift */; };
+		D00000000000000000000004 /* LocalWatchProgressStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */; };
+		D00000000000000000000005 /* MediaLibraryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000015 /* MediaLibraryStoreTests.swift */; };
+		D00000000000000000000006 /* KinoPubKit in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7052A6DD119004AFB3F /* KinoPubKit */; };
+		D00000000000000000000007 /* SearchModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000016 /* SearchModelTests.swift */; };
+		D00000000000000000000008 /* PlayerWatchMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000017 /* PlayerWatchMarkTests.swift */; };
+		D00000000000000000000009 /* FixtureContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000018 /* FixtureContractTests.swift */; };
+		D00000000000000000000002 /* Fixtures in Resources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000011 /* Fixtures */; };
+		D00000000000000000000003 /* KinoPubBackend in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7032A6DD119004AFB3F /* KinoPubBackend */; };
 		004DA870AEAB48D39E765EC5 /* InlinePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0147169BF0594D23A485BA23 /* InlinePlayerView.swift */; };
 		00F44064D1424897BB1C22B8 /* CollectionsServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7811B97B446F45EEA0F3128F /* CollectionsServiceImpl.swift */; };
 		1131CDC9936E45ACB72818AA /* CollectionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60A8F5C7D6274479919AD25F /* CollectionsService.swift */; };
@@ -74,7 +83,6 @@
 		CC71E7062A6DD119004AFB3F /* KinoPubKit in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7052A6DD119004AFB3F /* KinoPubKit */; };
 		CC71E7082A6DD119004AFB3F /* KinoPubLogging in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7072A6DD119004AFB3F /* KinoPubLogging */; };
 		CC71E70A2A6DD119004AFB3F /* KinoPubUI in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7092A6DD119004AFB3F /* KinoPubUI */; };
-		CC71E70D2A6DD56A004AFB3F /* SkeletonUI in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E70C2A6DD56A004AFB3F /* SkeletonUI */; };
 		CC71E7262A6DD643004AFB3F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC71E7252A6DD643004AFB3F /* AppDelegate.swift */; };
 		CC748DEE2A83CCA200D87C0C /* UserServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC748DED2A83CCA200D87C0C /* UserServiceImpl.swift */; };
 		CC78FC482A82CDF600C5BDFD /* DownloadsCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC78FC472A82CDF600C5BDFD /* DownloadsCatalog.swift */; };
@@ -127,6 +135,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		D00000000000000000000010 /* AuthModelPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModelPollingTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalWatchProgressStoreTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000015 /* MediaLibraryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaLibraryStoreTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000016 /* SearchModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchModelTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000017 /* PlayerWatchMarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerWatchMarkTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000018 /* FixtureContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureContractTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000011 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fixtures; sourceTree = "<group>"; };
+		D00000000000000000000012 /* KinoPubAppleClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KinoPubAppleClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0147169BF0594D23A485BA23 /* InlinePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InlinePlayerView.swift; path = KinoPubAppleClient/Views/Player/InlinePlayerView.swift; sourceTree = SOURCE_ROOT; };
 		0ADECA273F29409C805FDB2A /* CollectionDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CollectionDetailModel.swift; path = KinoPubAppleClient/Views/Collections/CollectionDetailModel.swift; sourceTree = SOURCE_ROOT; };
 		0D48FABCB9A4733D287E8F03 /* EPGSources.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = EPGSources.json; sourceTree = "<group>"; };
@@ -247,12 +263,30 @@
 		FABD71B3BB5D41E0B69E6F76 /* HomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXContainerItemProxy section */
+		D00000000000000000000020 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC88E1D92A6586E600E9387F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC88E1E02A6586E600E9387F;
+			remoteInfo = KinoPubAppleClient;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		D00000000000000000000021 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D00000000000000000000003 /* KinoPubBackend in Frameworks */,
+				D00000000000000000000006 /* KinoPubKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC88E1DE2A6586E600E9387F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC71E70D2A6DD56A004AFB3F /* SkeletonUI in Frameworks */,
 				CC71E7082A6DD119004AFB3F /* KinoPubLogging in Frameworks */,
 				CC71E7062A6DD119004AFB3F /* KinoPubKit in Frameworks */,
 				CC71E7042A6DD119004AFB3F /* KinoPubBackend in Frameworks */,
@@ -523,6 +557,7 @@
 			isa = PBXGroup;
 			children = (
 				CC88E1E32A6586E600E9387F /* KinoPubAppleClient */,
+				D00000000000000000000013 /* KinoPubAppleClientTests */,
 				CC88E1F52A6589DC00E9387F /* Packages */,
 				CC88E1E22A6586E600E9387F /* Products */,
 				CC71E7022A6DD119004AFB3F /* Frameworks */,
@@ -534,8 +569,23 @@
 			isa = PBXGroup;
 			children = (
 				CC88E1E12A6586E600E9387F /* KinoPub.app */,
+				D00000000000000000000012 /* KinoPubAppleClientTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000013 /* KinoPubAppleClientTests */ = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000010 /* AuthModelPollingTests.swift */,
+				D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */,
+				D00000000000000000000015 /* MediaLibraryStoreTests.swift */,
+				D00000000000000000000016 /* SearchModelTests.swift */,
+				D00000000000000000000017 /* PlayerWatchMarkTests.swift */,
+				D00000000000000000000018 /* FixtureContractTests.swift */,
+				D00000000000000000000011 /* Fixtures */,
+			);
+			path = KinoPubAppleClientTests;
 			sourceTree = "<group>";
 		};
 		CC88E1E32A6586E600E9387F /* KinoPubAppleClient */ = {
@@ -791,6 +841,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D00000000000000000000030 /* KinoPubAppleClientTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D00000000000000000000040 /* Build configuration list for PBXNativeTarget "KinoPubAppleClientTests" */;
+			buildPhases = (
+				D00000000000000000000031 /* Sources */,
+				D00000000000000000000021 /* Frameworks */,
+				D00000000000000000000032 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D00000000000000000000033 /* PBXTargetDependency */,
+			);
+			name = KinoPubAppleClientTests;
+			packageProductDependencies = (
+				CC71E7032A6DD119004AFB3F /* KinoPubBackend */,
+				CC71E7052A6DD119004AFB3F /* KinoPubKit */,
+			);
+			productName = KinoPubAppleClientTests;
+			productReference = D00000000000000000000012 /* KinoPubAppleClientTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		CC88E1E02A6586E600E9387F /* KinoPubAppleClient */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC88E1F02A6586E700E9387F /* Build configuration list for PBXNativeTarget "KinoPubAppleClient" */;
@@ -809,7 +881,6 @@
 				CC71E7052A6DD119004AFB3F /* KinoPubKit */,
 				CC71E7072A6DD119004AFB3F /* KinoPubLogging */,
 				CC71E7092A6DD119004AFB3F /* KinoPubUI */,
-				CC71E70C2A6DD56A004AFB3F /* SkeletonUI */,
 				CCF388342A71C83500242581 /* KeychainAccess */,
 			);
 			productName = KinoPubAppleClient;
@@ -826,6 +897,10 @@
 				LastSwiftUpdateCheck = 1430;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					D00000000000000000000030 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = CC88E1E02A6586E600E9387F;
+					};
 					CC88E1E02A6586E600E9387F = {
 						CreatedOnToolsVersion = 14.3.1;
 					};
@@ -856,7 +931,6 @@
 			);
 			mainGroup = CC88E1D82A6586E600E9387F;
 			packageReferences = (
-				CC71E70B2A6DD56A004AFB3F /* XCRemoteSwiftPackageReference "SkeletonUI" */,
 				CCF388332A71C83500242581 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 			);
 			productRefGroup = CC88E1E22A6586E600E9387F /* Products */;
@@ -864,11 +938,20 @@
 			projectRoot = "";
 			targets = (
 				CC88E1E02A6586E600E9387F /* KinoPubAppleClient */,
+				D00000000000000000000030 /* KinoPubAppleClientTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D00000000000000000000032 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D00000000000000000000002 /* Fixtures in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC88E1DF2A6586E600E9387F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -883,6 +966,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D00000000000000000000031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D00000000000000000000001 /* AuthModelPollingTests.swift in Sources */,
+				D00000000000000000000004 /* LocalWatchProgressStoreTests.swift in Sources */,
+				D00000000000000000000005 /* MediaLibraryStoreTests.swift in Sources */,
+				D00000000000000000000007 /* SearchModelTests.swift in Sources */,
+				D00000000000000000000008 /* PlayerWatchMarkTests.swift in Sources */,
+				D00000000000000000000009 /* FixtureContractTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC88E1DD2A6586E600E9387F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -999,7 +1095,51 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D00000000000000000000033 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC88E1E02A6586E600E9387F /* KinoPubAppleClient */;
+			targetProxy = D00000000000000000000020 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		D00000000000000000000041 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kino.pub.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KinoPub.app/Contents/MacOS/KinoPub";
+			};
+			name = Debug;
+		};
+		D00000000000000000000042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kino.pub.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KinoPub.app/Contents/MacOS/KinoPub";
+			};
+			name = Release;
+		};
 		CC88E1EE2A6586E700E9387F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1187,6 +1327,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D00000000000000000000040 /* Build configuration list for PBXNativeTarget "KinoPubAppleClientTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D00000000000000000000041 /* Debug */,
+				D00000000000000000000042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CC88E1DC2A6586E600E9387F /* Build configuration list for PBXProject "KinoPubAppleClient" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1208,14 +1357,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CC71E70B2A6DD56A004AFB3F /* XCRemoteSwiftPackageReference "SkeletonUI" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CSolanaM/SkeletonUI.git";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
 		CCF388332A71C83500242581 /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
@@ -1242,11 +1383,6 @@
 		CC71E7092A6DD119004AFB3F /* KinoPubUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KinoPubUI;
-		};
-		CC71E70C2A6DD56A004AFB3F /* SkeletonUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CC71E70B2A6DD56A004AFB3F /* XCRemoteSwiftPackageReference "SkeletonUI" */;
-			productName = SkeletonUI;
 		};
 		CCF388342A71C83500242581 /* KeychainAccess */ = {
 			isa = XCSwiftPackageProductDependency;

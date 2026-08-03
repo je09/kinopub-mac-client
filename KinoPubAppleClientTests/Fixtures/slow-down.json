@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "error": "slow_down",
+  "error_description": "Poll less frequently."
+}

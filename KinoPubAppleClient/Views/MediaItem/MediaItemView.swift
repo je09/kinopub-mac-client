@@ -10,7 +10,6 @@ import SwiftUI
 import KinoPubUI
 import KinoPubBackend
 import KinoPubKit
-import SkeletonUI
 
 struct MediaItemView: View {
 

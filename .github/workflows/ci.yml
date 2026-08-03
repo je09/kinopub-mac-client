@@ -26,6 +26,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  package-tests:
+    if: >-
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: macos-26
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - Packages/KinoPubBackend
+          - Packages/KinoPubKit
+          - Packages/KinoPubLogging
+          - Packages/KinoPubUI
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select pinned Xcode 26.6
+        run: |
+          XC=/Applications/Xcode_26.6.app
+          test -d "$XC" || { echo "Missing pinned toolchain: $XC"; exit 1; }
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+
+      - name: Test ${{ matrix.package }} with targeted concurrency diagnostics
+        working-directory: ${{ matrix.package }}
+        run: swift test -Xswiftc -strict-concurrency=targeted
+
   build:
     # Anti-spam: PRs opened from forks do NOT auto-run CI (which would burn Actions minutes). Only
     # direct pushes and same-repo (trusted) PR branches build automatically. A maintainer can still
@@ -33,18 +61,29 @@ jobs:
     if: >-
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: macos-26
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: latest
+            runner: macos-26
+            xcode: /Applications/Xcode_26.6.app
+          - lane: minimum
+            runner: macos-15
+            xcode: /Applications/Xcode_16.4.app
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Select Xcode 26
+      - name: Select pinned toolchain (${{ matrix.lane }})
         run: |
-          XC="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
-          [ -n "$XC" ] && sudo xcode-select -s "$XC"
+          test -d "${{ matrix.xcode }}" || { echo "Missing pinned toolchain: ${{ matrix.xcode }}"; exit 1; }
+          sudo xcode-select -s "${{ matrix.xcode }}"
           xcodebuild -version
 
-      - name: Build native macOS app
+      - name: Build and test native macOS app (latest)
+        if: matrix.lane == 'latest'
         run: |
           xcodebuild \
             -project KinoPubAppleClient.xcodeproj \
@@ -54,4 +93,31 @@ jobs:
             -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" \
+            test
+
+      - name: Verify minimum Xcode and macOS 13 deployment target
+        if: matrix.lane == 'minimum'
+        run: |
+          xcodebuild \
+            -project KinoPubAppleClient.xcodeproj \
+            -scheme KinoPubAppleClient \
+            -configuration Debug \
+            -destination 'generic/platform=macOS' \
+            -skipPackagePluginValidation \
+            MACOSX_DEPLOYMENT_TARGET=13.0 \
+            CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM="" \
             build
+
+      - name: Record architecture baseline
+        if: matrix.lane == 'latest'
+        run: |
+          chmod +x scripts/architecture-metrics.sh
+          scripts/architecture-metrics.sh | tee architecture-metrics.md
+          cat architecture-metrics.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload architecture baseline
+        if: matrix.lane == 'latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-metrics
+          path: architecture-metrics.md

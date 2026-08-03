@@ -12,6 +12,16 @@ import KinoPubBackend
 import KinoPubLogging
 import OSLog
 
+struct AuthorizationPollingClock {
+  var now: () -> Date
+  var sleep: (_ seconds: TimeInterval) async throws -> Void
+
+  static let continuous = AuthorizationPollingClock(
+    now: Date.init,
+    sleep: { try await Task.sleep(for: .seconds($0)) }
+  )
+}
+
 @MainActor
 class AuthModel: ObservableObject {
 
@@ -26,11 +36,20 @@ class AuthModel: ObservableObject {
 
   private var tempVerificationResponse: VerificationResponse?
   private var pollingTask: Task<Void, Never>?
+  private let pollingClock: AuthorizationPollingClock
 
-  init(authService: AuthorizationService, authState: AuthState, errorHandler: ErrorHandler) {
+  init(authService: AuthorizationService,
+       authState: AuthState,
+       errorHandler: ErrorHandler,
+       pollingClock: AuthorizationPollingClock = .continuous) {
     self.authService = authService
     self.authState = authState
     self.errorHandler = errorHandler
+    self.pollingClock = pollingClock
+  }
+
+  deinit {
+    pollingTask?.cancel()
   }
 
   func fetchDeviceCode() {
@@ -80,17 +99,17 @@ class AuthModel: ObservableObject {
       guard let self else { return }
 
       var interval = max(response.interval, 1)
-      let expiresAt = Date().addingTimeInterval(TimeInterval(response.expiresIn))
+      let expiresAt = pollingClock.now().addingTimeInterval(TimeInterval(response.expiresIn))
 
       while !Task.isCancelled {
-        if Date() >= expiresAt {
+        if pollingClock.now() >= expiresAt {
           Logger.app.debug("device code expired; requesting a replacement")
           fetchDeviceCode()
           return
         }
 
         do {
-          try await Task.sleep(for: .seconds(interval))
+          try await pollingClock.sleep(TimeInterval(interval))
           try Task.checkCancellation()
           Logger.app.debug("request token...")
           try await authService.fetchToken(by: response)

@@ -8,24 +8,6 @@
         "revision" : "84e546727d66f1adc5439debad16270d0fdd04e7",
         "version" : "4.2.2"
       }
-    },
-    {
-      "identity" : "skeletonui",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CSolanaM/SkeletonUI.git",
-      "state" : {
-        "branch" : "master",
-        "revision" : "e3cf87cb96a10562bc660c9d48418a395d8385ed"
-      }
-    },
-    {
-      "identity" : "swift-snapshot-testing",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
-      "state" : {
-        "revision" : "dc46eeb3928a75390651fac6c1ef7f93ad59a73b",
-        "version" : "1.11.1"
-      }
     }
   ],
   "version" : 2

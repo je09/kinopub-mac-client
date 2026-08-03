@@ -7,7 +7,6 @@
 
 import SwiftUI
 import KinoPubUI
-import SkeletonUI
 
 struct BookmarksView: View {
   @EnvironmentObject var navigationState: NavigationState

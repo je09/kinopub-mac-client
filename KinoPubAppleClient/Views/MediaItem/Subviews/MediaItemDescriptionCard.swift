@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 import KinoPubBackend
-import SkeletonUI
 
 struct MediaItemDescriptionCard: View {
   
@@ -52,7 +51,6 @@ struct MediaItemDescriptionCard: View {
       .font(Font.KinoPub.small)
       .foregroundStyle(Color.KinoPub.text)
       .padding(.top, 8)
-      .skeleton(with: isSkeleton, animated: nil)
       .multilineSkeleton(enabled: isSkeleton)
   }
   

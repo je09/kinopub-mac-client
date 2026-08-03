@@ -100,13 +100,14 @@ final class MediaLibraryStore: ObservableObject {
   init(downloadManager: DownloadManager<DownloadMeta>,
        downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>,
        progressStore: LocalWatchProgressStore,
-       actionsService: UserActionsService) {
+       actionsService: UserActionsService,
+       fileURL: URL? = nil) {
     self.downloadManager = downloadManager
     self.downloadedFilesDatabase = downloadedFilesDatabase
     self.progressStore = progressStore
     self.actionsService = actionsService
     let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    fileURL = directory.appendingPathComponent("media_library.json")
+    self.fileURL = fileURL ?? directory.appendingPathComponent("media_library.json")
     load()
     rebuildDownloadedIndex()
 

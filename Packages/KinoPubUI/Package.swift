@@ -1,4 +1,4 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -12,15 +12,13 @@ let package = Package(
       targets: ["KinoPubUI"])
   ],
   dependencies: [
-    .package(name: "KinoPubBackend", path: "../KinoPubBackend"),
-    .package(url: "https://github.com/CSolanaM/SkeletonUI.git", branch: "master")
+    .package(name: "KinoPubBackend", path: "../KinoPubBackend")
   ],
   targets: [
     .target(
       name: "KinoPubUI",
       dependencies: [
-        .product(name: "KinoPubBackend", package: "KinoPubBackend"),
-        .product(name: "SkeletonUI", package: "SkeletonUI")
+        .product(name: "KinoPubBackend", package: "KinoPubBackend")
       ],
       resources: [
         .process("Media.xcassets")

@@ -55,6 +55,8 @@ struct KinoPubAppleClientApp: App {
         }
         // Ask once for permission to post download-complete notifications.
         .task {
+          // Hosted unit tests launch the app process; never prompt for system permissions there.
+          guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
           await AppContext.shared.downloadNotificationManager.requestPermission()
         }
         .frame(minWidth: WindowMetrics.minimum.width,
