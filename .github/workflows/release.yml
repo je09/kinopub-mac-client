@@ -27,10 +27,11 @@ jobs:
         id: tag
         run: echo "tag=${{ github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
 
-      - name: Select Xcode 26
+      - name: Select pinned Xcode 26.6
         run: |
-          XC="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
-          [ -n "$XC" ] && sudo xcode-select -s "$XC"
+          XC=/Applications/Xcode_26.6.app
+          test -d "$XC" || { echo "Missing pinned toolchain: $XC"; exit 1; }
+          sudo xcode-select -s "$XC"
           xcodebuild -version
 
       - name: Build macOS app (ad-hoc signed)
