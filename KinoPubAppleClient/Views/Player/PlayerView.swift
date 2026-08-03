@@ -127,7 +127,9 @@ private final class PlayerChromeView: AVPlayerView {
   private var trackingArea: NSTrackingArea?
   private var hideWorkItem: DispatchWorkItem?
   private var mouseUpMonitor: Any?
-  private var originalStyleMask: NSWindow.StyleMask?
+  private var windowFocusObservers: [NSObjectProtocol] = []
+  private var displaySleepActivity: NSObjectProtocol?
+  private var insertedFullSizeContentView = false
   private var originalTitleVisibility: NSWindow.TitleVisibility?
   private var originalTitlebarTransparency: Bool?
   private var originalToolbarVisibility: Bool?
@@ -140,6 +142,8 @@ private final class PlayerChromeView: AVPlayerView {
     hideWorkItem?.cancel()
     gestureSeekEndWorkItem?.cancel()
     if let mouseUpMonitor { NSEvent.removeMonitor(mouseUpMonitor) }
+    windowFocusObservers.forEach(NotificationCenter.default.removeObserver)
+    stopPreventingDisplaySleep()
   }
 
   override var acceptsFirstResponder: Bool { true }
@@ -147,10 +151,14 @@ private final class PlayerChromeView: AVPlayerView {
   override func viewDidMoveToWindow() {
     super.viewDidMoveToWindow()
     guard let window else { return }
-    if hostWindow == nil { hostWindow = window }
+    if hostWindow == nil {
+      hostWindow = window
+      observeWindowFocus(window)
+    }
     guard window === hostWindow else { return }
     configureOverlayTitlebar()
     showWindowChrome()
+    updateDisplaySleepPrevention()
 
     // AVKit otherwise auto-focuses and accent-highlights its first playback control on entry. Keep
     // keyboard events on the player itself without selecting any individual button.
@@ -274,29 +282,71 @@ private final class PlayerChromeView: AVPlayerView {
         } else {
           self.showWindowChrome(scheduleHide: false)
         }
+        self.updateDisplaySleepPrevention()
       }
     }
   }
 
   func restoreWindowChrome() {
     hideWorkItem?.cancel()
+    stopPreventingDisplaySleep()
     guard let window = hostWindow else { return }
-    if let originalStyleMask { window.styleMask = originalStyleMask }
+    // Never assign a captured style mask here. AppKit adds transient bits (notably `.fullScreen`),
+    // and replacing them while SwiftUI dismantles the representable raises an NSWindow exception.
+    // Remove only the bit this view actually added, and do it after the current graph transaction.
+    if insertedFullSizeContentView {
+      insertedFullSizeContentView = false
+      DispatchQueue.main.async { [weak window] in
+        guard let window, !window.styleMask.contains(.fullScreen) else { return }
+        window.styleMask.remove(.fullSizeContentView)
+      }
+    }
     window.titleVisibility = originalTitleVisibility ?? .visible
     window.titlebarAppearsTransparent = originalTitlebarTransparency ?? false
     if let originalToolbarVisibility { window.toolbar?.isVisible = originalToolbarVisibility }
     setTrafficLights(hidden: false, in: window)
   }
 
+  private func observeWindowFocus(_ window: NSWindow) {
+    let center = NotificationCenter.default
+    for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification] {
+      windowFocusObservers.append(center.addObserver(forName: name,
+                                                     object: window,
+                                                     queue: .main) { [weak self] _ in
+        self?.updateDisplaySleepPrevention()
+      })
+    }
+  }
+
+  private func updateDisplaySleepPrevention() {
+    let shouldPreventSleep = hostWindow?.isKeyWindow == true && (observedPlayer?.rate ?? 0) > 0
+    if shouldPreventSleep, displaySleepActivity == nil {
+      displaySleepActivity = ProcessInfo.processInfo.beginActivity(
+        options: .idleDisplaySleepDisabled,
+        reason: "Video playback in focused window"
+      )
+    } else if !shouldPreventSleep {
+      stopPreventingDisplaySleep()
+    }
+  }
+
+  private func stopPreventingDisplaySleep() {
+    guard let displaySleepActivity else { return }
+    ProcessInfo.processInfo.endActivity(displaySleepActivity)
+    self.displaySleepActivity = nil
+  }
+
   private func configureOverlayTitlebar() {
     guard let window = hostWindow else { return }
-    if originalStyleMask == nil {
-      originalStyleMask = window.styleMask
+    if originalTitleVisibility == nil {
       originalTitleVisibility = window.titleVisibility
       originalTitlebarTransparency = window.titlebarAppearsTransparent
       originalToolbarVisibility = window.toolbar?.isVisible
+      if !window.styleMask.contains(.fullSizeContentView) {
+        insertedFullSizeContentView = true
+        window.styleMask.insert(.fullSizeContentView)
+      }
     }
-    window.styleMask.insert(.fullSizeContentView)
     window.titleVisibility = .hidden
     window.titlebarAppearsTransparent = true
   }
