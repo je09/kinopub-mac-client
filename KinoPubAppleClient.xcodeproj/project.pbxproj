@@ -1139,7 +1139,7 @@
 				KINO_APP_BUNDLE_IDENTIFIER = com.kino.pub;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.5.0; /* x-release-please-version */
+				MARKETING_VERSION = 2.0.0; /* x-release-please-version */
 				PRODUCT_BUNDLE_IDENTIFIER = "$(KINO_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = KinoPub;
 				SDKROOT = macosx;
@@ -1174,7 +1174,7 @@
 				KINO_APP_BUNDLE_IDENTIFIER = com.kino.pub;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.5.0; /* x-release-please-version */
+				MARKETING_VERSION = 2.0.0; /* x-release-please-version */
 				PRODUCT_BUNDLE_IDENTIFIER = "$(KINO_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = KinoPub;
 				SDKROOT = macosx;
