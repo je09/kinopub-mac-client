@@ -21,9 +21,7 @@ struct PlayerView: View {
   }
 
   var body: some View {
-    // Native macOS player (AVKit): floating controls, scrubber, volume, and the system fullscreen
-    // toggle. PiP is deliberately disabled: AVKit's PiP service crashes this ad-hoc distributed app
-    // during the window hand-off. Re-enable only after a crash-log-backed lifecycle fix.
+    // Native macOS player (AVKit): floating controls, scrubber, volume, fullscreen, and PiP.
     MacNativePlayer(player: playerManager.player)
       // The window titlebar is a transient overlay; video fills its reserved safe area beneath it.
       .ignoresSafeArea(.all)
@@ -68,59 +66,38 @@ struct PlayerView: View {
 private struct MacNativePlayer: NSViewRepresentable {
   let player: AVPlayer
 
-  func makeNSView(context: Context) -> PlayerContainerView {
-    let view = PlayerContainerView()
-    view.playerView.player = player
-    view.playerView.observeChrome(for: player)
+  func makeNSView(context: Context) -> PlayerChromeView {
+    // PiP inserts an AVKit-owned player-layer view alongside this view. Returning the AVPlayerView
+    // itself prevents AVKit from inserting that layer directly into NSHostingController.view.
+    let view = PlayerChromeView()
+    view.controlsStyle = .floating
+    view.showsFullScreenToggleButton = true
+    view.allowsPictureInPicturePlayback = true
+    view.videoGravity = .resizeAspect
+    view.focusRingType = .none
+    view.player = player
+    view.pictureInPictureDelegate = view
+    view.observeChrome(for: player)
     return view
   }
 
-  func updateNSView(_ view: PlayerContainerView, context: Context) {
-    if view.playerView.player !== player { view.playerView.player = player }
-    view.playerView.observeChrome(for: player)
+  func updateNSView(_ view: PlayerChromeView, context: Context) {
+    if view.player !== player { view.player = player }
+    view.observeChrome(for: player)
   }
 
-  static func dismantleNSView(_ view: PlayerContainerView, coordinator: ()) {
-    view.playerView.restoreWindowChrome()
-    view.playerView.player?.pause()
-    view.playerView.player = nil
-    view.unmountPlayer()
-  }
-}
-
-/// Keep AVKit below a regular AppKit container rather than making it SwiftUI's representable root.
-private final class PlayerContainerView: NSView {
-  let playerView = PlayerChromeView()
-
-  override init(frame frameRect: NSRect) {
-    super.init(frame: frameRect)
-    playerView.controlsStyle = .floating
-    playerView.showsFullScreenToggleButton = true
-    playerView.allowsPictureInPicturePlayback = false
-    playerView.videoGravity = .resizeAspect
-    playerView.focusRingType = .none
-    playerView.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(playerView)
-    NSLayoutConstraint.activate([
-      playerView.leadingAnchor.constraint(equalTo: leadingAnchor),
-      playerView.trailingAnchor.constraint(equalTo: trailingAnchor),
-      playerView.topAnchor.constraint(equalTo: topAnchor),
-      playerView.bottomAnchor.constraint(equalTo: bottomAnchor)
-    ])
-  }
-
-  @available(*, unavailable)
-  required init?(coder: NSCoder) { nil }
-
-  func unmountPlayer() {
-    playerView.removeFromSuperview()
+  static func dismantleNSView(_ view: PlayerChromeView, coordinator: ()) {
+    view.pictureInPictureDelegate = nil
+    view.restoreWindowChrome()
+    view.player?.pause()
+    view.player = nil
   }
 }
 
 /// Keeps the app titlebar in sync with AVKit's floating controls: mouse activity or pause shows
-/// both; after a short period of active playback both disappear. PiP remains disabled, so AVKit
-/// never reparents this view into a private window while we adjust the host window.
-private final class PlayerChromeView: AVPlayerView {
+/// both; after a short period of active playback both disappear. AVKit can reparent this view for
+/// PiP, so all window changes remain scoped to the original host window.
+private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPictureDelegate {
   private weak var hostWindow: NSWindow?
   private weak var observedPlayer: AVPlayer?
   private var rateObservation: NSKeyValueObservation?
@@ -189,6 +166,22 @@ private final class PlayerChromeView: AVPlayerView {
 
   private func clearControlFocus(in window: NSWindow) {
     window.makeFirstResponder(self)
+  }
+
+  // Keep the SwiftUI route mounted while AVKit hands playback to PiP. Automatic dismissal races
+  // the layer transfer against teardown of the hosting hierarchy.
+  func playerViewShouldAutomaticallyDismissAtPicture(inPictureStart playerView: AVPlayerView) -> Bool {
+    false
+  }
+
+  func playerViewWillStartPicture(inPicture playerView: AVPlayerView) {
+    showWindowChrome(scheduleHide: false)
+  }
+
+  func playerView(_ playerView: AVPlayerView,
+                  restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+    showWindowChrome(scheduleHide: false)
+    completionHandler(true)
   }
 
   override func updateTrackingAreas() {

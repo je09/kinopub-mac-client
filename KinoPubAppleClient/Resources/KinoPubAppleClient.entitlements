@@ -2,8 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- PiP is disabled in the player, so the app does not need AVKit's problematic private PiP
-	     service lookup. Keep the ad-hoc distributed app sandboxed. -->
+	<!-- PiP uses AVKit's public API with the standard App Sandbox entitlement set. -->
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 	<key>com.apple.security.files.downloads.read-write</key>
