@@ -74,7 +74,7 @@ struct AuthView: View {
       .font(.system(size: 42, weight: .medium))
       .foregroundStyle(Color.accentColor)
       .frame(width: 76, height: 76)
-      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+      .systemGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
       .accessibilityHidden(true)
   }
 
@@ -119,7 +119,7 @@ struct AuthView: View {
     }
     .padding(20)
     .frame(maxWidth: .infinity)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    .systemGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     .overlay {
       RoundedRectangle(cornerRadius: 14, style: .continuous)
         .strokeBorder(Color.primary.opacity(0.08))
