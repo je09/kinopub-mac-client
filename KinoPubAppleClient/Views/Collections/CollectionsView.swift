@@ -203,5 +203,6 @@ struct CollectionsView_Previews: PreviewProvider {
     CollectionsView(model: CollectionsModel(collectionsService: CollectionsServiceMock(),
                                             authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
                                             errorHandler: ErrorHandler()))
+      .appPreviewEnvironment()
   }
 }

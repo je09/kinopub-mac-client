@@ -513,6 +513,6 @@ struct SearchView_Previews: PreviewProvider {
     SearchView(model: SearchModel(itemsService: VideoContentServiceMock(),
                                   authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
                                   errorHandler: ErrorHandler()))
-      .environmentObject(navState)
+      .appPreviewEnvironment()
   }
 }

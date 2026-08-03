@@ -77,5 +77,6 @@ struct BookmarksView_Previews: PreviewProvider {
     BookmarksView(catalog: BookmarksCatalog(itemsService: VideoContentServiceMock(),
                                             authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
                                             errorHandler: ErrorHandler()))
+      .appPreviewEnvironment()
   }
 }

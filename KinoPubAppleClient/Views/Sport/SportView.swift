@@ -250,5 +250,6 @@ struct SportView_Previews: PreviewProvider {
                                 epgService: EPGServiceMock(),
                                 authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
                                 errorHandler: ErrorHandler()))
+      .appPreviewEnvironment()
   }
 }

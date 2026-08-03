@@ -178,5 +178,6 @@ struct CollectionDetailView_Previews: PreviewProvider {
                                                         collectionsService: CollectionsServiceMock(),
                                                         errorHandler: ErrorHandler()))
     }
+    .appPreviewEnvironment()
   }
 }

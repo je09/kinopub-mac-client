@@ -289,5 +289,6 @@ struct HomeView_Previews: PreviewProvider {
     HomeView(model: HomeModel(itemsService: VideoContentServiceMock(),
                               authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
                               errorHandler: ErrorHandler()))
+      .appPreviewEnvironment()
   }
 }

@@ -106,7 +106,7 @@ struct MainView_Previews: PreviewProvider {
 
   static var previews: some View {
     MainView(catalog: MediaCatalog(itemsService: VideoContentServiceMock(), authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()), errorHandler: ErrorHandler()))
-      .environmentObject(navState)
+      .appPreviewEnvironment()
   }
 }
 

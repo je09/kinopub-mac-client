@@ -177,7 +177,7 @@ struct MediaItemView: View {
     let poster = mediaItem.posters.wide ?? mediaItem.posters.big
     let trailerURL = mediaItem.trailer?.url
     let trailer = (!reduceMotion && !(trailerURL?.isEmpty ?? true)) ? trailerURL : nil
-    guard poster != nil || trailer != nil else { return nil }
+    guard !poster.isEmpty || trailer != nil else { return nil }
     return WindowHeroMedia(posterURL: poster,
                            videoURL: trailer,
                            revealVideo: trailer != nil,
@@ -1918,5 +1918,6 @@ struct MediaItemView_Previews: PreviewProvider {
     NavigationStack {
       Preview()
     }
+    .appPreviewEnvironment()
   }
 }

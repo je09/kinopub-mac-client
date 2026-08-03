@@ -188,5 +188,6 @@ struct HistoryView_Previews: PreviewProvider {
     HistoryView(catalog: HistoryModel(itemsService: VideoContentServiceMock(),
                                       authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
                                       errorHandler: ErrorHandler()))
+      .appPreviewEnvironment()
   }
 }

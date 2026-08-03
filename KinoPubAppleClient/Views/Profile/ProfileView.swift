@@ -226,5 +226,6 @@ struct ProfileView_Previews: PreviewProvider {
                                     authState: AuthState(authService: AuthorizationServiceMock(),
                                                          accessTokenService: AccessTokenServiceMock(),
                                                          deviceService: DeviceServiceMock())))
+      .appPreviewEnvironment()
   }
 }

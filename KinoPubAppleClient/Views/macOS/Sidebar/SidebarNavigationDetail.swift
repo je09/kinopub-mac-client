@@ -213,5 +213,6 @@ struct SidebarNavigationDetail_Previews: PreviewProvider {
   }
   static var previews: some View {
     Preview()
+      .appPreviewEnvironment()
   }
 }

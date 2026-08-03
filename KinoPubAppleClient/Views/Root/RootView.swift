@@ -7,6 +7,7 @@
 
 import SwiftUI
 import KinoPubUI
+import KinoPubKit
 
 private struct SectionEmbeddedKey: EnvironmentKey {
   static let defaultValue = false
@@ -40,6 +41,19 @@ extension EnvironmentValues {
 
 extension View {
   func moreBackButton() -> some View { self }
+
+  /// Supplies every app-wide observable dependency for previews. The preview runner evaluates all
+  /// providers in one process, so a missing object aborts that process before Canvas can render.
+  func appPreviewEnvironment() -> some View {
+    environmentObject(NavigationState())
+      .environmentObject(AuthState(authService: AuthorizationServiceMock(),
+                                   accessTokenService: AccessTokenServiceMock(),
+                                   deviceService: DeviceServiceMock()))
+      .environmentObject(ErrorHandler())
+      .environmentObject(NetworkMonitor())
+      .environmentObject(AppearanceSettings())
+      .environmentObject(AppContext.shared.libraryState)
+  }
 }
 
 struct RootView: View {
@@ -56,6 +70,6 @@ struct RootView: View {
 struct RootView_Previews: PreviewProvider {
   static var previews: some View {
     RootView()
-      .environmentObject(AppearanceSettings())
+      .appPreviewEnvironment()
   }
 }

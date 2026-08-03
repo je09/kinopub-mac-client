@@ -179,5 +179,6 @@ struct WatchingView_Previews: PreviewProvider {
     WatchingView(model: WatchingModel(itemsService: VideoContentServiceMock(),
                                       authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
                                       errorHandler: ErrorHandler()))
+      .appPreviewEnvironment()
   }
 }

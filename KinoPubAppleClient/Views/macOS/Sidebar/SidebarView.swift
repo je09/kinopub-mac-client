@@ -89,8 +89,12 @@ struct SidebarView: View {
     }
     .background(InitialFocusReset())
     .onPreferenceChange(WindowHeroMediaPreferenceKey.self) { media in
-      if media?.videoURL != windowHeroMedia?.videoURL { readyHeroVideoURL = nil }
-      withAnimation(.easeInOut(duration: 0.7)) { windowHeroMedia = media }
+      // Preference delivery occurs during SwiftUI's update pass. Defer @State writes to the next
+      // main-loop turn to avoid "Publishing changes from within view updates" and undefined layout.
+      DispatchQueue.main.async {
+        if media?.videoURL != windowHeroMedia?.videoURL { readyHeroVideoURL = nil }
+        withAnimation(.easeInOut(duration: 0.7)) { windowHeroMedia = media }
+      }
     }
     .animation(.easeInOut(duration: 0.25), value: networkMonitor.isOnline)
     .animation(.easeInOut(duration: 0.25), value: showReconnected)
@@ -230,5 +234,6 @@ private struct InitialFocusReset: NSViewRepresentable {
 struct SideBarView_Previews: PreviewProvider {
   static var previews: some View {
     SidebarView()
+      .appPreviewEnvironment()
   }
 }

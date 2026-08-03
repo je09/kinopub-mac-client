@@ -29,7 +29,9 @@ struct KinoPubAppleClientApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
   
   var body: some Scene {
-    WindowGroup {
+    // A blank scene title falls back to the bundle name in AppKit. Use an invisible title so a
+    // navigation destination without its own title never displays the default “KinoPub” label.
+    WindowGroup("\u{200B}") {
       RootView()
         // The app is dark-only; the color assets' "Any" (light) appearance is authored inconsistently
         // (dark background but black text), so on a Light-mode Mac text/icons render invisible. Force

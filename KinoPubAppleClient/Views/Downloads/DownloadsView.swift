@@ -284,5 +284,6 @@ struct DownloadsView_Previews: PreviewProvider {
     
     DownloadsView(catalog: DownloadsCatalog(downloadsDatabase: database,
                                             downloadManager: downloadManager))
+      .appPreviewEnvironment()
   }
 }
