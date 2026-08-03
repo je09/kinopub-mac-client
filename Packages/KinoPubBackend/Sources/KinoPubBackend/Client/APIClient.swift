@@ -7,21 +7,53 @@
 
 import Foundation
 
+/// Spaces request starts across the whole API client and turns a server 429 into a shared cooldown.
+/// A serial gate is intentional: limiting only task concurrency still permits short request bursts.
+private actor APIRequestGate {
+  private let minimumInterval: TimeInterval
+  private var nextStart = Date.distantPast
+
+  init(minimumInterval: TimeInterval) {
+    self.minimumInterval = max(0, minimumInterval)
+  }
+
+  func wait() async throws {
+    while true {
+      let now = Date()
+      let delay = nextStart.timeIntervalSince(now)
+      if delay <= 0 {
+        nextStart = now.addingTimeInterval(minimumInterval)
+        return
+      }
+      // Re-check after sleeping: another caller may have taken the slot, or a 429 may have moved
+      // `nextStart` farther out while this task was suspended.
+      try await Task.sleep(for: .seconds(delay))
+    }
+  }
+
+  func pause(for delay: TimeInterval) {
+    nextStart = max(nextStart, Date().addingTimeInterval(max(0, delay)))
+  }
+}
+
 public class APIClient {
   private let session: URLSessionProtocol
   private let requestBuilder: RequestBuilder
   private let baseUrl: URL
   private var plugins: [APIClientPlugin]
   private let cache: ResponseCaching?
+  private let requestGate: APIRequestGate
 
   public init(baseUrl: String,
               plugins: [APIClientPlugin] = [],
               session: URLSessionProtocol = URLSessionImpl(session: .shared),
-              cache: ResponseCaching? = nil) {
+              cache: ResponseCaching? = nil,
+              minimumRequestInterval: TimeInterval = 0) {
     self.baseUrl = URL(string: baseUrl)!
     self.plugins = plugins
     self.session = session
     self.cache = cache
+    self.requestGate = APIRequestGate(minimumInterval: minimumRequestInterval)
     self.requestBuilder = RequestBuilder(baseURL: self.baseUrl)
   }
 
@@ -49,6 +81,10 @@ public class APIClient {
 
     var attempt = 0
     while true {
+      // The gate normally passes immediately. After any caller receives 429, however, it holds all
+      // subsequent requests until the shared Retry-After window ends, avoiding a retry storm without
+      // artificially serializing normal Home-screen loading.
+      try await requestGate.wait()
       let (data, response) = try await session.data(for: preparedRequest)
 
       // Notify plugins
@@ -61,7 +97,9 @@ public class APIClient {
         if http.statusCode == 429, attempt < 2 {
           attempt += 1
           let delay = min(max(retryAfter ?? pow(2, Double(attempt - 1)), 1), 60)
-          try await Task.sleep(for: .seconds(delay))
+          // Cool down every caller sharing this client, not just the request that saw the 429. This
+          // prevents the remaining queue from extending a server-side rate-limit window.
+          await requestGate.pause(for: delay)
           continue
         }
         if let backendError = try? JSONDecoder().decode(BackendError.self, from: data) {
