@@ -87,7 +87,6 @@ struct SidebarView: View {
       .clipped()
       .ignoresSafeArea()
     }
-    .background(InitialFocusReset())
     .onPreferenceChange(WindowHeroMediaPreferenceKey.self) { media in
       // Preference delivery occurs during SwiftUI's update pass. Defer @State writes to the next
       // main-loop turn to avoid "Publishing changes from within view updates" and undefined layout.
@@ -207,28 +206,6 @@ struct SidebarView: View {
                               errorHandler: errorHandler))
   }
 
-}
-
-/// NavigationSplitView assigns keyboard focus to its sidebar-toggle toolbar item when the window
-/// first opens. Clear that automatic selection without affecting deliberate keyboard navigation.
-private struct InitialFocusReset: NSViewRepresentable {
-  func makeNSView(context: Context) -> FocusResetView { FocusResetView() }
-  func updateNSView(_ view: FocusResetView, context: Context) {}
-
-  final class FocusResetView: NSView {
-    private var didReset = false
-
-    override func viewDidMoveToWindow() {
-      super.viewDidMoveToWindow()
-      guard !didReset, let window else { return }
-      didReset = true
-      DispatchQueue.main.async { [weak window] in window?.makeFirstResponder(nil) }
-      // SwiftUI installs its automatic toolbar key view one run-loop later.
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak window] in
-        window?.makeFirstResponder(nil)
-      }
-    }
-  }
 }
 
 struct SideBarView_Previews: PreviewProvider {

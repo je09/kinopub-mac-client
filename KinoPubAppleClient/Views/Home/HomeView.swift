@@ -20,6 +20,7 @@ struct HomeView: View {
   @State private var featuredIndex = 0
   @State private var heroHovered = false
   @State private var trailerReadyItemID: Int?
+  @FocusState private var focusedHeroID: Int?
 
   init(model: @autoclosure @escaping () -> HomeModel) {
     _model = StateObject(wrappedValue: model())
@@ -177,17 +178,17 @@ struct HomeView: View {
 
   private func selectFeatured(index: Int) {
     guard model.featured.indices.contains(index) else { return }
+    focusedHeroID = nil
     withAnimation(.easeInOut(duration: 0.8)) { featuredIndex = index }
   }
 
   @ViewBuilder
   private func heroPage(_ hero: MediaItem) -> some View {
-    NavigationLink(value: Route.details(hero)) {
-      HeroBackdrop(imageURL: hero.posters.wide ?? hero.posters.big,
-                   videoURL: hero.trailer?.url,
-                   height: heroHeight,
-                   blurReduction: heroHeight,
-                   transparentBase: true) {
+    HeroBackdrop(imageURL: hero.posters.wide ?? hero.posters.big,
+                 videoURL: hero.trailer?.url,
+                 height: heroHeight,
+                 blurReduction: heroHeight,
+                 transparentBase: true) {
         VStack(alignment: .leading, spacing: 10) {
           Text(hero.localizedTitle)
             .font(.system(size: 34, weight: .bold))
@@ -214,19 +215,23 @@ struct HomeView: View {
               .frame(maxWidth: 390, alignment: .leading)
           }
 
-          Label("More Info".localized, systemImage: "info.circle")
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.black)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 11)
-            .background(Color.white, in: Capsule())
-            .padding(.top, 4)
+          NavigationLink(value: Route.details(hero)) {
+            Label("More Info".localized, systemImage: "info.circle")
+              .font(.system(size: 16, weight: .semibold))
+              .foregroundStyle(.black)
+              .padding(.horizontal, 20)
+              .padding(.vertical, 11)
+              .background(Color.white, in: Capsule())
+          }
+          .buttonStyle(.plain)
+          .focused($focusedHeroID, equals: hero.id)
+          .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 42)
       }
-    }
-    .buttonStyle(PlainButtonStyle())
+      .contentShape(Rectangle())
+      .onTapGesture { focusedHeroID = nil }
   }
 
   @ViewBuilder
