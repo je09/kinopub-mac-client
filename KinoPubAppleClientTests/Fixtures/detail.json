@@ -1,5 +1,5 @@
 {
-  "items": [{
+  "item": {
     "id": 42, "type": "movie", "subtype": "foreign", "title": "Обсессия / Obsession", "year": 2024,
     "cast": "Fixture Actor", "director": "Fixture Director", "genres": [{"id": 1, "title": "Drama"}],
     "countries": [{"id": 1, "title": "US"}], "voice": null, "duration": {"average": 90, "total": 5400},
@@ -10,6 +10,5 @@
     "finished": false, "advert": false, "poor_quality": false, "created_at": null, "updated_at": null,
     "in_watchlist": false, "subscribed": false, "ac3": null, "bookmarks": null, "seasons": null,
     "videos": null, "skeleton": false
-  }],
-  "pagination": { "current": 1, "total": 1, "perpage": 20, "count": 1 }
+  }
 }

@@ -566,7 +566,10 @@ private extension View {
                                set: { if !$0 { error.wrappedValue = nil } })) {
       Button("OK", role: .cancel) { onDismiss() }
     } message: {
-      if let message = error.wrappedValue { Text(message) }
+      if let message = error.wrappedValue {
+        Text(message)
+          .accessibilityIdentifier(AccessibilityID.playerError)
+      }
     }
   }
 }

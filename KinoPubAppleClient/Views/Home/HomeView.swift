@@ -52,6 +52,7 @@ struct HomeView: View {
         }
       }
       .background(Color.clear)
+      .accessibilityIdentifier(AccessibilityID.homeScreen)
       .refreshable { await model.refresh() }
       .task { await model.refreshContinueWatchingIfStale() }
       // Include the trailer URL in the task identity: list items initially have no playable trailer
@@ -86,6 +87,7 @@ struct HomeView: View {
                    height: heroHeight,
                    blurReduction: heroHeight,
                    transparentBase: true) { EmptyView() }
+        .accessibilityIdentifier(AccessibilityID.homeLoading)
     } else {
       GeometryReader { proxy in
         ZStack {

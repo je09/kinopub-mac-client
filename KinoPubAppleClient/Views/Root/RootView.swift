@@ -9,6 +9,20 @@ import SwiftUI
 import KinoPubUI
 import KinoPubKit
 
+/// Stable identifiers for UI automation and accessibility regression tests. Keep these semantic;
+/// they deliberately describe user-visible regions/states rather than view implementation details.
+enum AccessibilityID {
+  static let authScreen = "auth.screen"
+  static let authLoading = "auth.device-code.loading"
+  static let authCode = "auth.device-code.value"
+  static let authActivation = "auth.open-activation"
+  static let homeScreen = "home.screen"
+  static let homeLoading = "home.loading"
+  static let detailScreen = "detail.screen"
+  static let bookmarkPicker = "detail.bookmark-picker"
+  static let playerError = "player.error"
+}
+
 private struct SectionEmbeddedKey: EnvironmentKey {
   static let defaultValue = false
 }

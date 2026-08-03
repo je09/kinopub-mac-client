@@ -14,6 +14,7 @@
 		D00000000000000000000007 /* SearchModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000016 /* SearchModelTests.swift */; };
 		D00000000000000000000008 /* PlayerWatchMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000017 /* PlayerWatchMarkTests.swift */; };
 		D00000000000000000000009 /* FixtureContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000018 /* FixtureContractTests.swift */; };
+		D00000000000000000000050 /* AccessibilityContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000051 /* AccessibilityContractTests.swift */; };
 		D00000000000000000000002 /* Fixtures in Resources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000011 /* Fixtures */; };
 		D00000000000000000000003 /* KinoPubBackend in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7032A6DD119004AFB3F /* KinoPubBackend */; };
 		004DA870AEAB48D39E765EC5 /* InlinePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0147169BF0594D23A485BA23 /* InlinePlayerView.swift */; };
@@ -141,6 +142,7 @@
 		D00000000000000000000016 /* SearchModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchModelTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000017 /* PlayerWatchMarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerWatchMarkTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000018 /* FixtureContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureContractTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000051 /* AccessibilityContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityContractTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000011 /* Fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Fixtures; sourceTree = "<group>"; };
 		D00000000000000000000012 /* KinoPubAppleClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KinoPubAppleClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0147169BF0594D23A485BA23 /* InlinePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InlinePlayerView.swift; path = KinoPubAppleClient/Views/Player/InlinePlayerView.swift; sourceTree = SOURCE_ROOT; };
@@ -583,6 +585,7 @@
 				D00000000000000000000016 /* SearchModelTests.swift */,
 				D00000000000000000000017 /* PlayerWatchMarkTests.swift */,
 				D00000000000000000000018 /* FixtureContractTests.swift */,
+				D00000000000000000000051 /* AccessibilityContractTests.swift */,
 				D00000000000000000000011 /* Fixtures */,
 			);
 			path = KinoPubAppleClientTests;
@@ -976,6 +979,7 @@
 				D00000000000000000000007 /* SearchModelTests.swift in Sources */,
 				D00000000000000000000008 /* PlayerWatchMarkTests.swift in Sources */,
 				D00000000000000000000009 /* FixtureContractTests.swift in Sources */,
+				D00000000000000000000050 /* AccessibilityContractTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
