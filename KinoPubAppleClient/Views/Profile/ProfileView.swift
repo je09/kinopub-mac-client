@@ -152,7 +152,7 @@ struct ProfileView: View {
   /// Links back to the project: who maintains it, where to report problems, and how to install.
   private var aboutSection: some View {
     Section(header: Text("About".localized),
-            footer: Text("Community fork of leoru/kinopub-apple-client, maintained on GitHub. Not affiliated with kino.pub.".localized)) {
+            footer: Text("Community fork maintained by je09. Not affiliated with kino.pub.".localized)) {
       linkRow("Source Code", systemImage: "chevron.left.forwardslash.chevron.right",
               url: "https://github.com/je09/kinopub-mac-client")
       linkRow("Report a Problem", systemImage: "exclamationmark.bubble",
