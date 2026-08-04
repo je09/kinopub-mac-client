@@ -19,11 +19,12 @@ struct KinoPubAppleClientApp: App {
   
   @StateObject var navigationState = NavigationState()
   @StateObject var errorHandler = ErrorHandler()
-  @StateObject var authState = AuthState(authService: AppContext.shared.authService,
-                                         accessTokenService: AppContext.shared.accessTokenService,
-                                         deviceService: AppContext.shared.deviceService)
+  @StateObject var authState = AuthState(
+    authService: AppContext.shared.authService,
+    accessTokenService: AppContext.shared.accessTokenService,
+    deviceService: AppContext.shared.deviceService)
   @StateObject var networkMonitor = NetworkMonitor()
-
+  
   @StateObject var windowSettings = WindowSettings()
   @StateObject var appearanceSettings = AppearanceSettings()
   @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
@@ -33,9 +34,9 @@ struct KinoPubAppleClientApp: App {
     // navigation destination without its own title never displays the default “KinoPub” label.
     WindowGroup("\u{200B}") {
       RootView()
-        // The app is dark-only; the color assets' "Any" (light) appearance is authored inconsistently
-        // (dark background but black text), so on a Light-mode Mac text/icons render invisible. Force
-        // dark so the assets always resolve their Dark variant.
+      // The app is dark-only; the color assets' "Any" (light) appearance is authored inconsistently
+      // (dark background but black text), so on a Light-mode Mac text/icons render invisible. Force
+      // dark so the assets always resolve their Dark variant.
         .preferredColorScheme(.dark)
         .environment(\.appContext, AppContext.shared)
         .environmentObject(navigationState)
@@ -45,7 +46,7 @@ struct KinoPubAppleClientApp: App {
         .environmentObject(appearanceSettings)
         .environmentObject(AppContext.shared.libraryState)
         .onAppear { windowSettings.updateWindowLevel() }
-        // Register this device's name once authorized, so it isn't listed as "unknown".
+      // Register this device's name once authorized, so it isn't listed as "unknown".
         .task(id: authState.userState) {
           if authState.userState == .authorized {
             await AppContext.shared.deviceService.registerDeviceName()
@@ -53,23 +54,26 @@ struct KinoPubAppleClientApp: App {
             await AppContext.shared.deviceService.syncCapabilities()
           }
         }
-        // Ask once for permission to post download-complete notifications.
+      // Ask once for permission to post download-complete notifications.
         .task {
           // Hosted unit tests launch the app process; never prompt for system permissions there.
           guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
           await AppContext.shared.downloadNotificationManager.requestPermission()
         }
-        .frame(minWidth: WindowMetrics.minimum.width,
-               minHeight: WindowMetrics.minimum.height)
+        .frame(
+          minWidth: WindowMetrics.minimum.width,
+          minHeight: WindowMetrics.minimum.height)
     }
-    .defaultSize(width: WindowMetrics.preferred.width,
-                 height: WindowMetrics.preferred.height)
+    .defaultSize(
+      width: WindowMetrics.preferred.width,
+      height: WindowMetrics.preferred.height
+    )
     .windowResizability(.contentMinSize)
     .commands {
       SidebarCommands()
       KinoPubCommands(navigationState: navigationState)
     }
-
+    
     Settings {
       SettingsView()
         .environmentObject(windowSettings)
@@ -83,7 +87,7 @@ struct KinoPubAppleClientApp: App {
 
 private struct KinoPubCommands: Commands {
   @ObservedObject var navigationState: NavigationState
-
+  
   var body: some Commands {
     CommandMenu("Navigate") {
       Button("Home".localized) { navigationState.sidebarSelection = .new }

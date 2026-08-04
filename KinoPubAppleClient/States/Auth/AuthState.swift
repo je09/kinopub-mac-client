@@ -1,4 +1,3 @@
-
 //
 //  AuthState.swift
 //  KinoPubAppleClient
@@ -26,15 +25,17 @@ final class AuthState: ObservableObject {
   private var authService: AuthorizationService
   private var accessTokenService: AccessTokenService
   private var deviceService: DeviceService
-
+  
   /// Initializes the `AuthState` with the provided services.
   /// - Parameters:
   ///   - authService: The authorization service used for authentication.
   ///   - accessTokenService: The access token service used for managing access tokens.
   ///   - deviceService: Used to deregister this device from the account on logout.
-  init(authService: AuthorizationService,
-       accessTokenService: AccessTokenService,
-       deviceService: DeviceService) {
+  init(
+    authService: AuthorizationService,
+    accessTokenService: AccessTokenService,
+    deviceService: DeviceService
+  ) {
     self.authService = authService
     self.accessTokenService = accessTokenService
     self.deviceService = deviceService
@@ -75,7 +76,7 @@ final class AuthState: ObservableObject {
       }
     }
   }
-
+  
   /// True for a transient connectivity failure (no network) vs. the server rejecting the token.
   /// Offline requests surface as `URLError`; a rejected token decodes into a `BackendError`.
   private static func isConnectivityError(_ error: Error) -> Bool {
@@ -91,7 +92,7 @@ final class AuthState: ObservableObject {
     }
     return error is URLError
   }
-
+  
   /// Logs out the user. Deregisters this device from the account first (while the token is still
   /// valid), then clears the local session. Device removal is best-effort — logout proceeds even if
   /// it fails (e.g. offline).

@@ -31,7 +31,8 @@ extension DownloadMeta: DownloadFileNaming {
     if let episode, !episode.isEmpty { name += " \(episode)" }
     if let quality, !quality.isEmpty { name += " (\(quality))" }
     // Strip characters that are illegal / awkward in a filename.
-    let cleaned = name
+    let cleaned =
+    name
       .components(separatedBy: CharacterSet(charactersIn: "/\\:?%*|\"<>"))
       .joined(separator: " ")
       .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -47,15 +48,16 @@ extension DownloadMeta {
       .filter { !$0.isEmpty }
       .joined(separator: " · ")
   }
-
+  
   static func make(from item: DownloadableMediaItem, quality: String? = nil) -> DownloadMeta {
-    return DownloadMeta(id: item.mediaItem.id,
-                        files: item.files,
-                        originalTitle: item.mediaItem.originalTitle,
-                        localizedTitle: item.mediaItem.localizedTitle,
-                        imageUrl: item.mediaItem.posters.small,
-                        metadata: item.watchingMetadata,
-                        quality: quality,
-                        episode: item.mediaItem.isSeries ? item.name : nil)
+    return DownloadMeta(
+      id: item.mediaItem.id,
+      files: item.files,
+      originalTitle: item.mediaItem.originalTitle,
+      localizedTitle: item.mediaItem.localizedTitle,
+      imageUrl: item.mediaItem.posters.small,
+      metadata: item.watchingMetadata,
+      quality: quality,
+      episode: item.mediaItem.isSeries ? item.name : nil)
   }
 }

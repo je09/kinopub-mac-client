@@ -19,11 +19,11 @@ public struct CollectionViewRequest: Endpoint {
     "/v1/collections/view"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     ["id": "\(id)"]
   }
 

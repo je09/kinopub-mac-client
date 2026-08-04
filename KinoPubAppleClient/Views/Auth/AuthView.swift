@@ -13,35 +13,35 @@ import KinoPubUI
 /// the content follows the familiar sign-in layout of one focused task, one prominent action, and a
 /// clearly selectable device code.
 struct AuthView: View {
-
+  
   @StateObject var model: AuthModel
   @EnvironmentObject var errorHandler: ErrorHandler
   @Environment(\.dismiss) private var dismiss
   @State private var copied = false
-
+  
   init(model: @autoclosure @escaping () -> AuthModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   var body: some View {
     ScrollView {
       VStack(spacing: 24) {
         activationIcon
-
+        
         VStack(spacing: 8) {
           Text("Auth_CodeActivationTitle")
             .font(.system(size: 28, weight: .semibold))
             .foregroundStyle(Color.KinoPub.text)
-
+          
           Text("Open the activation page, sign in to kino.pub, and enter this code.")
             .font(.body)
             .foregroundStyle(Color.KinoPub.subtitle)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
         }
-
+        
         deviceCodePanel
-
+        
         Button(action: model.openActivationURL) {
           Label("Open Activation Page", systemImage: "safari")
             .frame(maxWidth: .infinity)
@@ -51,7 +51,7 @@ struct AuthView: View {
         .accessibilityIdentifier(AccessibilityID.authActivation)
         .keyboardShortcut(.defaultAction)
         .disabled(model.deviceCode.isEmpty || model.verificationURL.isEmpty)
-
+        
         activationStatus
       }
       .frame(maxWidth: 420)
@@ -69,7 +69,7 @@ struct AuthView: View {
     }
     .handleError(state: $errorHandler.state)
   }
-
+  
   private var activationIcon: some View {
     Image(systemName: "play.rectangle.on.rectangle.fill")
       .symbolRenderingMode(.hierarchical)
@@ -79,13 +79,13 @@ struct AuthView: View {
       .systemGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
       .accessibilityHidden(true)
   }
-
+  
   private var deviceCodePanel: some View {
     VStack(alignment: .leading, spacing: 14) {
       Text("Auth_DeviceCode")
         .font(.subheadline.weight(.medium))
         .foregroundStyle(Color.KinoPub.subtitle)
-
+      
       if model.deviceCode.isEmpty {
         HStack(spacing: 10) {
           ProgressView().controlSize(.small)
@@ -104,9 +104,9 @@ struct AuthView: View {
             .accessibilityLabel("Device code")
             .accessibilityValue(model.deviceCode.map(String.init).joined(separator: " "))
             .accessibilityIdentifier(AccessibilityID.authCode)
-
+          
           Spacer(minLength: 8)
-
+          
           Button {
             model.copyCode()
             withAnimation(.easeInOut(duration: 0.15)) { copied = true }
@@ -129,7 +129,7 @@ struct AuthView: View {
         .strokeBorder(Color.primary.opacity(0.08))
     }
   }
-
+  
   @ViewBuilder
   private var activationStatus: some View {
     if !model.deviceCode.isEmpty {

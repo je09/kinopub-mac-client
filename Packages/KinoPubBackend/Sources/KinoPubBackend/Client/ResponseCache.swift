@@ -53,7 +53,7 @@ public extension CacheableRequest where Self: Endpoint {
       .map { "\($0.key)=\($0.value)" }
       .sorted()
       .joined(separator: "&") ?? ""
-    return "\(method) \(path)?\(query)"
+    return "schema=1 \(method.rawValue) \(path)?\(query)"
   }
 }
 

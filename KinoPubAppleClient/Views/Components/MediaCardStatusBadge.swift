@@ -17,14 +17,15 @@ struct MediaCardStatusBadge: View {
   let item: MediaItem
   /// Whether to show the "watched" check (hidden on Continue Watching, where it's redundant).
   var showsWatched: Bool = true
-
+  
   var body: some View {
     let downloaded = libraryState.isDownloadedAny(itemId: item.id)
     let downloading = !downloaded && libraryState.isDownloadingAny(itemId: item.id)
-    let watched = showsWatched
-      && !item.isSeries
-      && libraryState.movieWatched(itemId: item.id, serverWatched: item.videos?.first?.isWatched ?? false)
-
+    let watched =
+    showsWatched
+    && !item.isSeries
+    && libraryState.movieWatched(itemId: item.id, serverWatched: item.videos?.first?.isWatched ?? false)
+    
     HStack(spacing: 4) {
       if watched { badge("eye.fill") }
       if downloaded {
@@ -38,7 +39,7 @@ struct MediaCardStatusBadge: View {
     }
     .padding(6)
   }
-
+  
   private func badge(_ systemName: String) -> some View {
     Image(systemName: systemName)
       .font(.system(size: 16, weight: .semibold))

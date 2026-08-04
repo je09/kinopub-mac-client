@@ -1,71 +1,61 @@
-//
-//  RequestBuilder.swift
-//
-//
-//  Created by Kirill Kunst on 21.07.2023.
-//
-
 import Foundation
 
-internal class RequestBuilder {
+/// Converts typed transport values to URLRequest. The throwing API is used in production; the
+/// optional compatibility API preserves existing service and test call sites during this migration.
+internal struct RequestBuilder {
   let baseURL: URL
 
-  init(baseURL: URL) {
+  init(baseURL: URL) { self.baseURL = baseURL }
+
+  init(validating baseURL: URL) throws {
+    guard let components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false),
+          let scheme = components.scheme?.lowercased(), ["https", "http"].contains(scheme),
+          components.host != nil else {
+      throw APIClientError.invalidRequest("The base URL must include an HTTP(S) scheme and host.")
+    }
     self.baseURL = baseURL
   }
 
-  func build(with endpoint: Endpoint) -> URLRequest? {
-    guard let url = URL(string: endpoint.path, relativeTo: baseURL) else { return nil }
+  func build(with endpoint: Endpoint) -> URLRequest? { try? buildThrowing(with: endpoint) }
+  func buildThrowing(with endpoint: Endpoint) throws -> URLRequest { try buildThrowing(endpoint.httpRequest) }
 
-    var request = URLRequest(url: url)
-    request.httpMethod = endpoint.method
-
-    if let headers = endpoint.headers {
-      for (key, value) in headers {
-        request.addValue(value, forHTTPHeaderField: key)
-      }
+  func buildThrowing(_ request: HTTPRequest) throws -> URLRequest {
+    guard let url = URL(string: request.path, relativeTo: baseURL) else {
+      throw APIClientError.invalidRequest("The endpoint path is invalid.")
     }
-
-    if let parameters = endpoint.parameters {
-      switch endpoint.method {
-      case "GET":
-        request = convertParamsToURL(for: url, request: request, endpoint: endpoint)
-      default:
-        if endpoint.forceSendAsGetParams {
-          request = convertParamsToURL(for: url, request: request, endpoint: endpoint)
-          break
-        }
-        // kino.pub is a form/query API (OAuth token + device notify expect form-urlencoded),
-        // never JSON — encode the body accordingly.
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.httpBody = formURLEncodedBody(from: parameters)
-      }
+    var result = URLRequest(url: url)
+    result.httpMethod = request.method.rawValue
+    request.headers.forEach { result.setValue($0.value, forHTTPHeaderField: $0.key) }
+    guard !request.parameters.isEmpty else { return result }
+    if request.method == .get || request.sendsParametersInQuery {
+      return try appendingQuery(to: result, parameters: request.parameters)
     }
-
-    return request
+    result.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+    result.httpBody = formURLEncodedBody(from: request.parameters)
+    return result
   }
 
-  private func convertParamsToURL(for url: URL, request: URLRequest, endpoint: Endpoint) -> URLRequest {
-    var request = request
-    var components = URLComponents(url: url, resolvingAgainstBaseURL: true)!
-    if let parameters = endpoint.parameters {
-      components.queryItems = parameters.sorted(by: { $0.key < $1.key }).map { (key, value) in
-        return URLQueryItem(name: key, value: "\(value)")
-      }
+  private func appendingQuery(to request: URLRequest, parameters: HTTPParameters) throws -> URLRequest {
+    var result = request
+    guard var components = URLComponents(url: request.url!, resolvingAgainstBaseURL: true) else {
+      throw APIClientError.invalidRequest("The endpoint URL cannot be represented as components.")
     }
-    request.url = components.url
-    return request
+    components.queryItems = (components.queryItems ?? []) + parameters.sorted { $0.key < $1.key }.map {
+      URLQueryItem(name: $0.key, value: $0.value.encodedValue)
+    }
+    guard let url = components.url else { throw APIClientError.invalidRequest("The endpoint query is invalid.") }
+    result.url = url
+    return result
   }
 
-  private func formURLEncodedBody(from parameters: [String: Any]) -> Data? {
+  private func formURLEncodedBody(from parameters: HTTPParameters) -> Data {
     var allowed = CharacterSet.urlQueryAllowed
-    // These are sub-delimiters in a query value and must be escaped in form bodies.
     allowed.remove(charactersIn: "+&=?")
-    let pairs = parameters.sorted(by: { $0.key < $1.key }).map { (key, value) -> String in
+    let pairs = parameters.sorted { $0.key < $1.key }.map { key, value -> String in
       let encodedKey = key.addingPercentEncoding(withAllowedCharacters: allowed) ?? key
-      let encodedValue = "\(value)".addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+      let encodedValue = value.encodedValue.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
       return "\(encodedKey)=\(encodedValue)"
     }
-    return pairs.joined(separator: "&").data(using: .utf8)
+    return Data(pairs.joined(separator: "&").utf8)
   }
 }

@@ -23,11 +23,11 @@ public struct RefreshTokenRequest: Endpoint {
     "/oauth2/token"
   }
 
-  public var method: String {
-    "POST"
+  public var method: HTTPMethod {
+    .post
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     [
       "grant_type": "refresh_token",
       "client_id": clientID,

@@ -51,16 +51,16 @@ private struct Probe: Codable { let value: Int }
 private struct CacheProbeRequest: Endpoint, CacheableRequest {
   var cachePolicy: CachePolicy { .memory(ttl: 60) }
   var path: String { "/probe" }
-  var method: String { "GET" }
+  var method: HTTPMethod { .get }
   var headers: [String: String]? { nil }
-  var parameters: [String: Any]? { nil }
+  var parameters: HTTPParameters? { nil }
 }
 
 private struct UncachedProbeRequest: Endpoint {
   var path: String { "/probe" }
-  var method: String { "GET" }
+  var method: HTTPMethod { .get }
   var headers: [String: String]? { nil }
-  var parameters: [String: Any]? { nil }
+  var parameters: HTTPParameters? { nil }
 }
 
 final class APIClientCacheTests: XCTestCase {

@@ -18,13 +18,13 @@ protocol CollectionsServiceProvider {
 }
 
 struct CollectionsServiceMock: CollectionsService {
-
+  
   func fetchCollections(page: Int?, sort: String?) async throws -> CollectionsData {
     return .mock(data: [])
   }
-
+  
   func fetchCollection(id: Int) async throws -> (Collection, [MediaItem]) {
     return (Collection.mock(id: id), [])
   }
-
+  
 }

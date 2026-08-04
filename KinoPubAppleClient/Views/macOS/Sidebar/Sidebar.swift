@@ -13,7 +13,7 @@ import KinoPubUI
 
 struct Sidebar: View {
   @Binding var selection: SidebarItem?
-
+  
   @EnvironmentObject private var navigationState: NavigationState
   @EnvironmentObject private var networkMonitor: NetworkMonitor
   @EnvironmentObject private var appearance: AppearanceSettings
@@ -22,7 +22,7 @@ struct Sidebar: View {
   @State private var isEditingSections = false
   @State private var isHoveringLibraryHeader = false
   @State private var draggedItem: SidebarItem?
-
+  
   var body: some View {
     List(selection: selectionBinding) {
       // Apple TV keeps its two primary destinations above the first labeled group.
@@ -33,7 +33,7 @@ struct Sidebar: View {
           if isEditingSections || visibility.isVisible(item) { row(item) }
         }
       }
-
+      
       if isEditingSections || visibility.personalItems.contains(where: visibility.isVisible) {
         Section {
           ForEach(visibility.personalItems) { item in
@@ -50,7 +50,7 @@ struct Sidebar: View {
           sectionHeader("My Library")
         }
       }
-
+      
       Section {
         ForEach(visibility.libraryItems) { item in
           if isEditingSections || visibility.isVisible(item) { row(item) }
@@ -58,19 +58,24 @@ struct Sidebar: View {
       } header: {
         libraryHeader
       }
-
+      
     }
     .listStyle(.sidebar)
     .safeAreaInset(edge: .bottom, spacing: 0) {
       profileRow
     }
     .environment(\.defaultMinListRowHeight, appearance.sidebarDensity.rowHeight)
-    .modifier(SidebarBackground(style: appearance.sidebarAppearance,
-                                accent: appearance.accent.color))
+    .modifier(
+      SidebarBackground(
+        style: appearance.sidebarAppearance,
+        accent: appearance.accent.color)
+    )
     .navigationTitle(Text(verbatim: "\u{200B}"))
-    .navigationSplitViewColumnWidth(min: 200,
-                                    ideal: appearance.sidebarDensity.idealWidth,
-                                    max: 340)
+    .navigationSplitViewColumnWidth(
+      min: 200,
+      ideal: appearance.sidebarDensity.idealWidth,
+      max: 340
+    )
     .animation(.easeInOut(duration: 0.2), value: appearance.sidebarDensity)
     .animation(.easeInOut(duration: 0.2), value: appearance.sidebarAppearance)
     .animation(.easeInOut(duration: 0.2), value: isEditingSections)
@@ -82,7 +87,7 @@ struct Sidebar: View {
       selection = .bookmarks
     }
   }
-
+  
   private var selectionBinding: Binding<SidebarItem?> {
     Binding(
       get: { selection },
@@ -92,7 +97,7 @@ struct Sidebar: View {
       }
     )
   }
-
+  
   private var profileRow: some View {
     Button {
       selection = .profile
@@ -121,14 +126,14 @@ struct Sidebar: View {
     .padding(.horizontal, 8)
     .padding(.vertical, 8)
   }
-
+  
   @ViewBuilder
   private func sectionHeader(_ title: String) -> some View {
     if appearance.showsSectionHeaders {
       Text(title.localized)
     }
   }
-
+  
   private var libraryHeader: some View {
     HStack(spacing: 8) {
       if appearance.showsSectionHeaders { Text("Library".localized) }
@@ -149,7 +154,7 @@ struct Sidebar: View {
       withAnimation(.easeOut(duration: 0.12)) { isHoveringLibraryHeader = hovering }
     }
   }
-
+  
   @ViewBuilder
   private func row(_ item: SidebarItem) -> some View {
     let locked = !networkMonitor.isOnline && !item.isAvailableOffline
@@ -181,11 +186,13 @@ struct Sidebar: View {
         draggedItem = item
         return NSItemProvider(object: item.id as NSString)
       }
-      .onDrop(of: [UTType.text], delegate: SidebarItemDropDelegate(
-        target: item,
-        draggedItem: $draggedItem,
-        visibility: visibility
-      ))
+      .onDrop(
+        of: [UTType.text],
+        delegate: SidebarItemDropDelegate(
+          target: item,
+          draggedItem: $draggedItem,
+          visibility: visibility
+        ))
     } else {
       Label {
         HStack {
@@ -209,13 +216,13 @@ struct Sidebar: View {
       .help(locked ? "Needs a connection".localized : item.title.localized)
     }
   }
-
+  
   private func isConfigurable(_ item: SidebarItem) -> Bool {
     SectionVisibilityStore.editableDiscover.contains(item)
-      || SectionVisibilityStore.editableLibrary.contains(item)
-      || SectionVisibilityStore.editablePersonal.contains(item)
+    || SectionVisibilityStore.editableLibrary.contains(item)
+    || SectionVisibilityStore.editablePersonal.contains(item)
   }
-
+  
   private func bookmarkFolderRow(_ folder: Bookmark) -> some View {
     let item = SidebarItem.bookmarkFolder(folder.id)
     let locked = !networkMonitor.isOnline
@@ -228,11 +235,11 @@ struct Sidebar: View {
         .foregroundStyle(locked ? Color.secondary : iconColor(for: item))
         .frame(width: 18)
     }
-      .tag(item)
-      .disabled(locked)
-      .help(locked ? "Needs a connection".localized : folder.title)
+    .tag(item)
+    .disabled(locked)
+    .help(locked ? "Needs a connection".localized : folder.title)
   }
-
+  
   private func iconColor(for item: SidebarItem) -> Color {
     switch appearance.sidebarIcons {
     case .monochrome:
@@ -263,30 +270,30 @@ private struct SidebarItemDropDelegate: DropDelegate {
   let target: SidebarItem
   @Binding var draggedItem: SidebarItem?
   let visibility: SectionVisibilityStore
-
+  
   func dropEntered(info: DropInfo) {
     guard let draggedItem, draggedItem != target else { return }
     withAnimation(.easeInOut(duration: 0.15)) {
       visibility.move(draggedItem, before: target)
     }
   }
-
+  
   func dropUpdated(info: DropInfo) -> DropProposal? {
     DropProposal(operation: .move)
   }
-
+  
   func performDrop(info: DropInfo) -> Bool {
     draggedItem = nil
     return true
   }
-
+  
   func dropExited(info: DropInfo) {}
 }
 
 private struct SidebarBackground: ViewModifier {
   let style: SidebarAppearance
   let accent: Color
-
+  
   @ViewBuilder
   func body(content: Content) -> some View {
     switch style {
@@ -300,9 +307,10 @@ private struct SidebarBackground: ViewModifier {
       content
         .scrollContentBackground(.hidden)
         .background(
-          LinearGradient(colors: [accent.opacity(0.14), Color.KinoPub.background.opacity(0.92)],
-                         startPoint: .topLeading,
-                         endPoint: .bottomTrailing)
+          LinearGradient(
+            colors: [accent.opacity(0.14), Color.KinoPub.background.opacity(0.92)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing)
         )
     case .solid:
       content
@@ -315,7 +323,7 @@ private struct SidebarBackground: ViewModifier {
 struct Sidebar_Previews: PreviewProvider {
   struct Preview: View {
     @State private var selection: SidebarItem? = .new
-
+    
     var body: some View {
       Sidebar(selection: $selection)
         .environmentObject(NavigationState())
@@ -324,7 +332,7 @@ struct Sidebar_Previews: PreviewProvider {
         .environmentObject(AppContext.shared.libraryState)
     }
   }
-
+  
   static var previews: some View {
     NavigationSplitView {
       Preview()

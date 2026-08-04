@@ -17,12 +17,12 @@ enum StreamQuality: String, CaseIterable, Identifiable {
   case fhd1080
   case hd720
   case sd480
-
+  
   var id: String { rawValue }
-
+  
   /// UserDefaults / @AppStorage key shared between the settings screen and the player.
   static let userDefaultsKey = "preferredStreamQuality"
-
+  
   /// The cap applied to `AVPlayerItem.preferredMaximumResolution`. `nil` means "no cap" (Auto).
   /// kino.pub's anamorphic content (e.g. 1920x800) stays under the nominal 16:9 height, so the
   /// width is the effective gate and these nominal sizes select the intended rung.
@@ -35,7 +35,7 @@ enum StreamQuality: String, CaseIterable, Identifiable {
     case .sd480: return CGSize(width: 854, height: 480)
     }
   }
-
+  
   var title: String {
     switch self {
     case .auto: return "Auto".localized
@@ -45,11 +45,12 @@ enum StreamQuality: String, CaseIterable, Identifiable {
     case .sd480: return "480p"
     }
   }
-
+  
   /// The preference currently stored by the settings screen, for non-View consumers (PlayerManager).
   static var current: StreamQuality {
     guard let raw = UserDefaults.standard.string(forKey: userDefaultsKey),
-          let value = StreamQuality(rawValue: raw) else {
+          let value = StreamQuality(rawValue: raw)
+    else {
       return .auto
     }
     return value

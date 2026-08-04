@@ -27,7 +27,8 @@ class PlayerTimeObserver {
     let timeScale = CMTimeScale(NSEC_PER_SEC)
     let time = CMTime(seconds: period, preferredTimescale: timeScale)
     
-    timeObserverToken = player.addPeriodicTimeObserver(forInterval: time, queue: .global(qos: .userInteractive)) { [weak self] time in
+    timeObserverToken = player.addPeriodicTimeObserver(forInterval: time, queue: .global(qos: .userInteractive)) {
+      [weak self] time in
       if time.seconds > 60.0 {
         self?.timeUpdateHandler?(time.seconds)
       }

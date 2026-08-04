@@ -21,20 +21,20 @@ struct SearchView: View {
   @EnvironmentObject var errorHandler: ErrorHandler
   @Environment(\.appContext) var appContext
   @StateObject private var model: SearchModel
-
+  
   @State private var bookmarkTarget: BookmarkTarget?
   /// True after the user commits a search (Return or tapping a suggestion) → show the sectioned
   /// layout. It is NOT tied to raw focus: incidental focus loss (opening a row's "…" menu, scrolling)
   /// must keep the live list, otherwise a row appears to vanish the moment you interact with it.
   @State private var committed = false
   @FocusState private var searchFocused: Bool
-
+  
   init(model: @autoclosure @escaping () -> SearchModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   private var trimmedQuery: String { model.query.trimmingCharacters(in: .whitespaces) }
-
+  
   var body: some View {
     NavigationStack(path: $navigationState.searchRoutes) {
       VStack(spacing: 0) {
@@ -65,7 +65,7 @@ struct SearchView: View {
       }
     }
   }
-
+  
   private var searchField: some View {
     HStack(spacing: 8) {
       Image(systemName: "magnifyingglass")
@@ -80,30 +80,33 @@ struct SearchView: View {
     .frame(width: 500, height: 44)
     .background(Color.black.opacity(0.16), in: Capsule())
     .overlay {
-      Capsule().stroke(searchFocused ? Color.accentColor.opacity(0.8) : Color.white.opacity(0.14),
-                       lineWidth: searchFocused ? 3 : 1)
+      Capsule().stroke(
+        searchFocused ? Color.accentColor.opacity(0.8) : Color.white.opacity(0.14),
+        lineWidth: searchFocused ? 3 : 1)
     }
     .padding(.top, 14)
     .padding(.bottom, 22)
   }
-
+  
   // MARK: - Discovery (empty query): browse + recent
-
+  
   @ViewBuilder
   private var discoveryContent: some View {
     VStack(alignment: .leading, spacing: 28) {
       if !model.genres.isEmpty { browseSection }
       if !model.recentItems.isEmpty { recentSection }
       if model.recentItems.isEmpty && model.genres.isEmpty {
-        EmptyStateView(systemImage: "magnifyingglass",
-                       title: "Search".localized,
-                       message: "Find movies, shows, actors and directors.".localized)
-          .padding(.top, 80)
+        EmptyStateView(
+          systemImage: "magnifyingglass",
+          title: "Search".localized,
+          message: "Find movies, shows, actors and directors.".localized
+        )
+        .padding(.top, 80)
       }
     }
     .padding(16)
   }
-
+  
   private var recentSection: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
@@ -121,15 +124,17 @@ struct SearchView: View {
       }
     }
   }
-
+  
   private var browseSection: some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("Browse").font(Font.KinoPub.subheader).foregroundStyle(Color.KinoPub.text)
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 180), spacing: 20)], spacing: 20) {
         ForEach(model.genres, id: \.id) { genre in
-          NavigationLink(value: Route.filteredCatalog(
-            MediaItemsFilter(contentType: .movie, genres: [genre.id], countries: []),
-            genre.title)) {
+          NavigationLink(
+            value: Route.filteredCatalog(
+              MediaItemsFilter(contentType: .movie, genres: [genre.id], countries: []),
+              genre.title)
+          ) {
             browseCard(genre)
           }
           .buttonStyle(.plain)
@@ -137,14 +142,15 @@ struct SearchView: View {
       }
     }
   }
-
+  
   private func browseCard(_ genre: MediaGenre) -> some View {
     ZStack(alignment: .bottomLeading) {
       CachedAsyncImage(url: URL(string: model.genrePosters[genre.id] ?? "")) { image in
         image.resizable().aspectRatio(contentMode: .fill)
       } placeholder: {
-        LinearGradient(colors: [Color.accentColor.opacity(0.5), Color.black.opacity(0.6)],
-                       startPoint: .topLeading, endPoint: .bottomTrailing)
+        LinearGradient(
+          colors: [Color.accentColor.opacity(0.5), Color.black.opacity(0.6)],
+          startPoint: .topLeading, endPoint: .bottomTrailing)
       }
       LinearGradient(colors: [.clear, .black.opacity(0.7)], startPoint: .center, endPoint: .bottom)
       Text(genre.title)
@@ -153,12 +159,14 @@ struct SearchView: View {
     .aspectRatio(2.0 / 3.0, contentMode: .fit)
     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
-
+  
   private func recentCard(_ recent: RecentSearchItem) -> some View {
     HStack(spacing: 12) {
       CachedAsyncImage(url: URL(string: recent.poster)) { image in
         image.resizable().aspectRatio(contentMode: .fill)
-      } placeholder: { Color.KinoPub.skeleton }
+      } placeholder: {
+        Color.KinoPub.skeleton
+      }
       .frame(width: 100, height: 62).clipped()
       .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
       VStack(alignment: .leading, spacing: 2) {
@@ -173,9 +181,9 @@ struct SearchView: View {
     .background(Color.white.opacity(0.06))
     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
-
+  
   // MARK: - Live list (typing): matching recents as suggestions + result rows
-
+  
   /// Recent searches whose title matches the current prefix — our stand-in for query suggestions
   /// (kino.pub has no autocomplete API).
   private var matchingRecents: [RecentSearchItem] {
@@ -188,7 +196,7 @@ struct SearchView: View {
       .filter { $0.title.lowercased().contains(q) && !resultIds.contains($0.id) }
       .prefix(3).map { $0 }
   }
-
+  
   @ViewBuilder
   private var liveList: some View {
     LazyVStack(alignment: .leading, spacing: 0) {
@@ -207,14 +215,16 @@ struct SearchView: View {
         .buttonStyle(.plain)
         Divider().background(Color.white.opacity(0.06))
       }
-
+      
       if model.searching && model.allResults.isEmpty {
         ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
       } else if trimmedQuery.count >= 3 && model.allResults.isEmpty && !model.searching {
-        EmptyStateView(systemImage: "magnifyingglass",
-                       title: "Nothing found".localized,
-                       message: "Try a different title, actor or director.".localized)
-          .padding(.top, 60)
+        EmptyStateView(
+          systemImage: "magnifyingglass",
+          title: "Nothing found".localized,
+          message: "Try a different title, actor or director.".localized
+        )
+        .padding(.top, 60)
       } else {
         ForEach(model.allResults.prefix(25), id: \.id) { item in
           resultRow(item)
@@ -223,14 +233,16 @@ struct SearchView: View {
       }
     }
   }
-
+  
   private func resultRow(_ item: MediaItem) -> some View {
     HStack(spacing: 0) {
       NavigationLink(value: Route.details(item)) {
         HStack(spacing: 12) {
           CachedAsyncImage(url: URL(string: item.posters.small)) { image in
             image.resizable().aspectRatio(contentMode: .fill)
-          } placeholder: { Color.KinoPub.skeleton }
+          } placeholder: {
+            Color.KinoPub.skeleton
+          }
           .frame(width: 46, height: 66).clipped()
           .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
           VStack(alignment: .leading, spacing: 3) {
@@ -244,15 +256,19 @@ struct SearchView: View {
       }
       .buttonStyle(.plain)
       .simultaneousGesture(TapGesture().onEnded { model.recordRecent(item) })
-
+      
       Menu {
         Button {
           model.recordRecent(item)
           navigationState.searchRoutes.append(.details(item))
-        } label: { Label("Open".localized, systemImage: "info.circle") }
+        } label: {
+          Label("Open".localized, systemImage: "info.circle")
+        }
         Button {
           bookmarkTarget = BookmarkTarget(item: item)
-        } label: { Label("Add to bookmarks".localized, systemImage: "bookmark") }
+        } label: {
+          Label("Add to bookmarks".localized, systemImage: "bookmark")
+        }
       } label: {
         Image(systemName: "ellipsis")
           .foregroundStyle(Color.KinoPub.subtitle)
@@ -262,7 +278,7 @@ struct SearchView: View {
     }
     .padding(.horizontal, 16).padding(.vertical, 8)
   }
-
+  
   private func metaLine(_ item: MediaItem) -> String {
     var parts: [String] = []
     if let type = MediaType(rawValue: item.type)?.title { parts.append(type) }
@@ -270,9 +286,9 @@ struct SearchView: View {
     if item.year > 0 { parts.append("\(item.year)") }
     return parts.joined(separator: " · ")
   }
-
+  
   // MARK: - Sections (committed): Top Results / Movies / TV Shows / Cast & Crew
-
+  
   /// Movie/TV shelves ordered by how many results each has (so the dominant type leads, like Apple TV
   /// puts TV Shows first for "Shrinking" and Movies first for "Interstellar").
   private var orderedShelves: [(title: String, items: [MediaItem])] {
@@ -281,24 +297,28 @@ struct SearchView: View {
     if !model.tvResults.isEmpty { shelves.append(("TV Shows".localized, model.tvResults)) }
     return shelves.sorted { $0.1.count > $1.1.count }
   }
-
+  
   @ViewBuilder
   private func sections(width: CGFloat) -> some View {
     if model.searching && model.allResults.isEmpty {
       ProgressView().frame(maxWidth: .infinity).padding(.top, 60)
     } else if model.allResults.isEmpty && model.people.isEmpty {
-      EmptyStateView(systemImage: "magnifyingglass",
-                     title: "Nothing found".localized,
-                     message: "Try a different title, actor or director.".localized)
-        .padding(.top, 80)
+      EmptyStateView(
+        systemImage: "magnifyingglass",
+        title: "Nothing found".localized,
+        message: "Try a different title, actor or director.".localized
+      )
+      .padding(.top, 80)
     } else {
       VStack(alignment: .leading, spacing: 28) {
         if !model.topResults.isEmpty { topResultsSection }
         ForEach(orderedShelves, id: \.title) { shelf in
           // ">" opens the full set on its own page (like Apple TV). Only when there's more than fits.
-          MediaShelf(title: shelf.title,
-                     showsChevron: shelf.items.count > 1,
-                     onHeaderTap: { navigationState.searchRoutes.append(.mediaList(shelf.items, shelf.title)) }) {
+          MediaShelf(
+            title: shelf.title,
+            showsChevron: shelf.items.count > 1,
+            onHeaderTap: { navigationState.searchRoutes.append(.mediaList(shelf.items, shelf.title)) }
+          ) {
             ForEach(shelf.items.prefix(18), id: \.id) { item in
               NavigationLink(value: Route.details(item)) {
                 PosterCard(imageURL: item.posters.medium, title: item.localizedTitle, width: 130)
@@ -312,7 +332,7 @@ struct SearchView: View {
       .padding(.vertical, 8)
     }
   }
-
+  
   private var topResultsSection: some View {
     VStack(alignment: .leading, spacing: 10) {
       Text("Top Results".localized)
@@ -329,12 +349,14 @@ struct SearchView: View {
       }
     }
   }
-
+  
   private func topResultCard(_ item: MediaItem) -> some View {
     HStack(spacing: 12) {
       CachedAsyncImage(url: URL(string: item.posters.small)) { image in
         image.resizable().aspectRatio(contentMode: .fill)
-      } placeholder: { Color.KinoPub.skeleton }
+      } placeholder: {
+        Color.KinoPub.skeleton
+      }
       .frame(width: 60, height: 88).clipped()
       .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
       VStack(alignment: .leading, spacing: 4) {
@@ -349,7 +371,7 @@ struct SearchView: View {
     .background(Color.white.opacity(0.06))
     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
-
+  
   private var castCrewSection: some View {
     VStack(alignment: .leading, spacing: 10) {
       Button {
@@ -369,9 +391,10 @@ struct SearchView: View {
         LazyHStack(spacing: 16) {
           ForEach(model.people) { person in
             NavigationLink(value: Route.personSearch(person.name, person.searchField, person.displayName)) {
-              CastAvatarView(imageURL: ActorImageProvider.photoURLString(for: person.name),
-                             name: person.displayName,
-                             role: person.roleLabel)
+              CastAvatarView(
+                imageURL: ActorImageProvider.photoURLString(for: person.name),
+                name: person.displayName,
+                role: person.roleLabel)
             }
             .buttonStyle(.plain)
           }
@@ -387,7 +410,8 @@ private extension View {
   /// preserves control hit testing while still following the user's Clear/Tinted glass setting.
   func glassSearchField() -> some View {
     let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-    return self
+    return
+    self
       .systemGlassBackground(in: shape)
       .overlay(shape.strokeBorder(Color.white.opacity(0.10)).allowsHitTesting(false))
   }
@@ -402,14 +426,16 @@ private struct BookmarkActionSheet: View {
   @State private var folders: [Bookmark] = []
   @State private var inFolders: Set<Int> = []
   @State private var loading = true
-
+  
   var body: some View {
     NavigationStack {
       List {
         if item.isSeries {
           Section {
             Button {
-              Task { try? await actionsService.toggleWatchlist(id: item.id); dismiss() }
+              Task {
+                try? await actionsService.toggleWatchlist(id: item.id); dismiss()
+              }
             } label: {
               Label("Add to watchlist".localized, systemImage: "plus.rectangle.on.rectangle")
             }
@@ -458,7 +484,7 @@ private struct BookmarkActionSheet: View {
 struct MediaListGridView: View {
   let items: [MediaItem]
   let title: String
-
+  
   var body: some View {
     WidthReader { width in
       ScrollView {
@@ -482,18 +508,19 @@ struct MediaListGridView: View {
 struct SearchCastCrewView: View {
   let people: [SearchPerson]
   let title: String
-
+  
   private let columns = [GridItem(.adaptive(minimum: 100), spacing: 14, alignment: .top)]
-
+  
   var body: some View {
     ScrollView {
       LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
         ForEach(people) { person in
           NavigationLink(value: Route.personSearch(person.name, person.searchField, person.displayName)) {
-            CastAvatarView(imageURL: ActorImageProvider.photoURLString(for: person.name),
-                           name: person.displayName,
-                           role: person.roleLabel,
-                           diameter: 80)
+            CastAvatarView(
+              imageURL: ActorImageProvider.photoURLString(for: person.name),
+              name: person.displayName,
+              role: person.roleLabel,
+              diameter: 80)
           }
           .buttonStyle(.plain)
         }
@@ -506,11 +533,16 @@ struct SearchCastCrewView: View {
 
 struct SearchView_Previews: PreviewProvider {
   @StateObject static var navState = NavigationState()
-
+  
   static var previews: some View {
-    SearchView(model: SearchModel(itemsService: VideoContentServiceMock(),
-                                  authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
-                                  errorHandler: ErrorHandler()))
-      .appPreviewEnvironment()
+    SearchView(
+      model: SearchModel(
+        itemsService: VideoContentServiceMock(),
+        authState: AuthState(
+          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock()),
+        errorHandler: ErrorHandler())
+    )
+    .appPreviewEnvironment()
   }
 }

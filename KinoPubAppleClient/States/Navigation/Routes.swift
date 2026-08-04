@@ -38,7 +38,7 @@ enum Route: Hashable {
   /// A "see all" grid of people surfaced from a search (Cast & Crew): (people, title). Tapping a
   /// person opens their filmography, like the Cast & Crew on a film page / Apple TV.
   case castCrew([SearchPerson], String)
-
+  
   func hash(into hasher: inout Hasher) {
     switch self {
     case .details(let item):
@@ -71,7 +71,7 @@ enum Route: Hashable {
       hasher.combine(12); hasher.combine(people); hasher.combine(title)
     }
   }
-
+  
   static func == (lhs: Route, rhs: Route) -> Bool {
     lhs.hashValue == rhs.hashValue
   }

@@ -12,28 +12,28 @@ struct SettingsView: View {
   @EnvironmentObject private var windowSettings: WindowSettings
   @EnvironmentObject private var appearance: AppearanceSettings
   @State private var cacheSize = ImageCache.shared.formattedDiskUsage()
-
+  
   var body: some View {
     TabView {
       appearanceSettings
         .tabItem { Label("Appearance".localized, systemImage: "paintbrush") }
-
+      
       generalSettings
         .tabItem { Label("General".localized, systemImage: "gearshape") }
-
+      
       storageSettings
         .tabItem { Label("Storage".localized, systemImage: "internaldrive") }
     }
     .padding(20)
     .frame(width: 520, height: 390)
   }
-
+  
   private var appearanceSettings: some View {
     Form {
       Section("Accent color".localized) {
         accentSwatches
       }
-
+      
       Section("Sidebar".localized) {
         Picker("Background".localized, selection: $appearance.sidebarAppearance) {
           ForEach(SidebarAppearance.allCases) { style in
@@ -41,23 +41,23 @@ struct SettingsView: View {
           }
         }
         .pickerStyle(.segmented)
-
+        
         Picker("Icons".localized, selection: $appearance.sidebarIcons) {
           ForEach(SidebarIconStyle.allCases) { style in
             Text(style.title.localized).tag(style)
           }
         }
-
+        
         Picker("Density".localized, selection: $appearance.sidebarDensity) {
           ForEach(SidebarDensity.allCases) { density in
             Text(density.title.localized).tag(density)
           }
         }
         .pickerStyle(.segmented)
-
+        
         Toggle("Show section headers".localized, isOn: $appearance.showsSectionHeaders)
       }
-
+      
       Section {
         HStack {
           Spacer()
@@ -67,7 +67,7 @@ struct SettingsView: View {
     }
     .formStyle(.grouped)
   }
-
+  
   private var accentSwatches: some View {
     HStack(spacing: 14) {
       ForEach(AppAccent.allCases) { accent in
@@ -101,21 +101,22 @@ struct SettingsView: View {
         .foregroundStyle(.secondary)
     }
   }
-
+  
   private var generalSettings: some View {
     Form {
       Section {
         Toggle("AlwaysOnTop".localized, isOn: $windowSettings.alwaysOnTop)
       }
-
+      
       Section {
-        LabeledContent("App version".localized,
-                       value: "\(Bundle.main.appVersionLong) (\(Bundle.main.appBuild))")
+        LabeledContent(
+          "App version".localized,
+          value: "\(Bundle.main.appVersionLong) (\(Bundle.main.appBuild))")
       }
     }
     .formStyle(.grouped)
   }
-
+  
   private var storageSettings: some View {
     Form {
       Section {

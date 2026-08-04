@@ -12,11 +12,11 @@ import KinoPubBackend
 
 struct SeasonsView: View {
   @StateObject private var model: SeasonsModel
-
+  
   init(model: @autoclosure @escaping () -> SeasonsModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   var body: some View {
     VStack {
       listView
@@ -24,7 +24,7 @@ struct SeasonsView: View {
     .navigationTitle("Seasons")
     .background(Color.KinoPub.background)
   }
-
+  
   var listView: some View {
     List(model.seasons) { season in
       NavigationLink(value: model.linkProvider.season(for: season)) {

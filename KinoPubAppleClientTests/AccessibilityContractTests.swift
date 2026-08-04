@@ -14,7 +14,7 @@ final class AccessibilityContractTests: XCTestCase {
       AccessibilityID.bookmarkPicker,
       AccessibilityID.playerError
     ]
-
+    
     XCTAssertEqual(Set(identifiers).count, identifiers.count)
     XCTAssertEqual(AccessibilityID.authScreen, "auth.screen")
     XCTAssertEqual(AccessibilityID.homeScreen, "home.screen")

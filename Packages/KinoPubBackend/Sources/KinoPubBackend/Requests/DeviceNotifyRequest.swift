@@ -24,11 +24,11 @@ public struct DeviceNotifyRequest: Endpoint {
     "/v1/device/notify"
   }
 
-  public var method: String {
-    "POST"
+  public var method: HTTPMethod {
+    .post
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     [
       "title": title,
       "hardware": hardware,

@@ -15,8 +15,8 @@ public struct GetItemFoldersRequest: Endpoint {
   }
 
   public var path: String { "/v1/bookmarks/get-item-folders" }
-  public var method: String { "GET" }
-  public var parameters: [String: Any]? { ["item": item] }
+  public var method: HTTPMethod { .get }
+  public var parameters: HTTPParameters? { ["item": item] }
   public var headers: [String: String]? { nil }
   public var forceSendAsGetParams: Bool { false }
 }

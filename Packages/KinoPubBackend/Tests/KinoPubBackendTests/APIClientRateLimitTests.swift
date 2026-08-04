@@ -16,7 +16,7 @@ final class APIClientRateLimitTests: XCTestCase {
     )
 
     let response: VerificationResponse = try await client.performRequest(
-      with: RequestData(path: "/token", method: "GET"),
+      with: RequestData(path: "/token", method: .get),
       decodingType: VerificationResponse.self
     )
 
@@ -39,7 +39,7 @@ final class APIClientRateLimitTests: XCTestCase {
 
     do {
       let _: VerificationResponse = try await client.performRequest(
-        with: RequestData(path: "/token", method: "GET"),
+        with: RequestData(path: "/token", method: .get),
         decodingType: VerificationResponse.self
       )
       XCTFail("Expected cancellation")

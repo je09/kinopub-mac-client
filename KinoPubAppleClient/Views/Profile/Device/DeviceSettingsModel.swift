@@ -12,23 +12,23 @@ import KinoPubLogging
 
 @MainActor
 class DeviceSettingsModel: ObservableObject {
-
+  
   private var deviceService: DeviceService
   private var errorHandler: ErrorHandler
   private var deviceId: Int?
-
+  
   @Published var settings: DeviceSettings = DeviceSettings()
   @Published var isLoading: Bool = false
   @Published var isSaving: Bool = false
   @Published var deviceTitle: String = ""
   /// Flips true briefly after a successful save to drive the "Saved" confirmation toast.
   @Published var didSave: Bool = false
-
+  
   init(deviceService: DeviceService, errorHandler: ErrorHandler) {
     self.deviceService = deviceService
     self.errorHandler = errorHandler
   }
-
+  
   func load() async {
     isLoading = true
     defer { isLoading = false }
@@ -42,7 +42,7 @@ class DeviceSettingsModel: ObservableObject {
       errorHandler.setError(error)
     }
   }
-
+  
   func save() async {
     guard let deviceId else { return }
     isSaving = true
@@ -58,7 +58,7 @@ class DeviceSettingsModel: ObservableObject {
       errorHandler.setError(error)
     }
   }
-
+  
   /// Brief native confirmation after settings are saved.
   private func confirmSaved() {
     didSave = true

@@ -14,15 +14,15 @@ final class DevicesListModel: ObservableObject {
   @Published var devices: [ManagedDevice] = []
   @Published var currentDeviceId: Int?
   @Published var isLoading = true
-
+  
   private let deviceService: DeviceService
   private let errorHandler: ErrorHandler
-
+  
   init(deviceService: DeviceService, errorHandler: ErrorHandler) {
     self.deviceService = deviceService
     self.errorHandler = errorHandler
   }
-
+  
   func load() async {
     isLoading = true
     currentDeviceId = try? await deviceService.fetchCurrentDevice().id
@@ -33,7 +33,7 @@ final class DevicesListModel: ObservableObject {
     }
     isLoading = false
   }
-
+  
   func remove(_ device: ManagedDevice) async {
     do {
       try await deviceService.removeDevice(id: device.id)
@@ -47,16 +47,16 @@ final class DevicesListModel: ObservableObject {
 struct DevicesView: View {
   @StateObject private var model: DevicesListModel
   @State private var pendingRemove: ManagedDevice?
-
+  
   init(model: @autoclosure @escaping () -> DevicesListModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   /// Native apps/devices (everything the API doesn't flag as a browser session).
   private var devices: [ManagedDevice] { model.devices.filter { !($0.isBrowser ?? false) } }
   /// Web/browser sessions reported alongside devices by the API.
   private var sessions: [ManagedDevice] { model.devices.filter { $0.isBrowser ?? false } }
-
+  
   var body: some View {
     ZStack {
       Color.KinoPub.background.edgesIgnoringSafeArea(.all)
@@ -66,8 +66,11 @@ struct DevicesView: View {
         Form {
           // Real devices and browser sessions are separated so the list isn't a confusing mix.
           if !devices.isEmpty {
-            Section(header: Text("Devices".localized),
-                    footer: Text("Remove devices you no longer use. The current device can't be removed here — use Logout.".localized)) {
+            Section(
+              header: Text("Devices".localized),
+              footer: Text(
+                "Remove devices you no longer use. The current device can't be removed here — use Logout.".localized)
+            ) {
               ForEach(devices) { device in
                 row(device)
               }
@@ -88,8 +91,12 @@ struct DevicesView: View {
     }
     .navigationTitle("Devices".localized)
     .task { await model.load() }
-    .alert("Remove device?".localized, isPresented: Binding(get: { pendingRemove != nil },
-                                                            set: { if !$0 { pendingRemove = nil } })) {
+    .alert(
+      "Remove device?".localized,
+      isPresented: Binding(
+        get: { pendingRemove != nil },
+        set: { if !$0 { pendingRemove = nil } })
+    ) {
       Button("Cancel".localized, role: .cancel) {}
       Button("Remove".localized, role: .destructive) {
         if let device = pendingRemove { Task { await model.remove(device) } }
@@ -98,7 +105,7 @@ struct DevicesView: View {
       if let device = pendingRemove { Text(displayName(device)) }
     }
   }
-
+  
   @ViewBuilder
   private func row(_ device: ManagedDevice) -> some View {
     let isCurrent = device.id == model.currentDeviceId
@@ -129,14 +136,14 @@ struct DevicesView: View {
       }
     }
   }
-
+  
   private func displayName(_ device: ManagedDevice) -> String {
     let title = device.title?.trimmingCharacters(in: .whitespaces) ?? ""
     if !title.isEmpty { return title }
     let hardware = device.hardware?.trimmingCharacters(in: .whitespaces) ?? ""
     return hardware.isEmpty ? "Unknown device".localized : hardware
   }
-
+  
   private static func dateText(_ ts: TimeInterval) -> String {
     let f = DateFormatter()
     f.dateStyle = .medium

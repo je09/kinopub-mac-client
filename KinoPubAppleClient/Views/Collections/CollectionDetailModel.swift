@@ -17,9 +17,9 @@ enum MediaItemsSort: CaseIterable, Identifiable {
   case title
   case year
   case rating
-
+  
   var id: Self { self }
-
+  
   var localizedTitle: String {
     switch self {
     case .default: return "Default".localized
@@ -28,7 +28,7 @@ enum MediaItemsSort: CaseIterable, Identifiable {
     case .rating: return "Rating".localized
     }
   }
-
+  
   /// Returns `items` sorted by this option (`.default` keeps the original order).
   func sorted(_ items: [MediaItem]) -> [MediaItem] {
     switch self {
@@ -46,33 +46,33 @@ enum MediaItemsSort: CaseIterable, Identifiable {
 
 @MainActor
 class CollectionDetailModel: ObservableObject {
-
+  
   private var errorHandler: ErrorHandler
   private var collectionsService: CollectionsService
-
+  
   /// The collection metadata. Replaced with the richer payload once the detail loads.
   @Published public var collection: Collection
-
+  
   @Published public var items: [MediaItem] = []
   @Published public var isLoading: Bool = true
   @Published public var selectedSort: MediaItemsSort = .default {
     didSet { applySort() }
   }
-
+  
   /// The unsorted items as returned by the API; `items` is the sorted view of this.
   private var rawItems: [MediaItem] = []
-
+  
   init(collection: Collection, collectionsService: CollectionsService, errorHandler: ErrorHandler) {
     self.collection = collection
     self.collectionsService = collectionsService
     self.errorHandler = errorHandler
   }
-
+  
   /// The films count to show in the header: prefer the API meta, fall back to loaded items.
   var itemsCountText: Int {
     collection.itemsCount ?? rawItems.count
   }
-
+  
   func fetchItems() async {
     isLoading = true
     do {
@@ -87,15 +87,15 @@ class CollectionDetailModel: ObservableObject {
     }
     isLoading = false
   }
-
+  
   private func applySort() {
     items = selectedSort.sorted(rawItems)
   }
-
+  
   @Sendable @MainActor
   func refresh() async {
     errorHandler.reset()
     await fetchItems()
   }
-
+  
 }

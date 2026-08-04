@@ -9,140 +9,161 @@ import Foundation
 import KinoPubBackend
 
 final class VideoContentServiceImpl: VideoContentService {
-
+  
   private var apiClient: APIClient
-
+  
   init(apiClient: APIClient) {
     self.apiClient = apiClient
   }
-
-  func fetch(shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> {
+  
+  func fetch(
+    shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool
+  ) async throws -> PaginatedData<MediaItem> {
     let request = ShortcutItemsRequest(shortcut: shortcut, contentType: contentType, page: page)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: PaginatedData<MediaItem>.self,
-                                                      forceRefresh: forceRefresh)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: PaginatedData<MediaItem>.self,
+      forceRefresh: forceRefresh)
     return response
   }
-
-  func search(query: String?, contentType: MediaType?, field: String?, page: Int?) async throws -> PaginatedData<MediaItem> {
+  
+  func search(
+    query: String?, contentType: MediaType?, field: String?, page: Int?
+  ) async throws -> PaginatedData<MediaItem> {
     let request = SearchItemsRequest(contentType: contentType, page: page, query: query, field: field)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: PaginatedData<MediaItem>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: PaginatedData<MediaItem>.self)
     return response
   }
-
+  
   func filter(filter: MediaItemsFilter, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> {
-    let request = FilterItemsRequest(contentType: filter.contentType,
-                                     rawType: filter.rawType,
-                                     genres: filter.genres,
-                                     countries: filter.countries,
-                                     year: filter.year,
-                                     age: filter.age,
-                                     sort: filter.sort,
-                                     director: filter.director,
-                                     cast: filter.cast,
-                                     subtitles: filter.subtitles,
-                                     imdb: filter.imdbParam,
-                                     kinopoisk: filter.kinopoiskParam,
-                                     quality: filter.qualityParams,
-                                     conditions: filter.conditionParams,
-                                     period: filter.period,
-                                     language: filter.language,
-                                     translation: filter.translation,
-                                     page: page)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: PaginatedData<MediaItem>.self,
-                                                      forceRefresh: forceRefresh)
+    let request = FilterItemsRequest(
+      contentType: filter.contentType,
+      rawType: filter.rawType,
+      genres: filter.genres,
+      countries: filter.countries,
+      year: filter.year,
+      age: filter.age,
+      sort: filter.sort,
+      director: filter.director,
+      cast: filter.cast,
+      subtitles: filter.subtitles,
+      imdb: filter.imdbParam,
+      kinopoisk: filter.kinopoiskParam,
+      quality: filter.qualityParams,
+      conditions: filter.conditionParams,
+      period: filter.period,
+      language: filter.language,
+      translation: filter.translation,
+      page: page)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: PaginatedData<MediaItem>.self,
+      forceRefresh: forceRefresh)
     return response
   }
-
+  
   func itemsByPerson(name: String, field: String, page: Int?) async throws -> PaginatedData<MediaItem> {
     // No contentType → no `type` param → all of the person's films & series. Uses the documented,
     // reliable cast=/director= filter rather than the flaky search?field=cast full-text match.
-    let request = FilterItemsRequest(director: field == "director" ? name : nil,
-                                     cast: field == "cast" ? name : nil,
-                                     page: page)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: PaginatedData<MediaItem>.self)
+    let request = FilterItemsRequest(
+      director: field == "director" ? name : nil,
+      cast: field == "cast" ? name : nil,
+      page: page)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: PaginatedData<MediaItem>.self)
     return response
   }
-
+  
   func fetchGenres(type: MediaType?) async throws -> [MediaGenre] {
     let request = GenresRequest(type: type)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: ArrayData<MediaGenre>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: ArrayData<MediaGenre>.self)
     return response.items
   }
-
+  
   func fetchCountries() async throws -> [Country] {
     let request = CountriesRequest()
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: ArrayData<Country>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: ArrayData<Country>.self)
     return response.items
   }
-
+  
   func fetchDetails(for id: String) async throws -> SingleItemData<MediaItem> {
     let request = ItemDetailsRequest(id: id)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: SingleItemData<MediaItem>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: SingleItemData<MediaItem>.self)
     return response
   }
-
+  
   func fetchMediaLinks(mediaID: Int) async throws -> MediaLinksData {
-    try await apiClient.performRequest(with: MediaLinksRequest(mediaID: mediaID),
-                                       decodingType: MediaLinksData.self)
+    try await apiClient.performRequest(
+      with: MediaLinksRequest(mediaID: mediaID),
+      decodingType: MediaLinksData.self)
   }
-
+  
   func fetchMediaVideoLink(file: String, type: String) async throws -> MediaVideoLinkData {
-    try await apiClient.performRequest(with: MediaVideoLinkRequest(file: file, type: type),
-                                       decodingType: MediaVideoLinkData.self)
+    try await apiClient.performRequest(
+      with: MediaVideoLinkRequest(file: file, type: type),
+      decodingType: MediaVideoLinkData.self)
   }
   
   func fetchBookmarks() async throws -> ArrayData<Bookmark> {
     let request = BookmarksRequest()
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: ArrayData<Bookmark>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: ArrayData<Bookmark>.self)
     return response
   }
   
   func fetchBookmarkItems(id: String) async throws -> ArrayData<MediaItem> {
     let request = BookmarkItemsRequest(id: id)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: ArrayData<MediaItem>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: ArrayData<MediaItem>.self)
     return response
   }
-
+  
   func fetchHistory(page: Int?) async throws -> HistoryData {
     let request = HistoryRequest(page: page)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: HistoryData.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: HistoryData.self)
     return response
   }
-
+  
   func fetchWatchingSerials(subscribed: Int?, type: String?) async throws -> ArrayData<WatchingSerial> {
     let request = WatchingSerialsRequest(subscribed: subscribed, type: type)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: ArrayData<WatchingSerial>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: ArrayData<WatchingSerial>.self)
     return response
   }
-
+  
   func fetchWatchingMovies() async throws -> ArrayData<WatchingSerial> {
     let request = WatchingMoviesRequest()
     return try await apiClient.performRequest(with: request, decodingType: ArrayData<WatchingSerial>.self)
   }
-
+  
   func fetchTVChannels() async throws -> [TVChannel] {
     let request = TVChannelsRequest()
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: TVChannelsData.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: TVChannelsData.self)
     return response.channels
   }
-
+  
   func fetchComments(for id: Int) async throws -> CommentsData {
     let request = CommentsRequest(id: id)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: CommentsData.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: CommentsData.self)
     return response
   }
-
+  
 }

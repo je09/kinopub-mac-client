@@ -15,15 +15,15 @@ import VideoToolbox
 import CoreMedia
 
 enum DeviceCapabilities {
-
+  
   /// Whether this hardware can decode HEVC (and therefore the HDR10 master). True on A10+ real
   /// Macs whose hardware decoder supports HEVC; playback is tone-mapped on SDR displays. False on the
   /// Simulator and on pre-HEVC hardware, where advertising HEVC would yield an undecodable stream.
   static var supportsHEVC: Bool {
-    #if targetEnvironment(simulator)
+#if targetEnvironment(simulator)
     return false
-    #else
+#else
     return VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)
-    #endif
+#endif
   }
 }

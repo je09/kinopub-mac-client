@@ -49,7 +49,7 @@ struct MainView: View {
             SortDotIcon(active: catalog.isSortNonDefault)
           }
         }
-
+        
         ToolbarItem(placement: toolbarItemPlacement) {
           Button {
             showFilterPicker = true
@@ -59,19 +59,28 @@ struct MainView: View {
         }
       }
       .background(Color.KinoPub.background)
-      .sheet(isPresented: $showShortCutPicker, content: {
-        SortSelectionView(sort: $catalog.sort)
-      })
-      .sheet(isPresented: $showFilterPicker, content: {
-        FilterView(model: FilterModel(contentType: catalog.contentType,
-                                      filterDataService: appContext.contentService,
-                                      initialFilter: catalog.activeFilter),
-                   onApply: { filter in
-                     catalog.apply(filter: filter)
-                   }, onClear: {
-                     catalog.clearFilter()
-                   })
-      })
+      .sheet(
+        isPresented: $showShortCutPicker,
+        content: {
+          SortSelectionView(sort: $catalog.sort)
+        }
+      )
+      .sheet(
+        isPresented: $showFilterPicker,
+        content: {
+          FilterView(
+            model: FilterModel(
+              contentType: catalog.contentType,
+              filterDataService: appContext.contentService,
+              initialFilter: catalog.activeFilter),
+            onApply: { filter in
+              catalog.apply(filter: filter)
+            },
+            onClear: {
+              catalog.clearFilter()
+            })
+        }
+      )
       .routeDestinations()
       .handleError(state: $errorHandler.state)
       // The deep-link filter is already captured by the catalog above; clear it so a later
@@ -84,13 +93,17 @@ struct MainView: View {
   
   var catalogView: some View {
     GeometryReader { geometryProxy in
-      ContentItemsListView(width: geometryProxy.size.width, items: $catalog.items, onLoadMoreContent: { item in
-        catalog.loadMoreContent(after: item)
-      }, onRefresh: {
-        await catalog.refresh()
-      }, navigationLinkProvider: { item in
-        RouteLinkProvider().link(for: item)
-      }, statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) })
+      ContentItemsListView(
+        width: geometryProxy.size.width, items: $catalog.items,
+        onLoadMoreContent: { item in
+          catalog.loadMoreContent(after: item)
+        },
+        onRefresh: {
+          await catalog.refresh()
+        },
+        navigationLinkProvider: { item in
+          RouteLinkProvider().link(for: item)
+        }, statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) })
     }
   }
   
@@ -103,10 +116,16 @@ struct MainView: View {
 
 struct MainView_Previews: PreviewProvider {
   @StateObject static var navState = NavigationState()
-
+  
   static var previews: some View {
-    MainView(catalog: MediaCatalog(itemsService: VideoContentServiceMock(), authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()), errorHandler: ErrorHandler()))
-      .appPreviewEnvironment()
+    MainView(
+      catalog: MediaCatalog(
+        itemsService: VideoContentServiceMock(),
+        authState: AuthState(
+          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock()), errorHandler: ErrorHandler())
+    )
+    .appPreviewEnvironment()
   }
 }
 
@@ -124,42 +143,52 @@ struct FilteredCatalogView: View {
   private let linkProvider: NavigationLinkProvider
   @State private var showShortCutPicker: Bool = false
   @State private var showFilterPicker: Bool = false
-
-  init(catalog: @autoclosure @escaping () -> MediaCatalog,
-       title: String,
-       linkProvider: NavigationLinkProvider) {
+  
+  init(
+    catalog: @autoclosure @escaping () -> MediaCatalog,
+    title: String,
+    linkProvider: NavigationLinkProvider
+  ) {
     _catalog = StateObject(wrappedValue: catalog())
     self.title = title
     self.linkProvider = linkProvider
   }
-
+  
   private var toolbarItemPlacement: ToolbarItemPlacement {
     .navigation
   }
-
+  
   // Lands on the actual section catalog (e.g. Serials) pre-filtered, with the section's own
   // sort/filter/search chrome — a deep link into the section, not a one-off page.
   var body: some View {
     GeometryReader { geometryProxy in
-      ContentItemsListView(width: geometryProxy.size.width, items: $catalog.items, onLoadMoreContent: { item in
-        catalog.loadMoreContent(after: item)
-      }, onRefresh: {
-        await catalog.refresh()
-      }, navigationLinkProvider: { item in
-        linkProvider.link(for: item)
-      }, statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) })
+      ContentItemsListView(
+        width: geometryProxy.size.width, items: $catalog.items,
+        onLoadMoreContent: { item in
+          catalog.loadMoreContent(after: item)
+        },
+        onRefresh: {
+          await catalog.refresh()
+        },
+        navigationLinkProvider: { item in
+          linkProvider.link(for: item)
+        }, statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) })
     }
     .searchable(text: $catalog.query, placement: .automatic)
     .kinoScreen(catalog.title.localized)
     .moreBackButton()
     .toolbar {
       ToolbarItem(placement: toolbarItemPlacement) {
-        Button { showShortCutPicker = true } label: {
+        Button {
+          showShortCutPicker = true
+        } label: {
           SortDotIcon(active: catalog.isSortNonDefault)
         }
       }
       ToolbarItem(placement: toolbarItemPlacement) {
-        Button { showFilterPicker = true } label: {
+        Button {
+          showFilterPicker = true
+        } label: {
           FilterBadgeIcon(count: catalog.activeFilterCount)
         }
       }
@@ -170,14 +199,17 @@ struct FilteredCatalogView: View {
     .sheet(isPresented: $showFilterPicker) {
       // Seed the sheet with the section's active filter (e.g. a preset's genre), so opening Filters
       // on Cartoons/Stand-up shows that genre selected instead of "Any".
-      FilterView(model: FilterModel(contentType: catalog.contentType,
-                                    filterDataService: appContext.contentService,
-                                    initialFilter: catalog.activeFilter),
-                 onApply: { filter in
-                   catalog.apply(filter: filter)
-                 }, onClear: {
-                   catalog.clearFilter()
-                 })
+      FilterView(
+        model: FilterModel(
+          contentType: catalog.contentType,
+          filterDataService: appContext.contentService,
+          initialFilter: catalog.activeFilter),
+        onApply: { filter in
+          catalog.apply(filter: filter)
+        },
+        onClear: {
+          catalog.clearFilter()
+        })
     }
     .handleError(state: $errorHandler.state)
   }
@@ -196,26 +228,28 @@ struct PersonSearchView: View {
   private let field: String
   private let title: String
   private let linkProvider: NavigationLinkProvider
-
-  init(model: @autoclosure @escaping () -> SearchModel,
-       query: String,
-       field: String,
-       title: String,
-       linkProvider: NavigationLinkProvider) {
+  
+  init(
+    model: @autoclosure @escaping () -> SearchModel,
+    query: String,
+    field: String,
+    title: String,
+    linkProvider: NavigationLinkProvider
+  ) {
     _model = StateObject(wrappedValue: model())
     self.query = query
     self.field = field
     self.title = title
     self.linkProvider = linkProvider
   }
-
+  
   /// Results sorted by the chosen option. Skeleton placeholders are kept in place (they sort to
   /// stable positions on empty fields), so loading still shows the grid.
   private var sortedResults: [MediaItem] {
     let anyReal = model.results.contains { !($0.skeleton ?? false) }
     return anyReal ? sort.sorted(model.results) : model.results
   }
-
+  
   var body: some View {
     WidthReader { width in
       ScrollView {

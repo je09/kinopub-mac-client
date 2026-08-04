@@ -11,8 +11,8 @@ public struct WatchingMoviesRequest: Endpoint {
   public init() {}
 
   public var path: String { "/v1/watching/movies" }
-  public var method: String { "GET" }
-  public var parameters: [String: Any]? { nil }
+  public var method: HTTPMethod { .get }
+  public var parameters: HTTPParameters? { nil }
   public var headers: [String: String]? { nil }
   public var forceSendAsGetParams: Bool { false }
 }

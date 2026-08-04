@@ -14,8 +14,8 @@ public struct RemoveDeviceRequest: Endpoint {
   }
 
   public var path: String { "/v1/device/\(id)/remove" }
-  public var method: String { "POST" }
-  public var parameters: [String: Any]? { nil }
+  public var method: HTTPMethod { .post }
+  public var parameters: HTTPParameters? { nil }
   public var headers: [String: String]? { nil }
   public var forceSendAsGetParams: Bool { true }
 }

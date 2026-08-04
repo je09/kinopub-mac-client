@@ -15,11 +15,11 @@ public struct UserDataRequest: Endpoint {
     "/v1/user"
   }
   
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
   
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     nil
   }
   

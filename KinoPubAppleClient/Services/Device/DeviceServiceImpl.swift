@@ -11,43 +11,46 @@ import OSLog
 import KinoPubLogging
 
 final class DeviceServiceImpl: DeviceService {
-
+  
   private var apiClient: APIClient
-
+  
   init(apiClient: APIClient) {
     self.apiClient = apiClient
   }
-
+  
   func fetchCurrentDevice() async throws -> DeviceInfo {
     let request = DeviceInfoRequest()
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: DeviceInfoData.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: DeviceInfoData.self)
     return response.device
   }
-
+  
   func fetchSettings(deviceId: Int) async throws -> DeviceSettings {
     let request = DeviceSettingsRequest(id: deviceId)
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: DeviceSettingsData.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: DeviceSettingsData.self)
     return response.settings
   }
-
+  
   func updateSettings(deviceId: Int, settings: DeviceSettings) async throws {
     let request = UpdateDeviceSettingsRequest(id: deviceId, settings: settings)
-    _ = try await apiClient.performRequest(with: request,
-                                           decodingType: EmptyResponseData.self)
+    _ = try await apiClient.performRequest(
+      with: request,
+      decodingType: EmptyResponseData.self)
   }
-
+  
   func listDevices() async throws -> [ManagedDevice] {
     let request = ListDevicesRequest()
     return try await apiClient.performRequest(with: request, decodingType: DevicesData.self).devices
   }
-
+  
   func removeDevice(id: Int) async throws {
     let request = RemoveDeviceRequest(id: id)
     _ = try await apiClient.performRequest(with: request, decodingType: EmptyResponseData.self)
   }
-
+  
   func registerDeviceName() async {
     let localName = Host.current().localizedName?.trimmingCharacters(in: .whitespacesAndNewlines)
     let title = (localName?.isEmpty == false ? localName : nil) ?? "Mac"
@@ -61,7 +64,7 @@ final class DeviceServiceImpl: DeviceService {
       Logger.app.debug("device notify error: \(error)")
     }
   }
-
+  
   func syncCapabilities() async {
     // Match the kino.pub device profile to what this hardware can DECODE. When HEVC decode is
     // available we advertise HEVC + 4K (kino.pub then serves HEVC + HDR10; AVPlayer plays it, tone-
@@ -73,10 +76,12 @@ final class DeviceServiceImpl: DeviceService {
     do {
       let device = try await fetchCurrentDevice()
       var settings = try await fetchSettings(deviceId: device.id)
-      guard settings.supportHevc != hevc
-              || settings.support4k != hevc
-              || settings.supportHdr != hevc
-              || settings.mixedPlaylist != hevc else { return }
+      guard
+        settings.supportHevc != hevc
+          || settings.support4k != hevc
+          || settings.supportHdr != hevc
+          || settings.mixedPlaylist != hevc
+      else { return }
       settings.supportHevc = hevc
       settings.support4k = hevc
       // Advertise HDR too so kino.pub includes HDR/Dolby-Vision renditions; the native player picks
@@ -89,7 +94,7 @@ final class DeviceServiceImpl: DeviceService {
       Logger.app.debug("syncCapabilities error: \(error)")
     }
   }
-
+  
   /// The hardware model identifier, e.g. "Mac15,3".
   private static var machineModel: String {
     var systemInfo = utsname()

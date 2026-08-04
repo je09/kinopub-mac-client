@@ -10,17 +10,17 @@ import SwiftUI
 import KinoPubBackend
 
 struct MediaItemFieldsCard: View {
-
+  
   var mediaItem: MediaItem
   var isSkeleton: Bool
-
+  
   var body: some View {
     VStack(alignment: .leading) {
       Label("MediaItem_Description", systemImage: "book.pages")
         .foregroundStyle(Color.KinoPub.text)
         .font(Font.KinoPub.subheader)
         .skeleton(enabled: isSkeleton, size: CGSize(width: 200, height: 50))
-
+      
       VStack {
         data(key: "MediaItem_Title", value: "\(mediaItem.originalTitle)")
         data(key: "MediaItem_Year", value: "\(mediaItem.year)")
@@ -31,10 +31,10 @@ struct MediaItemFieldsCard: View {
         data(key: "MediaItem_Director", value: "\(mediaItem.director)")
         data(key: "MediaItem_Cast", value: "\(mediaItem.cast)")
       }.padding(.top, 8)
-
+      
     }
   }
-
+  
   func data(key: String, value: String) -> some View {
     HStack(content: {
       dataTitle(text: key)
@@ -45,21 +45,21 @@ struct MediaItemFieldsCard: View {
     })
     .padding(.top, 8)
   }
-
+  
   var plot: some View {
     Text(mediaItem.plot)
       .font(.system(size: 11))
       .foregroundStyle(Color.KinoPub.text)
       .padding(.top, 8)
   }
-
+  
   func dataTitle(text: String) -> some View {
     Text(NSLocalizedString(text, comment: ""))
       .foregroundStyle(Color.KinoPub.subtitle)
       .font(Font.KinoPub.small)
       .padding(.horizontal, 5)
   }
-
+  
   func dataValue(text: String) -> some View {
     Text(text)
       .foregroundStyle(Color.KinoPub.text)
@@ -67,7 +67,7 @@ struct MediaItemFieldsCard: View {
       .padding(.horizontal, 5)
       .multilineTextAlignment(.trailing)
   }
-
+  
 }
 
 struct MediaItemFieldsCard_Previews: PreviewProvider {
@@ -76,7 +76,7 @@ struct MediaItemFieldsCard_Previews: PreviewProvider {
       MediaItemFieldsCard(mediaItem: MediaItem.mock(), isSkeleton: true)
     }
   }
-
+  
   static var previews: some View {
     NavigationStack {
       Preview()

@@ -25,12 +25,12 @@ public struct WatchingSerialsRequest: Endpoint {
     "/v1/watching/serials"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
-    var params: [String: Any] = [:]
+  public var parameters: HTTPParameters? {
+    var params: HTTPParameters = [:]
     if let subscribed = subscribed {
       params["subscribed"] = subscribed
     }

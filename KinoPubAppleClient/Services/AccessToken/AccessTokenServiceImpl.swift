@@ -12,17 +12,17 @@ extension Key where Value: Token {
 }
 
 public final class AccessTokenServiceImpl: AccessTokenService {
-
+  
   private let storage: KeychainStorage
-
+  
   init(storage: KeychainStorage) {
     self.storage = storage
   }
-
+  
   func set<T>(token: T) where T: Token {
     storage.setObject(token, for: .token)
   }
-
+  
   func token<T>() -> T? where T: Token {
     storage.object(for: .token)
   }
@@ -30,5 +30,5 @@ public final class AccessTokenServiceImpl: AccessTokenService {
   func clear() {
     storage.clear()
   }
-
+  
 }

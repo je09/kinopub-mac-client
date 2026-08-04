@@ -33,7 +33,7 @@ class APIClientTests: XCTestCase {
 
     // When
     do {
-      let response: VerificationResponse = try await apiClient.performRequest(with: RequestData(path: "/token", method: "GET"), decodingType: VerificationResponse.self)
+      let response: VerificationResponse = try await apiClient.performRequest(with: RequestData(path: "/token", method: .get), decodingType: VerificationResponse.self)
 
       // Then
       XCTAssertEqual(response.code, "testCode")
@@ -52,7 +52,7 @@ class APIClientTests: XCTestCase {
 
     // When
     do {
-      let _: VerificationResponse = try await apiClient.performRequest(with: RequestData(path: "/token", method: "GET"), decodingType: VerificationResponse.self)
+      let _: VerificationResponse = try await apiClient.performRequest(with: RequestData(path: "/token", method: .get), decodingType: VerificationResponse.self)
       XCTFail("Expected error but got a successful response")
     } catch {
       // Expected behavior
@@ -78,7 +78,7 @@ class APIClientTests: XCTestCase {
     sessionMock.data = json.data(using: .utf8, allowLossyConversion: true)
 
     let response: ArrayData<Bookmark> = try await apiClient.performRequest(
-      with: RequestData(path: "/bookmarks", method: "GET"),
+      with: RequestData(path: "/bookmarks", method: .get),
       decodingType: ArrayData<Bookmark>.self
     )
 
@@ -104,7 +104,7 @@ class APIClientTests: XCTestCase {
 
     do {
       let _: VerificationResponse = try await apiClient.performRequest(
-        with: RequestData(path: "/token", method: "GET"),
+        with: RequestData(path: "/token", method: .get),
         decodingType: VerificationResponse.self)
       XCTFail("Expected HTTP error")
     } catch APIClientError.httpError(let statusCode, _) {
@@ -125,7 +125,7 @@ class APIClientTests: XCTestCase {
 
     do {
       let _: VerificationResponse = try await apiClient.performRequest(
-        with: RequestData(path: "/token", method: "GET"),
+        with: RequestData(path: "/token", method: .get),
         decodingType: VerificationResponse.self
       )
       XCTFail("Expected decoding error but got a successful response")

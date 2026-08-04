@@ -24,7 +24,7 @@ class NavigationState: ObservableObject {
   /// A filter to apply when deep-linking into a Library category section (e.g. tapping a
   /// genre on a title selects that category in the sidebar and pre-filters it). Consumed once.
   @Published var pendingCategoryFilter: MediaItemsFilter?
-
+  
   /// Pop a section's navigation stack back to its root. Used when a sidebar row is tapped (including
   /// re-tapping the already-selected one) so it returns to the first screen, like a tab bar.
   /// Sections whose stack lives in local `@State` (Main / Watching / Sport / category / preset) are

@@ -12,11 +12,11 @@ import KinoPubBackend
 struct CollectionDetailView: View {
   @EnvironmentObject var errorHandler: ErrorHandler
   @StateObject private var model: CollectionDetailModel
-
+  
   init(model: @autoclosure @escaping () -> CollectionDetailModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   var body: some View {
     content
       .navigationTitle(model.collection.title)
@@ -28,7 +28,7 @@ struct CollectionDetailView: View {
         }
       }
   }
-
+  
   @ViewBuilder
   private var content: some View {
     if model.isLoading {
@@ -39,9 +39,9 @@ struct CollectionDetailView: View {
       itemsGrid
     }
   }
-
+  
   // MARK: - Meta header
-
+  
   private var metaHeader: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 12) {
@@ -62,7 +62,7 @@ struct CollectionDetailView: View {
     .padding(.top, 12)
     .padding(.bottom, 4)
   }
-
+  
   private func metaItem(systemImage: String, value: String) -> some View {
     HStack(spacing: 4) {
       Image(systemName: systemImage)
@@ -72,7 +72,7 @@ struct CollectionDetailView: View {
     }
     .foregroundStyle(Color.KinoPub.subtitle)
   }
-
+  
   private var sortMenu: some View {
     Menu {
       ForEach(MediaItemsSort.allCases) { sort in
@@ -102,27 +102,28 @@ struct CollectionDetailView: View {
     }
     .menuStyle(.borderlessButton)
   }
-
+  
   private var itemsGrid: some View {
     GeometryReader { geometryProxy in
-      ContentItemsListView(width: geometryProxy.size.width,
-                           items: $model.items,
-                           onLoadMoreContent: { _ in },
-                           onRefresh: {
-                             await model.refresh()
-                           },
-                           navigationLinkProvider: { item in
-                             RouteLinkProvider().link(for: item)
-                           },
-                           statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) },
-                           // Meta scrolls with the grid (was a pinned header that broke the large-title
-                           // → nav-bar-title collapse).
-                           header: AnyView(metaHeader))
+      ContentItemsListView(
+        width: geometryProxy.size.width,
+        items: $model.items,
+        onLoadMoreContent: { _ in },
+        onRefresh: {
+          await model.refresh()
+        },
+        navigationLinkProvider: { item in
+          RouteLinkProvider().link(for: item)
+        },
+        statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) },
+        // Meta scrolls with the grid (was a pinned header that broke the large-title
+        // → nav-bar-title collapse).
+        header: AnyView(metaHeader))
     }
   }
-
+  
   // MARK: - Formatting
-
+  
   /// Compact count, e.g. 12_345 -> "12.3K".
   private static func compact(_ value: Int) -> String {
     let formatter = NumberFormatter()
@@ -135,7 +136,7 @@ struct CollectionDetailView: View {
     }
     return "\(value)"
   }
-
+  
   private static func dateText(from timestamp: Int) -> String {
     let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
     let formatter = DateFormatter()
@@ -143,9 +144,9 @@ struct CollectionDetailView: View {
     formatter.timeStyle = .none
     return formatter.string(from: date)
   }
-
+  
   // MARK: - States
-
+  
   private var loading: some View {
     VStack {
       Spacer()
@@ -154,7 +155,7 @@ struct CollectionDetailView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
-
+  
   private var emptyState: some View {
     VStack(spacing: 10) {
       Spacer()
@@ -174,9 +175,11 @@ struct CollectionDetailView: View {
 struct CollectionDetailView_Previews: PreviewProvider {
   static var previews: some View {
     NavigationStack {
-      CollectionDetailView(model: CollectionDetailModel(collection: Collection.mock(title: "Best of 2026"),
-                                                        collectionsService: CollectionsServiceMock(),
-                                                        errorHandler: ErrorHandler()))
+      CollectionDetailView(
+        model: CollectionDetailModel(
+          collection: Collection.mock(title: "Best of 2026"),
+          collectionsService: CollectionsServiceMock(),
+          errorHandler: ErrorHandler()))
     }
     .appPreviewEnvironment()
   }

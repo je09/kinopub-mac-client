@@ -7,46 +7,46 @@ final class SearchModelTests: XCTestCase {
   func testOlderMainSearchResponseCannotReplaceNewerQuery() async throws {
     let service = ControlledSearchService()
     let model = makeModel(service: service)
-
+    
     let old = Task { await model.performSearch(query: "old") }
     await service.waitForPendingRequestCount(3)
     let new = Task { await model.performSearch(query: "new") }
     await service.waitForPendingRequestCount(6)
-
+    
     await service.resolve(query: "new", field: nil, page: nil, items: [.mock(id: 20)])
     await service.resolve(query: "new", field: "cast", page: nil, items: [.mock(id: 21)])
     await service.resolve(query: "new", field: "director", page: nil, items: [.mock(id: 22)])
     await new.value
-
+    
     await service.resolve(query: "old", field: nil, page: nil, items: [.mock(id: 10)])
     await service.resolve(query: "old", field: "cast", page: nil, items: [.mock(id: 11)])
     await service.resolve(query: "old", field: "director", page: nil, items: [.mock(id: 12)])
     await old.value
-
+    
     XCTAssertEqual(model.titleResults.map(\.id), [20])
     XCTAssertEqual(model.castResults.map(\.id), [21])
     XCTAssertEqual(model.directorResults.map(\.id), [22])
     XCTAssertFalse(model.searching)
   }
-
+  
   func testOlderFieldSearchCannotReplaceNewerQuery() async {
     let service = ControlledSearchService()
     let model = makeModel(service: service)
-
+    
     let old = Task { await model.performFieldSearch(query: "old", field: nil) }
     await service.waitForPendingRequestCount(1)
     let new = Task { await model.performFieldSearch(query: "new", field: nil) }
     await service.waitForPendingRequestCount(2)
-
+    
     await service.resolve(query: "new", field: nil, page: nil, items: [.mock(id: 2)])
     await new.value
     await service.resolve(query: "old", field: nil, page: nil, items: [.mock(id: 1)])
     await old.value
-
+    
     XCTAssertEqual(model.results.map(\.id), [2])
     XCTAssertFalse(model.searching)
   }
-
+  
   func testFieldSearchFailurePublishesEmptyErrorState() async {
     let service = ControlledSearchService()
     let errorHandler = ErrorHandler()
@@ -59,7 +59,7 @@ final class SearchModelTests: XCTestCase {
       ),
       errorHandler: errorHandler
     )
-
+    
     let search = Task { await model.performFieldSearch(query: "failure", field: nil) }
     await service.waitForPendingRequestCount(1)
     await service.reject(
@@ -69,31 +69,31 @@ final class SearchModelTests: XCTestCase {
       error: APIClientError.networkError(URLError(.notConnectedToInternet))
     )
     await search.value
-
+    
     XCTAssertTrue(model.results.isEmpty)
     XCTAssertFalse(model.searching)
     XCTAssertTrue(errorHandler.state.showError)
   }
-
+  
   func testShortMainSearchPublishesEmptyStateWithoutRequest() async {
     let service = ControlledSearchService()
     let model = makeModel(service: service)
     model.titleResults = [.mock(id: 1)]
     model.castResults = [.mock(id: 2)]
     model.directorResults = [.mock(id: 3)]
-
+    
     await model.performSearch(query: "ab")
-
+    
     let requestCount = await service.pendingRequestCount()
     XCTAssertTrue(model.allResults.isEmpty)
     XCTAssertFalse(model.searching)
     XCTAssertEqual(requestCount, 0)
   }
-
+  
   func testPaginationAppendsOnlyForCurrentQuery() async {
     let service = ControlledSearchService()
     let model = makeModel(service: service)
-
+    
     let initial = Task { await model.performFieldSearch(query: "actor", field: "cast") }
     await service.waitForPendingRequestCount(1)
     await service.resolve(
@@ -101,7 +101,7 @@ final class SearchModelTests: XCTestCase {
       pagination: Pagination(total: 2, current: 1, perpage: 1)
     )
     await initial.value
-
+    
     model.loadMoreContent(after: model.results[0])
     await service.waitForPendingRequestCount(1)
     await service.resolve(
@@ -109,10 +109,10 @@ final class SearchModelTests: XCTestCase {
       pagination: Pagination(total: 2, current: 2, perpage: 1)
     )
     await eventually { model.results.count == 2 }
-
+    
     XCTAssertEqual(model.results.map(\.id), [1, 2])
   }
-
+  
   private func makeModel(service: ControlledSearchService) -> SearchModel {
     SearchModel(
       itemsService: service,
@@ -124,7 +124,7 @@ final class SearchModelTests: XCTestCase {
       errorHandler: ErrorHandler()
     )
   }
-
+  
   private func eventually(
     timeout: TimeInterval = 1,
     condition: @escaping @MainActor () -> Bool
@@ -143,19 +143,19 @@ private actor ControlledSearchService: VideoContentService {
     let field: String?
     let page: Int?
   }
-
+  
   private var pending: [Key: [CheckedContinuation<PaginatedData<MediaItem>, Error>]] = [:]
-
+  
   func waitForPendingRequestCount(_ count: Int) async {
     while pending.values.reduce(0, { $0 + $1.count }) < count {
       await Task.yield()
     }
   }
-
+  
   func pendingRequestCount() -> Int {
     pending.values.reduce(0, { $0 + $1.count })
   }
-
+  
   func resolve(
     query: String,
     field: String?,
@@ -172,7 +172,7 @@ private actor ControlledSearchService: VideoContentService {
     pending[key] = values
     continuation.resume(returning: PaginatedData(items: items, pagination: pagination))
   }
-
+  
   func reject(query: String, field: String?, page: Int?, error: Error) {
     let key = Key(query: query, field: field, page: page)
     guard var values = pending[key], !values.isEmpty else {
@@ -183,22 +183,22 @@ private actor ControlledSearchService: VideoContentService {
     pending[key] = values
     continuation.resume(throwing: error)
   }
-
+  
   func search(query: String?, contentType: MediaType?, field: String?, page: Int?) async throws -> PaginatedData<MediaItem> {
     try await response(query: query ?? "", field: field, page: page)
   }
-
+  
   func itemsByPerson(name: String, field: String, page: Int?) async throws -> PaginatedData<MediaItem> {
     try await response(query: name, field: field, page: page)
   }
-
+  
   private func response(query: String, field: String?, page: Int?) async throws -> PaginatedData<MediaItem> {
     let key = Key(query: query, field: field, page: page)
     return try await withCheckedThrowingContinuation { continuation in
       pending[key, default: []].append(continuation)
     }
   }
-
+  
   func fetch(shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> { .mock(data: []) }
   func filter(filter: MediaItemsFilter, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> { .mock(data: []) }
   func fetchGenres(type: MediaType?) async throws -> [MediaGenre] { [] }

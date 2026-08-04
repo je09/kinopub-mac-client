@@ -11,16 +11,16 @@ import KinoPubBackend
 import KinoPubUI
 
 public struct SeasonItemView: View {
-
+  
   private var episode: Episode
   private var onDownload: ((FileInfo) -> Void)?
   @State private var showDownloadPicker: Bool = false
-
+  
   init(episode: Episode, onDownload: ((FileInfo) -> Void)? = nil) {
     self.episode = episode
     self.onDownload = onDownload
   }
-
+  
   public var body: some View {
     VStack(alignment: .center) {
       ZStack(alignment: .topTrailing) {
@@ -42,7 +42,7 @@ public struct SeasonItemView: View {
     }
     .background(Color.clear)
   }
-
+  
   var image: some View {
     CachedAsyncImage(url: URL(string: episode.thumbnail)) { image in
       image.resizable()
@@ -50,12 +50,13 @@ public struct SeasonItemView: View {
         .posterStyle(size: .regular, orientation: .horizontal)
     } placeholder: {
       Color.KinoPub.skeleton
-        .frame(width: PosterStyle.Size.regular.height,
-               height: PosterStyle.Size.regular.width)
+        .frame(
+          width: PosterStyle.Size.regular.height,
+          height: PosterStyle.Size.regular.width)
     }
     .cornerRadius(8)
   }
-
+  
   var title: some View {
     Text(episode.fixedTitle)
       .padding(.vertical, 3)
@@ -63,9 +64,9 @@ public struct SeasonItemView: View {
       .font(.system(size: 14.0, weight: .medium))
       .foregroundStyle(Color.KinoPub.text)
       .background(Color.black.opacity(0.7))
-
+    
   }
-
+  
   // Watched (server flag OR watched-to-the-credits) vs only partially watched — via the shared
   // `Episode.isWatched`, so the season list agrees with Continue Watching and the detail page.
   @ViewBuilder
@@ -76,7 +77,7 @@ public struct SeasonItemView: View {
       indicatorImage(systemName: "circle.lefthalf.filled")
     }
   }
-
+  
   func indicatorImage(systemName: String) -> some View {
     Image(systemName: systemName)
       .font(.system(size: 18))
@@ -85,11 +86,14 @@ public struct SeasonItemView: View {
       .background(Color.black.opacity(0.6))
       .clipShape(Circle())
   }
-
+  
   var downloadButton: some View {
-    Button(action: { showDownloadPicker = true }, label: {
-      indicatorImage(systemName: "arrow.down.circle")
-    })
+    Button(
+      action: { showDownloadPicker = true },
+      label: {
+        indicatorImage(systemName: "arrow.down.circle")
+      }
+    )
     .buttonStyle(.plain)
     // Picker to select quality of the episode to download
     .confirmationDialog("", isPresented: $showDownloadPicker, titleVisibility: .hidden) {
@@ -100,5 +104,5 @@ public struct SeasonItemView: View {
       }
     }
   }
-
+  
 }

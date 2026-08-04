@@ -18,11 +18,11 @@ public struct CountriesRequest: Endpoint, CacheableRequest {
     "/v1/countries"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     nil
   }
 
