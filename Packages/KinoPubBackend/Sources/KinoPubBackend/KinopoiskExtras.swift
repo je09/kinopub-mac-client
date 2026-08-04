@@ -14,7 +14,7 @@ import Foundation
 // MARK: - Models
 
 /// A trivia fact or goof ("киноляп"). `type` is "FACT" or "BLOOPER".
-public struct KpFact: Decodable, Identifiable, Hashable {
+public struct KpFact: Decodable, Identifiable, Hashable, Sendable {
   public let text: String
   public let type: String?
   public let spoiler: Bool?
@@ -28,7 +28,7 @@ private struct KpFactsResponse: Decodable {
 }
 
 /// A user review. `type` is "POSITIVE" / "NEGATIVE" / "NEUTRAL".
-public struct KpReview: Decodable, Identifiable, Hashable {
+public struct KpReview: Decodable, Identifiable, Hashable, Sendable {
   public let kinopoiskId: Int?
   public let type: String?
   public let date: String?
@@ -39,7 +39,7 @@ public struct KpReview: Decodable, Identifiable, Hashable {
   public var id: String { "\(kinopoiskId ?? 0)-\(title ?? "")" }
 }
 
-public struct KpReviewsPage: Decodable, Hashable {
+public struct KpReviewsPage: Decodable, Hashable, Sendable {
   public let total: Int?
   public let totalPositiveReviews: Int?
   public let totalNegativeReviews: Int?
@@ -51,7 +51,7 @@ public struct KpReviewsPage: Decodable, Hashable {
 }
 
 /// A crew/cast member with their role and (for actors) the character they play.
-public struct KpStaffMember: Decodable, Identifiable, Hashable {
+public struct KpStaffMember: Decodable, Identifiable, Hashable, Sendable {
   public let staffId: Int
   public let nameRu: String?
   public let nameEn: String?
@@ -70,7 +70,7 @@ public struct KpStaffMember: Decodable, Identifiable, Hashable {
 }
 
 /// A still / promotional image.
-public struct KpImage: Decodable, Identifiable, Hashable {
+public struct KpImage: Decodable, Identifiable, Hashable, Sendable {
   public let imageUrl: String?
   public let previewUrl: String?
 
