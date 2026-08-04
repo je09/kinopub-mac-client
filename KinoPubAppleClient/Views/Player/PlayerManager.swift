@@ -25,9 +25,9 @@ enum ThreeDMode: String, CaseIterable, Identifiable {
   case sbsAnaglyph
   case ouMono
   case ouAnaglyph
-
+  
   var id: String { rawValue }
-
+  
   var title: String {
     switch self {
     case .off: return "3D: Off"
@@ -37,7 +37,7 @@ enum ThreeDMode: String, CaseIterable, Identifiable {
     case .ouAnaglyph: return "Over-Under · Anaglyph"
     }
   }
-
+  
   var isSideBySide: Bool { self == .sbsMono || self == .sbsAnaglyph }
   var isAnaglyph: Bool { self == .sbsAnaglyph || self == .ouAnaglyph }
 }
@@ -52,14 +52,14 @@ enum ThreeDVideoComposition {
     return AVMutableVideoComposition(asset: asset) { request in
       let src = request.sourceImage
       let e = src.extent
-
+      
       // Each eye cropped from its half and stretched back to the full frame (half-packed sources
       // squeeze each eye, so un-squeezing restores the correct aspect).
       func leftEye() -> CIImage {
         if sideBySide {
           return src.cropped(to: CGRect(x: e.minX, y: e.minY, width: e.width / 2, height: e.height))
             .transformed(by: CGAffineTransform(scaleX: 2, y: 1))
-        } else { // Over-Under: left eye on top (CI origin is bottom-left → upper half)
+        } else {  // Over-Under: left eye on top (CI origin is bottom-left → upper half)
           return src.cropped(to: CGRect(x: e.minX, y: e.midY, width: e.width, height: e.height / 2))
             .transformed(by: CGAffineTransform(translationX: 0, y: -e.height / 2))
             .transformed(by: CGAffineTransform(scaleX: 1, y: 2))
@@ -75,17 +75,23 @@ enum ThreeDVideoComposition {
             .transformed(by: CGAffineTransform(scaleX: 1, y: 2))
         }
       }
-
+      
       let output: CIImage
       if anaglyph {
-        let leftRed = leftEye().applyingFilter("CIColorMatrix", parameters: [
-          "inputRVector": CIVector(x: 1, y: 0, z: 0, w: 0),
-          "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
-          "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0)])
-        let rightCyan = rightEye().applyingFilter("CIColorMatrix", parameters: [
-          "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0),
-          "inputGVector": CIVector(x: 0, y: 1, z: 0, w: 0),
-          "inputBVector": CIVector(x: 0, y: 0, z: 1, w: 0)])
+        let leftRed = leftEye().applyingFilter(
+          "CIColorMatrix",
+          parameters: [
+            "inputRVector": CIVector(x: 1, y: 0, z: 0, w: 0),
+            "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+          ])
+        let rightCyan = rightEye().applyingFilter(
+          "CIColorMatrix",
+          parameters: [
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputGVector": CIVector(x: 0, y: 1, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: 1, w: 0),
+          ])
         output = leftRed.applyingFilter("CIAdditionCompositing", parameters: [kCIInputBackgroundImageKey: rightCyan])
       } else {
         output = leftEye()
@@ -128,7 +134,7 @@ class PlayerManager: ObservableObject {
   /// Quality selection only affects remote adaptive streams, not trailers, downloads, or 3D MP4s.
   var offersStreamQualitySelection: Bool {
     watchMode == .media && !is3D && remoteStreamSource != .progressive
-      && fileURL?.isFileURL == false
+    && fileURL?.isFileURL == false
   }
   /// Highest quality advertised for this title; `quality` handles anamorphic files better than `h`.
   var maximumStreamResolution: Int? {
@@ -137,7 +143,7 @@ class PlayerManager: ObservableObject {
   }
   /// Current 3D view mode (Off for non-3D titles).
   @Published var threeDMode: ThreeDMode = .off
-
+  
   /// Last-used 3D view mode, persisted across launches and switched live in the player.
   /// Defaults to Side-by-Side 2D — the common packing, shown
   /// flat so it's watchable without glasses.
@@ -146,7 +152,7 @@ class PlayerManager: ObservableObject {
     get { ThreeDMode(rawValue: UserDefaults.standard.string(forKey: threeDModeKey) ?? "") ?? .sbsMono }
     set { UserDefaults.standard.set(newValue.rawValue, forKey: threeDModeKey) }
   }
-
+  
   lazy var player: AVPlayer = {
     guard let fileURL else { return AVPlayer() }
     let item = AVPlayerItem(url: fileURL)
@@ -169,7 +175,7 @@ class PlayerManager: ObservableObject {
     player.automaticallyWaitsToMinimizeStalling = true
     return player
   }()
-
+  
   private var playerTimeObserver: PlayerTimeObserver?
   private var playItem: any PlayableItem
   private var watchMode: WatchMode
@@ -192,7 +198,7 @@ class PlayerManager: ObservableObject {
   private var playbackRecoveryTask: Task<Void, Never>?
   private var nextTrackCommandTarget: Any?
   private var previousTrackCommandTarget: Any?
-
+  
   /// Serial, coalescing queue for marktime calls. Independent detached requests can complete out of
   /// order, and an old tick used to read `playItem` after an episode switch. Snapshot every mark and
   /// send one at a time instead.
@@ -201,7 +207,7 @@ class PlayerManager: ObservableObject {
     let video: Int?
     let season: Int?
     var time: Int
-
+    
     func matches(_ other: PendingWatchMark) -> Bool {
       id == other.id && video == other.video && season == other.season
     }
@@ -209,7 +215,7 @@ class PlayerManager: ObservableObject {
   private var watchMarkQueue: [PendingWatchMark] = []
   private var latestWatchMarkTimes: [String: Int] = [:]
   private var watchMarkWorker: Task<Void, Never>?
-
+  
   private var effectiveFiles: [FileInfo] { refreshedFiles ?? playItem.files }
   
   private var fileURL: URL? {
@@ -252,16 +258,19 @@ class PlayerManager: ObservableObject {
       return url
     case .trailer:
       guard let urlString = playItem.trailer?.url, !urlString.isEmpty,
-            let url = URL(string: urlString) else { return nil }
+            let url = URL(string: urlString)
+      else { return nil }
       return url
     }
   }
   
-  init(playItem: any PlayableItem,
-       watchMode: WatchMode,
-       downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>,
-       actionsService: UserActionsService,
-       episodeQueue: [Episode] = []) {
+  init(
+    playItem: any PlayableItem,
+    watchMode: WatchMode,
+    downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>,
+    actionsService: UserActionsService,
+    episodeQueue: [Episode] = []
+  ) {
     self.playItem = playItem
     self.watchMode = watchMode
     self.actionsService = actionsService
@@ -279,10 +288,12 @@ class PlayerManager: ObservableObject {
     // appear the moment the player presents (no race with the async server fetch, which only
     // refines it). Covers the "open from Continue Watching" case that previously started at 0.
     if watchMode == .media,
-       let local = AppContext.shared.localProgressStore.entry(forId: playItem.metadata.id,
-                                                              season: playItem.metadata.season,
-                                                              episode: playItem.metadata.video),
-       local.position > 0 {
+       let local = AppContext.shared.localProgressStore.entry(
+        forId: playItem.metadata.id,
+        season: playItem.metadata.season,
+        episode: playItem.metadata.video),
+       local.position > 0
+    {
       continueTime = local.position
     }
     rateObservation = player.observe(\.rate, options: [.new]) { [weak self] player, _ in
@@ -290,7 +301,7 @@ class PlayerManager: ObservableObject {
         self?.isPlaying = player.rate > 0
       }
     }
-
+    
     // Re-apply the remembered audio track (озвучка) once the item is ready, so the user's last dub
     // choice carries across episodes and launches without any custom UI.
     if watchMode == .media {
@@ -305,7 +316,7 @@ class PlayerManager: ObservableObject {
         }
       }
     }
-
+    
     // Surface the exact reason the native player shows the "crossed-out play" (item failed to load),
     // so an unplayable stream is diagnosable on-device instead of failing silently.
     failureObservation = player.currentItem?.observe(\.status, options: [.new]) { [weak self] item, _ in
@@ -313,25 +324,28 @@ class PlayerManager: ObservableObject {
       DispatchQueue.main.async { self?.reportPlaybackFailure(item) }
     }
     observeMediaSelection(on: player.currentItem)
-
-    playerTimeObserver = PlayerTimeObserver(player: player, period: 10.0, timeUpdateHandler: { [weak self] time in
-      Task { @MainActor in
-        self?.saveWatchMark(time: time)
-        await self?.captureCurrentMediaSelection()
-      }
-    })
-
+    
+    playerTimeObserver = PlayerTimeObserver(
+      player: player, period: 10.0,
+      timeUpdateHandler: { [weak self] time in
+        Task { @MainActor in
+          self?.saveWatchMark(time: time)
+          await self?.captureCurrentMediaSelection()
+        }
+      })
+    
     // Playing to the very end marks the title watched (see `markFinished`).
     if watchMode == .media {
       endOfPlaybackObserver = NotificationCenter.default.addObserver(
-        forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { [weak self] _ in
-          Task { @MainActor in self?.playbackDidFinish() }
+        forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.playbackDidFinish() }
       }
     }
     updateEpisodeNavigation()
     configureRemoteCommands()
   }
-
+  
   deinit {
     watchMarkWorker?.cancel()
     playbackRecoveryTask?.cancel()
@@ -341,12 +355,12 @@ class PlayerManager: ObservableObject {
     if let nextTrackCommandTarget { commands.nextTrackCommand.removeTarget(nextTrackCommandTarget) }
     if let previousTrackCommandTarget { commands.previousTrackCommand.removeTarget(previousTrackCommandTarget) }
   }
-
+  
   // MARK: - Episode navigation
-
+  
   func playNextEpisode() { _ = playAdjacentEpisode(offset: 1) }
   func playPreviousEpisode() { _ = playAdjacentEpisode(offset: -1) }
-
+  
   private func playbackDidFinish() {
     guard !didHandlePlaybackEnd else { return }
     didHandlePlaybackEnd = true
@@ -356,12 +370,13 @@ class PlayerManager: ObservableObject {
       shouldReturnToContent = true
     }
   }
-
+  
   /// Returns whether an adjacent episode was found and started.
   @discardableResult
   private func playAdjacentEpisode(offset: Int) -> Bool {
     guard let current = playItem as? Episode,
-          let index = episodeQueue.firstIndex(where: { $0.id == current.id }) else { return false }
+          let index = episodeQueue.firstIndex(where: { $0.id == current.id })
+    else { return false }
     let targetIndex = index + offset
     guard episodeQueue.indices.contains(targetIndex) else { return false }
     player.pause()
@@ -376,10 +391,11 @@ class PlayerManager: ObservableObject {
     player.play()
     return true
   }
-
+  
   private func updateEpisodeNavigation() {
     guard let current = playItem as? Episode,
-          let index = episodeQueue.firstIndex(where: { $0.id == current.id }) else {
+          let index = episodeQueue.firstIndex(where: { $0.id == current.id })
+    else {
       hasNextEpisode = false
       hasPreviousEpisode = false
       let commands = MPRemoteCommandCenter.shared()
@@ -393,7 +409,7 @@ class PlayerManager: ObservableObject {
     commands.previousTrackCommand.isEnabled = hasPreviousEpisode
     commands.nextTrackCommand.isEnabled = hasNextEpisode
   }
-
+  
   private func configureRemoteCommands() {
     guard !episodeQueue.isEmpty else { return }
     let commands = MPRemoteCommandCenter.shared()
@@ -408,7 +424,7 @@ class PlayerManager: ObservableObject {
     commands.previousTrackCommand.isEnabled = hasPreviousEpisode
     commands.nextTrackCommand.isEnabled = hasNextEpisode
   }
-
+  
   /// Applies an HLS quality cap immediately and remembers it for later playback sessions.
   func setStreamQuality(_ quality: StreamQuality) {
     streamQuality = quality
@@ -416,7 +432,7 @@ class PlayerManager: ObservableObject {
     guard watchMode == .media else { return }
     player.currentItem?.preferredMaximumResolution = quality.maxResolution ?? .zero
   }
-
+  
   private func replacePlayerItem() {
     guard let url = fileURL else { return }
     let item = AVPlayerItem(url: url)
@@ -448,30 +464,33 @@ class PlayerManager: ObservableObject {
     }
     updateEpisodeNavigation()
   }
-
+  
   // MARK: - Failure diagnostics
-
+  
   func stopPlayback() {
     playbackRecoveryTask?.cancel()
     playbackRecoveryTask = nil
     player.pause()
     PreviewPlaybackCoordinator.shared.endExclusivePlayback()
   }
-
+  
   private func reportPlaybackFailure(_ item: AVPlayerItem) {
     guard player.currentItem === item else { return }
     let error = item.error as NSError?
     let event = item.errorLog()?.events.last
     // CDN stream links are signed and can expire while a detail/player route remains alive. A fresh
     // item response carries a new URL; retry exactly once and preserve the current playback time.
-    let isForbidden = event?.errorStatusCode == 403
-      || event?.errorComment?.localizedCaseInsensitiveContains("403") == true
-      || (error?.domain == NSURLErrorDomain && error?.code == NSURLErrorNoPermissionsToReadFile)
+    let isForbidden =
+    event?.errorStatusCode == 403
+    || event?.errorComment?.localizedCaseInsensitiveContains("403") == true
+    || (error?.domain == NSURLErrorDomain && error?.code == NSURLErrorNoPermissionsToReadFile)
     if watchMode == .media, fileURL?.isFileURL == false, isForbidden {
       playbackRecoveryTask?.cancel()
       player.pause()
       playbackErrorTitle = "Session limit reached".localized
-      playbackError = "Your kino.pub account has reached its simultaneous viewing session limit. Stop playback on another device, wait a moment, and try again.".localized
+      playbackError =
+      "Your kino.pub account has reached its simultaneous viewing session limit. Stop playback on another device, wait a moment, and try again."
+        .localized
       Logger.app.error("Playback denied: kino.pub user session limit reached")
       return
     }
@@ -493,7 +512,7 @@ class PlayerManager: ObservableObject {
     Logger.app.error("Playback failed: \(message)")
     playbackError = message
   }
-
+  
   /// Uses the API's dedicated media-link endpoints. Item details are metadata and may keep returning
   /// the same denied URL; `media-video-link` explicitly mints a new signed URL for the raw file path.
   private func recoverPlayback(afterFailureOf failedItem: AVPlayerItem) async {
@@ -503,7 +522,7 @@ class PlayerManager: ObservableObject {
     // replacement URL. The old item's late callbacks are ignored by `reportPlaybackFailure`.
     player.replaceCurrentItem(with: nil)
     defer { isRecoveringPlayback = false }
-
+    
     do {
       // A CDN 403 can represent a concurrent-session slot that has not expired yet. Back off after
       // releasing the failed AVPlayer instead of immediately opening another server-side session.
@@ -515,7 +534,7 @@ class PlayerManager: ObservableObject {
         guard !links.files.isEmpty else { throw PlaybackRefreshError.missingFiles }
         refreshedFiles = links.files
       }
-
+      
       guard let file = preferredFile(), let rawPath = file.file, !rawPath.isEmpty else {
         throw PlaybackRefreshError.missingFilePath
       }
@@ -531,7 +550,7 @@ class PlayerManager: ObservableObject {
         streamType = "http"
         remoteStreamSource = .progressive
       }
-
+      
       let link = try await AppContext.shared.contentService
         .fetchMediaVideoLink(file: rawPath, type: streamType)
       guard let freshURL = URL(string: link.url), !link.url.isEmpty else {
@@ -553,7 +572,7 @@ class PlayerManager: ObservableObject {
       playbackError = "HTTP 403: Forbidden\nCould not obtain an accessible playback URL.\n\(error.localizedDescription)"
     }
   }
-
+  
   private func preferredFile() -> FileInfo? {
     let files = effectiveFiles
     guard !files.isEmpty else { return nil }
@@ -562,16 +581,16 @@ class PlayerManager: ObservableObject {
     let candidates = eligible.isEmpty ? files : eligible
     return candidates.max { max($0.resolution, $0.h) < max($1.resolution, $1.h) }
   }
-
+  
   private func preferredProgressiveURL() -> String {
     preferredFile()?.url.http ?? ""
   }
-
+  
   private enum PlaybackRefreshError: LocalizedError {
     case missingFiles
     case missingFilePath
     case missingURL
-
+    
     var errorDescription: String? {
       switch self {
       case .missingFiles: return "The media-links response did not include files."
@@ -580,39 +599,40 @@ class PlayerManager: ObservableObject {
       }
     }
   }
-
+  
   // MARK: - Audio track preference (озвучка)
-
+  
   /// Restore the user's audio choice. On first playback, prefer a track explicitly marked as the
   /// original language instead of whichever dub happens to be first in the HLS playlist.
   private func applyPreferredAudio() async {
     guard watchMode == .media, let item = player.currentItem,
           let group = try? await item.asset.loadMediaSelectionGroup(for: .audible)
     else { return }
-
+    
     let options = group.options
     let preference = AppContext.shared.libraryState.audioPreference(itemId: playItem.metadata.id)
     let desired: AVMediaSelectionOption?
     if let preference {
-      desired = options.first(where: { $0.displayName == preference.displayName })
-        ?? options.first(where: {
-          $0.extendedLanguageTag != nil && $0.extendedLanguageTag == preference.languageTag
-        })
-        ?? (options.indices.contains(preference.index) ? options[preference.index] : nil)
+      desired =
+      options.first(where: { $0.displayName == preference.displayName })
+      ?? options.first(where: {
+        $0.extendedLanguageTag != nil && $0.extendedLanguageTag == preference.languageTag
+      })
+      ?? (options.indices.contains(preference.index) ? options[preference.index] : nil)
     } else {
       desired = options.first(where: isOriginalAudioOption) ?? group.defaultOption
     }
-
+    
     if let desired { item.select(desired, in: group) }
   }
-
+  
   private func isOriginalAudioOption(_ option: AVMediaSelectionOption) -> Bool {
     let name = option.displayName
       .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
       .lowercased()
     return name.contains("original") || name.contains("оригинал")
   }
-
+  
   /// Restore the user's subtitle track, including an explicit Off choice. If no preference exists,
   /// use the playlist default. Repeat only while the selection is unchanged so a quick user choice
   /// is never overwritten while AVKit attaches its renderer.
@@ -620,24 +640,25 @@ class PlayerManager: ObservableObject {
     guard watchMode == .media,
           let group = try? await item.asset.loadMediaSelectionGroup(for: .legible)
     else { return }
-
+    
     let preference = AppContext.shared.libraryState.subtitlePreference(itemId: playItem.metadata.id)
     let desired: AVMediaSelectionOption?
     if let preference {
       if preference.isEnabled {
-        desired = group.options.first(where: { $0.displayName == preference.displayName })
-          ?? group.options.first(where: {
-            $0.extendedLanguageTag != nil && $0.extendedLanguageTag == preference.languageTag
-          })
-          ?? preference.index.flatMap { group.options.indices.contains($0) ? group.options[$0] : nil }
-          ?? group.defaultOption
+        desired =
+        group.options.first(where: { $0.displayName == preference.displayName })
+        ?? group.options.first(where: {
+          $0.extendedLanguageTag != nil && $0.extendedLanguageTag == preference.languageTag
+        })
+        ?? preference.index.flatMap { group.options.indices.contains($0) ? group.options[$0] : nil }
+        ?? group.defaultOption
       } else {
         desired = nil
       }
     } else {
       desired = group.defaultOption
     }
-
+    
     item.select(desired, in: group)
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
       Task { @MainActor in
@@ -649,7 +670,7 @@ class PlayerManager: ObservableObject {
       }
     }
   }
-
+  
   private func observeMediaSelection(on item: AVPlayerItem?) {
     if let mediaSelectionObserver {
       NotificationCenter.default.removeObserver(mediaSelectionObserver)
@@ -667,12 +688,12 @@ class PlayerManager: ObservableObject {
       }
     }
   }
-
+  
   private func captureCurrentMediaSelection() async {
     await captureCurrentAudio()
     await captureCurrentSubtitle()
   }
-
+  
   /// Remember the audio option currently selected in the player, so the next episode/launch resumes it.
   private func captureCurrentAudio() async {
     guard watchMode == .media,
@@ -681,26 +702,28 @@ class PlayerManager: ObservableObject {
           let selected = item.currentMediaSelection.selectedMediaOption(in: group),
           let index = group.options.firstIndex(of: selected)
     else { return }
-    let preference = MediaLibraryStore.AudioPreference(displayName: selected.displayName,
-                                                       languageTag: selected.extendedLanguageTag,
-                                                       index: index)
+    let preference = MediaLibraryStore.AudioPreference(
+      displayName: selected.displayName,
+      languageTag: selected.extendedLanguageTag,
+      index: index)
     AppContext.shared.libraryState.setAudioPreference(itemId: playItem.metadata.id, preference)
   }
-
+  
   /// Remember the selected subtitle immediately; nil is a meaningful explicit Off selection.
   private func captureCurrentSubtitle() async {
     guard watchMode == .media,
           let item = player.currentItem,
           let group = try? await item.asset.loadMediaSelectionGroup(for: .legible)
     else { return }
-
+    
     let selected = item.currentMediaSelection.selectedMediaOption(in: group)
     let preference: MediaLibraryStore.SubtitlePreference
     if let selected {
-      preference = .init(isEnabled: true,
-                         displayName: selected.displayName,
-                         languageTag: selected.extendedLanguageTag,
-                         index: group.options.firstIndex(of: selected))
+      preference = .init(
+        isEnabled: true,
+        displayName: selected.displayName,
+        languageTag: selected.extendedLanguageTag,
+        index: group.options.firstIndex(of: selected))
     } else {
       preference = .init(isEnabled: false, displayName: nil, languageTag: nil, index: nil)
     }
@@ -714,20 +737,23 @@ class PlayerManager: ObservableObject {
     // started, independent of the backend (skips live/trailers via the non-finite duration).
     if watchMode == .media {
       let duration = player.currentItem?.duration.seconds ?? 0
-      AppContext.shared.localProgressStore.recordProgress(mediaId: playItem.metadata.id,
-                                                          position: time,
-                                                          duration: duration,
-                                                          season: playItem.metadata.season,
-                                                          episode: playItem.metadata.video)
+      AppContext.shared.localProgressStore.recordProgress(
+        mediaId: playItem.metadata.id,
+        position: time,
+        duration: duration,
+        season: playItem.metadata.season,
+        episode: playItem.metadata.video)
     }
-
+    
     let metadata = playItem.metadata
-    enqueueWatchMark(.init(id: metadata.id,
-                           video: metadata.video,
-                           season: metadata.season,
-                           time: Int(time)))
+    enqueueWatchMark(
+      .init(
+        id: metadata.id,
+        video: metadata.video,
+        season: metadata.season,
+        time: Int(time)))
   }
-
+  
   /// Reaching the end marks the title watched. kino.pub derives watched status from the position you
   /// report via `marktime` (there's no separate "set watched" call — `toggle` only flips it), so we
   /// send one final marktime at the full duration to push it over the threshold server-side, and
@@ -738,12 +764,14 @@ class PlayerManager: ObservableObject {
     guard duration.isFinite, duration > 0 else { return }
     let metadata = playItem.metadata
     AppContext.shared.localProgressStore.clear(id: metadata.id)
-    enqueueWatchMark(.init(id: metadata.id,
-                           video: metadata.video,
-                           season: metadata.season,
-                           time: Int(duration)))
+    enqueueWatchMark(
+      .init(
+        id: metadata.id,
+        video: metadata.video,
+        season: metadata.season,
+        time: Int(duration)))
   }
-
+  
   private func enqueueWatchMark(_ mark: PendingWatchMark) {
     let key = "\(mark.id)|\(mark.season.map(String.init) ?? "-")|\(mark.video.map(String.init) ?? "-")"
     guard mark.time > (latestWatchMarkTimes[key] ?? -1) else { return }
@@ -760,10 +788,11 @@ class PlayerManager: ObservableObject {
       while !Task.isCancelled, !watchMarkQueue.isEmpty {
         let next = watchMarkQueue.removeFirst()
         do {
-          try await actionsService.markWatch(id: next.id,
-                                             time: next.time,
-                                             video: next.video,
-                                             season: next.season)
+          try await actionsService.markWatch(
+            id: next.id,
+            time: next.time,
+            video: next.video,
+            season: next.season)
         } catch is CancellationError {
           break
         } catch {
@@ -773,27 +802,30 @@ class PlayerManager: ObservableObject {
       watchMarkWorker = nil
     }
   }
-
+  
   func fetchWatchMark() async {
     // Only media has a resume point (live/trailers don't).
     guard watchMode == .media else { return }
-
+    
     var remoteContinueTime: TimeInterval = 0
     do {
-      watchMark = try await actionsService.fetchWatchMark(id: playItem.metadata.id, video: playItem.metadata.video, season: playItem.metadata.season)
+      watchMark = try await actionsService.fetchWatchMark(
+        id: playItem.metadata.id, video: playItem.metadata.video, season: playItem.metadata.season)
       if let watchMark {
-        remoteContinueTime = watchMark.item.videos?.first?.time ?? watchMark.item.seasons?.first?.episodes.first?.time ?? 0
+        remoteContinueTime =
+        watchMark.item.videos?.first?.time ?? watchMark.item.seasons?.first?.episodes.first?.time ?? 0
       }
     } catch {
       Logger.app.error("Failed to fetch watch mark: \(error)")
     }
-
+    
     // Fall back to the local resume point: a movie/episode watched in-app records its position
     // locally on every tick, so it resumes even when the server mark lags or the fetch fails.
-    let localContinueTime = AppContext.shared.localProgressStore
+    let localContinueTime =
+    AppContext.shared.localProgressStore
       .entry(forId: playItem.metadata.id, season: playItem.metadata.season, episode: playItem.metadata.video)?
       .position ?? 0
-
+    
     let best = max(remoteContinueTime, localContinueTime)
     // Keep any value we already seeded synchronously if the refined fetch somehow comes back empty.
     if best > 0 { continueTime = best }
@@ -807,7 +839,7 @@ class PlayerManager: ObservableObject {
     }
     let seekTime = CMTime(seconds: continueTime, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
     self.continueTime = nil
-
+    
     // Seek now if the item is ready; otherwise wait for it to become ready and seek once. Seeking
     // a not-yet-ready item is silently dropped, which is why resume sometimes "played from start".
     if player.currentItem?.status == .readyToPlay {
@@ -828,9 +860,9 @@ class PlayerManager: ObservableObject {
   func cancelContinueWatching() {
     self.continueTime = nil
   }
-
+  
   // MARK: - 3D view mode
-
+  
   /// Switch the 3D rendering live (rebuilds the per-frame composition on the current item).
   func setThreeDMode(_ mode: ThreeDMode) {
     threeDMode = mode
@@ -838,5 +870,5 @@ class PlayerManager: ObservableObject {
     guard let item = player.currentItem else { return }
     item.videoComposition = ThreeDVideoComposition.make(for: item.asset, mode: mode)
   }
-
+  
 }

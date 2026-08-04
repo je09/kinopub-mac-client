@@ -12,16 +12,16 @@ import OSLog
 import KinoPubLogging
 
 struct CommentsView: View {
-
+  
   let mediaId: Int
-
+  
   @Environment(\.dismiss) private var dismiss
   @State private var comments: [Comment] = []
   @State private var isLoading: Bool = true
   @State private var failed: Bool = false
-
+  
   private var contentService: VideoContentService { AppContext.shared.contentService }
-
+  
   var body: some View {
     NavigationStack {
       Group {
@@ -56,7 +56,7 @@ struct CommentsView: View {
       .task { await load() }
     }
   }
-
+  
   private func load() async {
     isLoading = true
     failed = false
@@ -74,12 +74,12 @@ struct CommentsView: View {
 
 private struct CommentRow: View {
   let comment: Comment
-
+  
   private var avatarURL: URL? {
     guard let avatar = comment.user.avatar, !avatar.isEmpty else { return nil }
     return URL(string: avatar)
   }
-
+  
   private var formattedDate: String {
     let date = Date(timeIntervalSince1970: TimeInterval(comment.created))
     let formatter = DateFormatter()
@@ -87,13 +87,13 @@ private struct CommentRow: View {
     formatter.timeStyle = .short
     return formatter.string(from: date)
   }
-
+  
   /// Rating arrives as a string ("0" means no rating).
   private var ratingValue: Int? {
     guard let rating = comment.rating, let value = Int(rating), value != 0 else { return nil }
     return value
   }
-
+  
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(alignment: .center, spacing: 10) {
@@ -127,7 +127,7 @@ private struct CommentRow: View {
     .padding(.leading, CGFloat(min(comment.depth ?? 0, 4)) * 16)
     .frame(maxWidth: .infinity, alignment: .leading)
   }
-
+  
   @ViewBuilder
   private var avatar: some View {
     CachedAsyncImage(url: avatarURL) { image in

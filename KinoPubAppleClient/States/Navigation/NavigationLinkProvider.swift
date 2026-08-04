@@ -57,11 +57,11 @@ extension View {
 /// the app context, so this is section-agnostic and can be reused everywhere.
 struct RouteDestinationView: View {
   let route: Route
-
+  
   @Environment(\.appContext) private var appContext
   @EnvironmentObject private var authState: AuthState
   @EnvironmentObject private var errorHandler: ErrorHandler
-
+  
   var body: some View {
     switch route {
     case .details(let item):
@@ -79,60 +79,76 @@ struct RouteDestinationView: View {
     case .trailerPlayer(let item):
       player(item, mode: .trailer)
     case .filteredCatalog(let filter, let title):
-      FilteredCatalogView(catalog: MediaCatalog(itemsService: appContext.contentService,
-                                                authState: authState,
-                                                errorHandler: errorHandler,
-                                                filter: filter),
-                          title: title,
-                          linkProvider: RouteLinkProvider())
+      FilteredCatalogView(
+        catalog: MediaCatalog(
+          itemsService: appContext.contentService,
+          authState: authState,
+          errorHandler: errorHandler,
+          filter: filter),
+        title: title,
+        linkProvider: RouteLinkProvider())
     case .personSearch(let query, let field, let title):
-      PersonSearchView(model: SearchModel(itemsService: appContext.contentService,
-                                          authState: authState,
-                                          errorHandler: errorHandler),
-                       query: query,
-                       field: field,
-                       title: title,
-                       linkProvider: RouteLinkProvider())
+      PersonSearchView(
+        model: SearchModel(
+          itemsService: appContext.contentService,
+          authState: authState,
+          errorHandler: errorHandler),
+        query: query,
+        field: field,
+        title: title,
+        linkProvider: RouteLinkProvider())
     case .genre(let id, let title):
-      GenreResultsView(model: SearchModel(itemsService: appContext.contentService,
-                                          authState: authState,
-                                          errorHandler: errorHandler),
-                       genreId: id,
-                       title: title)
+      GenreResultsView(
+        model: SearchModel(
+          itemsService: appContext.contentService,
+          authState: authState,
+          errorHandler: errorHandler),
+        genreId: id,
+        title: title)
     case .bookmark(let bookmark):
-      BookmarkView(model: BookmarkModel(bookmark: bookmark,
-                                        itemsService: appContext.contentService,
-                                        actionsService: appContext.actionsService,
-                                        errorHandler: errorHandler))
+      BookmarkView(
+        model: BookmarkModel(
+          bookmark: bookmark,
+          itemsService: appContext.contentService,
+          actionsService: appContext.actionsService,
+          errorHandler: errorHandler))
     case .collection(let collection):
-      CollectionDetailView(model: CollectionDetailModel(collection: collection,
-                                                        collectionsService: appContext.collectionsService,
-                                                        errorHandler: errorHandler))
+      CollectionDetailView(
+        model: CollectionDetailModel(
+          collection: collection,
+          collectionsService: appContext.collectionsService,
+          errorHandler: errorHandler))
     case .mediaList(let items, let title):
       MediaListGridView(items: items, title: title)
     case .castCrew(let people, let title):
       SearchCastCrewView(people: people, title: title)
     }
   }
-
+  
   @ViewBuilder
   private func mediaItem(id: Int) -> some View {
-    MediaItemView(model: MediaItemModel(mediaItemId: id,
-                                        itemsService: appContext.contentService,
-                                        downloadManager: appContext.downloadManager,
-                                        linkProvider: RouteLinkProvider(),
-                                        errorHandler: errorHandler))
+    MediaItemView(
+      model: MediaItemModel(
+        mediaItemId: id,
+        itemsService: appContext.contentService,
+        downloadManager: appContext.downloadManager,
+        linkProvider: RouteLinkProvider(),
+        errorHandler: errorHandler))
   }
-
+  
   @ViewBuilder
-  private func player(_ item: any PlayableItem,
-                      mode: WatchMode,
-                      episodeQueue: [Episode] = []) -> some View {
-    PlayerView(manager: PlayerManager(playItem: item,
-                                      watchMode: mode,
-                                      downloadedFilesDatabase: appContext.downloadedFilesDatabase,
-                                      actionsService: appContext.actionsService,
-                                      episodeQueue: episodeQueue))
+  private func player(
+    _ item: any PlayableItem,
+    mode: WatchMode,
+    episodeQueue: [Episode] = []
+  ) -> some View {
+    PlayerView(
+      manager: PlayerManager(
+        playItem: item,
+        watchMode: mode,
+        downloadedFilesDatabase: appContext.downloadedFilesDatabase,
+        actionsService: appContext.actionsService,
+        episodeQueue: episodeQueue))
   }
 }
 
@@ -142,13 +158,13 @@ struct GenreResultsView: View {
   @StateObject private var model: SearchModel
   private let genreId: Int
   private let title: String
-
+  
   init(model: @autoclosure @escaping () -> SearchModel, genreId: Int, title: String) {
     _model = StateObject(wrappedValue: model())
     self.genreId = genreId
     self.title = title
   }
-
+  
   var body: some View {
     WidthReader { width in
       ScrollView {

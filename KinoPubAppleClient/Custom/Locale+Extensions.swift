@@ -7,7 +7,7 @@
 import Foundation
 
 extension Locale {
-    static var currentLanguageCode: String {
-        self.current.language.languageCode?.identifier ?? "en"
-    }
+  static var currentLanguageCode: String {
+    self.current.language.languageCode?.identifier ?? "en"
+  }
 }

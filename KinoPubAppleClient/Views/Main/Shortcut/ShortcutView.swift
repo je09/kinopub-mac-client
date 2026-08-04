@@ -14,7 +14,7 @@ import KinoPubUI
 struct SortSelectionView: View {
   @Environment(\.dismiss) private var dismiss
   @Binding var sort: SortOption
-
+  
   var body: some View {
     NavigationStack {
       Form {

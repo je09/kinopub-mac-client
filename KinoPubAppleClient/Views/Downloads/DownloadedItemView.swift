@@ -18,7 +18,7 @@ public enum DownloadRowState {
 }
 
 public struct DownloadedItemView: View {
-
+  
   private var mediaItem: DownloadMeta
   private var progress: Float?
   private var fileURL: URL?
@@ -26,14 +26,16 @@ public struct DownloadedItemView: View {
   private var remaining: TimeInterval?
   private var state: DownloadRowState
   private var onDownloadStateChange: (Bool) -> Void
-
-  public init(mediaItem: DownloadMeta,
-              progress: Float?,
-              fileURL: URL? = nil,
-              speed: Double? = nil,
-              remaining: TimeInterval? = nil,
-              state: DownloadRowState = .auto,
-              onDownloadStateChange: @escaping (Bool) -> Void) {
+  
+  public init(
+    mediaItem: DownloadMeta,
+    progress: Float?,
+    fileURL: URL? = nil,
+    speed: Double? = nil,
+    remaining: TimeInterval? = nil,
+    state: DownloadRowState = .auto,
+    onDownloadStateChange: @escaping (Bool) -> Void
+  ) {
     self.mediaItem = mediaItem
     self.progress = progress
     self.fileURL = fileURL
@@ -42,11 +44,11 @@ public struct DownloadedItemView: View {
     self.state = state
     self.onDownloadStateChange = onDownloadStateChange
   }
-
+  
   public var body: some View {
     HStack(alignment: .center) {
       image
-
+      
       VStack(alignment: .leading, spacing: 3) {
         title
         subtitle
@@ -57,7 +59,7 @@ public struct DownloadedItemView: View {
             .foregroundStyle(Color.KinoPub.subtitle)
         }
       }.padding(.all, 5)
-
+      
       if let progress = progress, progress < 1.0 {
         Spacer()
         VStack(alignment: .trailing, spacing: 2) {
@@ -103,7 +105,7 @@ public struct DownloadedItemView: View {
     }
     .padding(.vertical, 8)
   }
-
+  
   /// "S4E4 · 1080p · 1.4 GB" — episode (series), chosen quality, and on-disk size when known.
   private var fileDetail: String? {
     var parts: [String] = []
@@ -118,7 +120,7 @@ public struct DownloadedItemView: View {
     }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
-
+  
   /// "12.3 MB/s · 0:45 left" — live speed and ETA for an in-progress download.
   private var transferString: String? {
     var parts: [String] = []
@@ -130,7 +132,7 @@ public struct DownloadedItemView: View {
     }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
-
+  
   private static let etaFormatter: DateComponentsFormatter = {
     let f = DateComponentsFormatter()
     f.allowedUnits = [.hour, .minute, .second]
@@ -138,14 +140,14 @@ public struct DownloadedItemView: View {
     f.maximumUnitCount = 2
     return f
   }()
-
+  
   private var fileSizeString: String? {
     guard let fileURL else { return nil }
     let bytes = Self.byteSize(of: fileURL)
     guard bytes > 0 else { return nil }
     return ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
   }
-
+  
   /// On-disk size of the download. An mp4 is a single file; an HLS download is a `.movpkg` *bundle*
   /// (a directory), so `attributesOfItem` returns only the tiny directory entry — we must sum the
   /// contents to report the real size.
@@ -174,8 +176,9 @@ public struct DownloadedItemView: View {
         .posterStyle(size: .small, orientation: .vertical)
     } placeholder: {
       Color.KinoPub.skeleton
-        .frame(width: PosterStyle.Size.small.width,
-               height: PosterStyle.Size.small.height)
+        .frame(
+          width: PosterStyle.Size.small.width,
+          height: PosterStyle.Size.small.height)
     }
     .cornerRadius(8)
   }
@@ -197,8 +200,12 @@ public struct DownloadedItemView: View {
 }
 
 #Preview {
-  DownloadedItemView(mediaItem: DownloadMeta.make(from: DownloadableMediaItem(name: "", files: [], mediaItem: MediaItem.mock(), watchingMetadata: WatchingMetadata(id: 0, video: nil, season: nil))), progress: nil) { _ in
+  DownloadedItemView(
+    mediaItem: DownloadMeta.make(
+      from: DownloadableMediaItem(
+        name: "", files: [], mediaItem: MediaItem.mock(),
+        watchingMetadata: WatchingMetadata(id: 0, video: nil, season: nil))), progress: nil
+  ) { _ in
     
   }
 }
-

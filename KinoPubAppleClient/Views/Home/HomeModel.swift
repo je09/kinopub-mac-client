@@ -13,7 +13,7 @@ import Combine
 
 @MainActor
 class HomeModel: ObservableObject {
-
+  
   struct Shelf: Identifiable {
     let id = UUID()
     let title: String
@@ -22,21 +22,21 @@ class HomeModel: ObservableObject {
     /// The catalog filter this shelf represents, so its header can open the full list.
     var filter: MediaItemsFilter? = nil
   }
-
+  
   /// Definition of a Home shelf (matches the kino.pub web sections).
   private struct ShelfSpec {
     let title: String
     let type: MediaType
     let sort: String
     let period: String?
-
+    
     var filter: MediaItemsFilter {
       var f = MediaItemsFilter(contentType: type, genres: [], countries: [], year: nil, age: nil, sort: sort)
       f.period = period
       return f
     }
   }
-
+  
   // Mirrors the kino.pub web home sections (type + order + period). Web order → API sort:
   // views → views-, added → created-, watchers → watchers-. `period` is sent server-side
   // (see FilterItemsRequest); "Популярные фильмы" = most viewed this month.
@@ -49,9 +49,9 @@ class HomeModel: ObservableObject {
     ShelfSpec(title: "New in 3D", type: .threeD, sort: "created-", period: nil),
     ShelfSpec(title: "New Documentary Movies", type: .documovie, sort: "created-", period: nil),
     ShelfSpec(title: "New Documentary Series", type: .docuserial, sort: "created-", period: nil),
-    ShelfSpec(title: "New TV Shows", type: .tvshow, sort: "created-", period: nil)
+    ShelfSpec(title: "New TV Shows", type: .tvshow, sort: "created-", period: nil),
   ]
-
+  
   /// A "Continue Watching" entry enriched with resume progress and, for series,
   /// the last episode the user was watching.
   struct ContinueItem: Identifiable {
@@ -60,7 +60,7 @@ class HomeModel: ObservableObject {
     /// Resume progress for the movie / last-watched episode (nil for live or unstarted).
     let watch: WatchProgress?
     let subtitle: String?
-
+    
     /// Fraction for the progress bar — nil (no bar) until the title is actually started.
     var progress: Double? {
       guard let watch, watch.state != .unwatched else { return nil }
@@ -70,12 +70,12 @@ class HomeModel: ObservableObject {
     /// instead of still inviting you to continue.
     var finished: Bool { watch?.isFinished ?? false }
   }
-
+  
   private var authState: AuthState
   private var errorHandler: ErrorHandler
   private var itemsService: VideoContentService
   private var bag = Set<AnyCancellable>()
-
+  
   @Published public var shelves: [Shelf] = HomeModel.skeletonShelves()
   @Published public var featured: [MediaItem] = []
   @Published public var continueWatching: [ContinueItem] = []
@@ -86,7 +86,7 @@ class HomeModel: ObservableObject {
   private var didLoadShelves = false
   private var lastContinueWatchingRefresh: Date?
   private var isFetchingData = false
-
+  
   init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
     self.itemsService = itemsService
     self.authState = authState
@@ -95,21 +95,21 @@ class HomeModel: ObservableObject {
     // compact split view / nested navigation stack). `fetchData` is idempotent + auth-gated.
     Task { await fetchData() }
   }
-
+  
   func fetchData(forceRefresh: Bool = false) async {
     guard !isFetchingData else { return }
     guard authState.userState == .authorized else {
       subscribeForAuth()
       return
     }
-
+    
     isFetchingData = true
     defer { isFetchingData = false }
-
+    
     // The watch history powers the "Continue Watching" shelf. Fetch it alongside the other
     // shelves, but isolate failures so a history error can't take down the whole Home screen.
     async let history = itemsService.fetchHistory(page: nil)
-
+    
     // Build the shelves from the kino.pub web sections (each with its own order/period),
     // fetched in parallel. A failed shelf is simply dropped rather than failing the screen.
     // Only build them once: returning from a pushed detail must not rebuild the list (which
@@ -119,22 +119,28 @@ class HomeModel: ObservableObject {
       let shelfService = itemsService
       // The website's Новинки → Популярные feed is the source of truth for the Home carousel.
       // Keep it separate from the shelves so carousel ordering exactly follows `/items/popular`.
-      async let popularCarouselRequest = shelfService.fetch(shortcut: .popular,
-                                                            contentType: .movie,
-                                                            page: nil,
-                                                            forceRefresh: forceRefresh)
+      async let popularCarouselRequest = shelfService.fetch(
+        shortcut: .popular,
+        contentType: .movie,
+        page: nil,
+        forceRefresh: forceRefresh)
       let loaded: [Shelf] = await withTaskGroup(of: (Int, Shelf?).self) { group in
         var iterator = Array(specs.enumerated()).makeIterator()
         func add(_ entry: (offset: Int, element: ShelfSpec)) {
           group.addTask {
-            let items = (try? await shelfService.filter(filter: entry.element.filter,
-                                                        page: nil,
-                                                        forceRefresh: forceRefresh))?.items ?? []
-            let shelf = items.isEmpty ? nil
-              : Shelf(title: entry.element.title.localized,
-                      items: items,
-                      ranked: entry.element.title.hasPrefix("Popular"),
-                      filter: entry.element.filter)
+            let items =
+            (try? await shelfService.filter(
+              filter: entry.element.filter,
+              page: nil,
+              forceRefresh: forceRefresh))?.items ?? []
+            let shelf =
+            items.isEmpty
+            ? nil
+            : Shelf(
+              title: entry.element.title.localized,
+              items: items,
+              ranked: entry.element.title.hasPrefix("Popular"),
+              filter: entry.element.filter)
             return (entry.offset, shelf)
           }
         }
@@ -146,13 +152,13 @@ class HomeModel: ObservableObject {
         }
         return slots.compactMap { $0 }
       }
-
+      
       // Only commit (and stop reloading) once something actually came back, so a transient
       // failure keeps the skeletons and retries on the next appearance instead of sticking empty.
       if !loaded.isEmpty {
         didLoadShelves = true
         shelves = loaded
-
+        
         let popularItems = (try? await popularCarouselRequest)?.items ?? []
         // Fall back to loaded shelves only if the dedicated website feed is unavailable.
         let fallbackItems = loaded.flatMap(\.items)
@@ -167,7 +173,7 @@ class HomeModel: ObservableObject {
         Task { await loadFeaturedPreviews(for: featuredItems) }
       }
     }
-
+    
     // Best-effort: a history failure should never surface an error on Home.
     let historyEntries = (try? await history)?.history ?? []
     // Deduplicate by id (a series shows up once), keeping the most-recent occurrence and its
@@ -178,11 +184,12 @@ class HomeModel: ObservableObject {
       return (entry.item, entry.lastSeen ?? entry.time ?? entry.firstSeen ?? 0)
     }
     let candidates = Array(uniqueHistory.prefix(10))
-
+    
     // Enrich each entry with its watch progress + last-watched episode (details carry the
     // per-episode watching positions that the history list does not), keeping the timestamp.
     let service = itemsService
-    let enriched: [(item: ContinueItem, watchedAt: TimeInterval)] = await withTaskGroup(of: (Int, ContinueItem).self) { group in
+    let enriched: [(item: ContinueItem, watchedAt: TimeInterval)] = await withTaskGroup(of: (Int, ContinueItem).self) {
+      group in
       var iterator = Array(candidates.enumerated()).makeIterator()
       func add(_ entry: (offset: Int, element: (item: MediaItem, watchedAt: TimeInterval))) {
         group.addTask {
@@ -201,7 +208,7 @@ class HomeModel: ObservableObject {
         item.map { ($0, candidates[index].watchedAt) }
       }
     }
-
+    
     // Locally-started titles (> 10s) the backend doesn't list yet, with their own update time.
     let backendIds = Set(enriched.map { $0.item.id })
     let localOnly: [(item: ContinueItem, watchedAt: TimeInterval)] = AppContext.shared.localProgressStore.allEntries()
@@ -217,7 +224,7 @@ class HomeModel: ObservableObject {
         let item = ContinueItem(id: entry.id, item: entry.item, watch: watch, subtitle: subtitle)
         return (item, entry.updatedAt)
       }
-
+    
     // Single list ordered by real recency (newest first) across both sources, so Continue Watching
     // matches what History shows instead of always floating local items to the front.
     // Drop finished titles (watched to the credits) — a movie at its end / a fully-watched series
@@ -229,7 +236,7 @@ class HomeModel: ObservableObject {
     continueWatchingLoading = false
     lastContinueWatchingRefresh = Date()
   }
-
+  
   /// Refresh mutable Home data after returning to this cached sidebar screen, without repeatedly
   /// rebuilding the catalog shelves during quick navigation.
   private func loadFeaturedPreviews(for items: [MediaItem]) async {
@@ -242,7 +249,7 @@ class HomeModel: ObservableObject {
           return (entry.offset, detail ?? entry.element)
         }
       }
-
+      
       // Two detail requests at a time keep preview loading below the API's rate-limit threshold.
       for _ in 0..<2 { if let entry = iterator.next() { add(entry) } }
       var result: [(Int, MediaItem)] = []
@@ -252,19 +259,20 @@ class HomeModel: ObservableObject {
       }
       return result
     }
-
+    
     // Ignore completion if a refresh replaced the featured set while details were loading.
     guard featured.map(\.id) == items.map(\.id) else { return }
     featured = enriched.sorted { $0.0 < $1.0 }.map(\.1)
   }
-
+  
   func refreshContinueWatchingIfStale() async {
     guard didLoadShelves,
-          lastContinueWatchingRefresh.map({ Date().timeIntervalSince($0) >= 30 }) ?? true else { return }
+          lastContinueWatchingRefresh.map({ Date().timeIntervalSince($0) >= 30 }) ?? true
+    else { return }
     continueWatchingLoading = true
     await fetchData()
   }
-
+  
   @Sendable @MainActor
   func refresh() async {
     guard !isFetchingData else { return }
@@ -274,15 +282,16 @@ class HomeModel: ObservableObject {
     continueWatchingLoading = true
     await fetchData(forceRefresh: true)
   }
-
+  
   /// Builds a Continue Watching entry from a fully-loaded media item. Series use the same
   /// `MediaItem.continueEpisode()` logic as the detail page so the two stay in sync (DRY).
   nonisolated private static func continueItem(from item: MediaItem) -> ContinueItem {
     if item.isSeries, let target = item.continueEpisode() ?? item.orderedEpisodes.last {
       let episode = target.episode
       let watch = WatchProgress(position: Double(episode.watching.time), duration: Double(episode.duration))
-      return ContinueItem(id: item.id, item: item, watch: watch,
-                          subtitle: "S\(target.season.number) · E\(episode.number)")
+      return ContinueItem(
+        id: item.id, item: item, watch: watch,
+        subtitle: "S\(target.season.number) · E\(episode.number)")
     }
     if let video = item.videos?.first {
       let watch = WatchProgress(position: Double(video.watching.time), duration: Double(video.duration))
@@ -290,15 +299,15 @@ class HomeModel: ObservableObject {
     }
     return ContinueItem(id: item.id, item: item, watch: nil, subtitle: item.duration.totalFormatted)
   }
-
+  
   private static func skeletonShelves() -> [Shelf] {
     [
       Shelf(title: "Popular Movies".localized, items: MediaItem.skeletonMock(), ranked: true),
       Shelf(title: "Popular Series".localized, items: MediaItem.skeletonMock(), ranked: true),
-      Shelf(title: "New Movies".localized, items: MediaItem.skeletonMock(), ranked: false)
+      Shelf(title: "New Movies".localized, items: MediaItem.skeletonMock(), ranked: false),
     ]
   }
-
+  
   private func subscribeForAuth() {
     authState.$userState.filter({ $0 == .authorized }).first().sink { [weak self] _ in
       Task {
@@ -306,5 +315,5 @@ class HomeModel: ObservableObject {
       }
     }.store(in: &bag)
   }
-
+  
 }

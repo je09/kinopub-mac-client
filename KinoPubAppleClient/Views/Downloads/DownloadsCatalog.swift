@@ -14,21 +14,23 @@ import KinoPubKit
 final class DownloadsCatalog: ObservableObject {
   private let downloadsDatabase: DownloadedFilesDatabase<DownloadMeta>
   private let downloadManager: DownloadManager<DownloadMeta>
-
+  
   @Published var downloadedItems: [DownloadedFileInfo<DownloadMeta>] = []
   @Published var activeDownloads: [Download<DownloadMeta>] = []
   @Published var totalBytes: Int64 = 0
-
+  
   private var cancellables = [AnyCancellable]()
-
+  
   var isEmpty: Bool { downloadedItems.isEmpty && activeDownloads.isEmpty }
-
-  init(downloadsDatabase: DownloadedFilesDatabase<DownloadMeta>,
-       downloadManager: DownloadManager<DownloadMeta>) {
+  
+  init(
+    downloadsDatabase: DownloadedFilesDatabase<DownloadMeta>,
+    downloadManager: DownloadManager<DownloadMeta>
+  ) {
     self.downloadsDatabase = downloadsDatabase
     self.downloadManager = downloadManager
   }
-
+  
   func refresh() {
     let stored = downloadsDatabase.readData() ?? []
     var present: [DownloadedFileInfo<DownloadMeta>] = []
@@ -43,7 +45,7 @@ final class DownloadsCatalog: ObservableObject {
     activeDownloads = Array(downloadManager.activeDownloads.values)
     cancellables.removeAll()
     recomputeTotalSize()
-
+    
     for download in activeDownloads {
       download.objectWillChange
         .receive(on: DispatchQueue.main)
@@ -51,7 +53,7 @@ final class DownloadsCatalog: ObservableObject {
         .store(in: &cancellables)
     }
   }
-
+  
   func deleteDownloadedItem(at indexSet: IndexSet) {
     for index in indexSet {
       downloadsDatabase.remove(fileInfo: downloadedItems[index])
@@ -59,7 +61,7 @@ final class DownloadsCatalog: ObservableObject {
     downloadedItems.remove(atOffsets: indexSet)
     recomputeTotalSize()
   }
-
+  
   func deleteActiveDownload(at indexSet: IndexSet) {
     for index in indexSet {
       downloadManager.removeDownload(for: activeDownloads[index].url)
@@ -67,11 +69,11 @@ final class DownloadsCatalog: ObservableObject {
     activeDownloads.remove(atOffsets: indexSet)
     recomputeTotalSize()
   }
-
+  
   func toggle(download: Download<DownloadMeta>) {
     download.state == .inProgress ? download.pause() : download.resume()
   }
-
+  
   private func recomputeTotalSize() {
     let urls = downloadedItems.map(\.localFileURL)
     Task.detached(priority: .utility) {

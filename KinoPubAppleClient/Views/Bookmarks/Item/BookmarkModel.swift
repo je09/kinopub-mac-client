@@ -18,9 +18,9 @@ enum BookmarkSort: CaseIterable, Identifiable {
   case year
   case imdb
   case kinopoisk
-
+  
   var id: Self { self }
-
+  
   var title: String {
     switch self {
     case .added: return "Added".localized
@@ -34,29 +34,31 @@ enum BookmarkSort: CaseIterable, Identifiable {
 
 @MainActor
 class BookmarkModel: ObservableObject {
-
+  
   private var contentService: VideoContentService
   private var actionsService: UserActionsService
   private var errorHandler: ErrorHandler
-
+  
   public var bookmark: Bookmark
   @Published public var items: [MediaItem] = MediaItem.skeletonMock()
   @Published public var toastMessage: ToastMessage?
   @Published public var sort: BookmarkSort = .added
   /// Latest folder title (kept in sync after a rename so the nav bar updates).
   @Published public var title: String
-
-  init(bookmark: Bookmark,
-       itemsService: VideoContentService,
-       actionsService: UserActionsService,
-       errorHandler: ErrorHandler) {
+  
+  init(
+    bookmark: Bookmark,
+    itemsService: VideoContentService,
+    actionsService: UserActionsService,
+    errorHandler: ErrorHandler
+  ) {
     self.contentService = itemsService
     self.actionsService = actionsService
     self.bookmark = bookmark
     self.title = bookmark.title
     self.errorHandler = errorHandler
   }
-
+  
   /// Items rendered by the view, sorted client-side according to `sort`.
   /// `added` keeps the server order (default).
   var sortedItems: [MediaItem] {
@@ -73,7 +75,7 @@ class BookmarkModel: ObservableObject {
       return items.sorted { ($0.kinopoiskRating ?? 0) > ($1.kinopoiskRating ?? 0) }
     }
   }
-
+  
   func fetchItems() async {
     do {
       items = try await contentService.fetchBookmarkItems(id: "\(bookmark.id)").items
@@ -82,7 +84,7 @@ class BookmarkModel: ObservableObject {
       errorHandler.setError(error)
     }
   }
-
+  
   @MainActor
   func refresh() {
     items = MediaItem.skeletonMock()
@@ -91,7 +93,7 @@ class BookmarkModel: ObservableObject {
       await fetchItems()
     }
   }
-
+  
   /// Remove a single item from this folder (toggle-item against the folder). Optimistically drops
   /// it from the list and syncs the shared library state so other screens update too.
   func removeFromFolder(_ item: MediaItem) async {
@@ -108,7 +110,7 @@ class BookmarkModel: ObservableObject {
       errorHandler.setError(error)
     }
   }
-
+  
   /// Delete the folder. Returns true on success so the view can dismiss back to the folders list.
   func delete() async -> Bool {
     do {
@@ -122,5 +124,5 @@ class BookmarkModel: ObservableObject {
       return false
     }
   }
-
+  
 }

@@ -13,18 +13,18 @@ import KinoPubBackend
 import KinoPubKit
 
 struct SidebarView: View {
-
+  
   @Environment(\.appContext) var appContext
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject var authState: AuthState
   @EnvironmentObject var networkMonitor: NetworkMonitor
-
+  
   @State private var sectionBeforeOffline: SidebarItem?
   @State private var showReconnected = false
   @State private var windowHeroMedia: WindowHeroMedia?
   @State private var readyHeroVideoURL: String?
-
+  
   var body: some View {
     // Show auth as full-window content (not a modal sheet): a macOS sheet disables the window's
     // close button, trapping the user on the activation screen with no way to quit the app.
@@ -34,7 +34,7 @@ struct SidebarView: View {
       mainContent
     }
   }
-
+  
   private var mainContent: some View {
     // Every section's detail NavigationStack now uses the shared `Route` element type, so the
     // NavigationSplitView detail column reconciles cleanly across section switches (no
@@ -44,7 +44,7 @@ struct SidebarView: View {
       Sidebar(selection: $navigationState.sidebarSelection)
     } detail: {
       SidebarNavigationDetail(selection: $navigationState.sidebarSelection)
-        // Keep the offline banner inside the detail column so it never covers the sidebar.
+      // Keep the offline banner inside the detail column so it never covers the sidebar.
         .safeAreaInset(edge: .top, spacing: 0) {
           if let banner = bannerState {
             OfflineBanner(tone: banner.tone, title: banner.title)
@@ -54,16 +54,18 @@ struct SidebarView: View {
     .background {
       ZStack {
         Color.KinoPub.background
-
+        
         if let video = windowHeroMedia?.videoURL, let url = URL(string: video) {
-          CinematicBackdropVideo(url: url,
-                                 isPlaying: windowHeroMedia?.revealVideo == true) {
+          CinematicBackdropVideo(
+            url: url,
+            isPlaying: windowHeroMedia?.revealVideo == true
+          ) {
             guard windowHeroMedia?.videoURL == video else { return }
             withAnimation(.easeInOut(duration: 0.7)) { readyHeroVideoURL = video }
           }
           .id(video)
         }
-
+        
         if let poster = windowHeroMedia?.posterURL {
           CachedAsyncImage(url: URL(string: poster)) { image in
             image
@@ -77,7 +79,7 @@ struct SidebarView: View {
           .transition(.opacity)
           .opacity(shouldRevealHeroVideo ? 0 : 1)
         }
-
+        
         if let media = windowHeroMedia {
           windowHeroTextGradient(height: media.height, strong: media.strongTextScrim)
         }
@@ -118,12 +120,12 @@ struct SidebarView: View {
       await authState.check()
     }
   }
-
+  
   private var shouldRevealHeroVideo: Bool {
     guard let media = windowHeroMedia, media.revealVideo, let video = media.videoURL else { return false }
     return readyHeroVideoURL == video
   }
-
+  
   /// Window-level artwork needs a window-level scrim so both poster/video and their gradient span
   /// behind the sidebar and detail column. The lower edge follows each screen's hero height.
   @ViewBuilder
@@ -139,18 +141,20 @@ struct SidebarView: View {
         // and titlebar instead of clipping it to the detail page.
         let heroEnd = min(max(height / max(proxy.size.height, 1), 0), 1)
         ZStack {
-          LinearGradient(stops: [
-            .init(color: .black.opacity(0.48), location: 0),
-            .init(color: .black.opacity(0.52), location: heroEnd * 0.58),
-            .init(color: .black.opacity(0.88), location: heroEnd),
-            .init(color: .black.opacity(0.88), location: 1)
-          ], startPoint: .top, endPoint: .bottom)
-
-          LinearGradient(stops: [
-            .init(color: .black.opacity(0.28), location: 0),
-            .init(color: .black.opacity(0.12), location: 0.62),
-            .init(color: .clear, location: 1)
-          ], startPoint: .leading, endPoint: .trailing)
+          LinearGradient(
+            stops: [
+              .init(color: .black.opacity(0.48), location: 0),
+              .init(color: .black.opacity(0.52), location: heroEnd * 0.58),
+              .init(color: .black.opacity(0.88), location: heroEnd),
+              .init(color: .black.opacity(0.88), location: 1),
+            ], startPoint: .top, endPoint: .bottom)
+          
+          LinearGradient(
+            stops: [
+              .init(color: .black.opacity(0.28), location: 0),
+              .init(color: .black.opacity(0.12), location: 0.62),
+              .init(color: .clear, location: 1),
+            ], startPoint: .leading, endPoint: .trailing)
         }
         .frame(width: proxy.size.width, height: proxy.size.height)
       }
@@ -159,21 +163,23 @@ struct SidebarView: View {
       let gradientHeight = min(height * 0.76, 420)
       VStack(spacing: 0) {
         Spacer().frame(height: max(height - gradientHeight, 0))
-        LinearGradient(stops: [
-          .init(color: .clear, location: 0),
-          .init(color: .black.opacity(0.22), location: 0.42),
-          .init(color: .black.opacity(0.82), location: 1)
-        ], startPoint: .top, endPoint: .bottom)
-          .frame(maxWidth: .infinity)
-          .frame(height: gradientHeight)
+        LinearGradient(
+          stops: [
+            .init(color: .clear, location: 0),
+            .init(color: .black.opacity(0.22), location: 0.42),
+            .init(color: .black.opacity(0.82), location: 1),
+          ], startPoint: .top, endPoint: .bottom
+        )
+        .frame(maxWidth: .infinity)
+        .frame(height: gradientHeight)
         Spacer(minLength: 0)
       }
       .allowsHitTesting(false)
     }
   }
-
+  
   // MARK: - Offline mode
-
+  
   private var bannerState: (tone: OfflineBanner.Tone, title: String)? {
     if !networkMonitor.isOnline {
       return (.warning, "You're offline — your downloads are available".localized)
@@ -183,7 +189,7 @@ struct SidebarView: View {
     }
     return nil
   }
-
+  
   private func handleConnectivityChange(online: Bool) {
     if !online {
       let current = navigationState.sidebarSelection ?? .new
@@ -201,13 +207,15 @@ struct SidebarView: View {
       }
     }
   }
-
+  
   var authSheet: some View {
-    AuthView(model: AuthModel(authService: appContext.authService,
-                              authState: authState,
-                              errorHandler: errorHandler))
+    AuthView(
+      model: AuthModel(
+        authService: appContext.authService,
+        authState: authState,
+        errorHandler: errorHandler))
   }
-
+  
 }
 
 struct SideBarView_Previews: PreviewProvider {

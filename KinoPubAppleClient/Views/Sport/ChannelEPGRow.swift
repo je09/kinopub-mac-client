@@ -19,7 +19,7 @@ enum EPGTimeFormat {
     formatter.dateStyle = .none
     return formatter
   }()
-
+  
   /// Date + time (relative, e.g. "Today at 14:30" / "5 Jul at 14:30") — for the "guide updated"
   /// caption, since the guide now refreshes at most once a day so the date matters.
   static let dateTime: DateFormatter = {
@@ -29,7 +29,7 @@ enum EPGTimeFormat {
     formatter.doesRelativeDateFormatting = true
     return formatter
   }()
-
+  
   /// "12:00 – 13:30" in the user's local timezone.
   static func range(_ start: Date, _ stop: Date) -> String {
     "\(time.string(from: start)) – \(time.string(from: stop))"
@@ -46,7 +46,7 @@ struct ChannelEPGRow: View {
   let isSelected: Bool
   /// While the guide is still downloading, show a loading hint instead of "no programme".
   var isLoadingGuide: Bool = false
-
+  
   var body: some View {
     HStack(spacing: 12) {
       ChannelArtwork(logo: channel.logo)
@@ -56,16 +56,16 @@ struct ChannelEPGRow: View {
           RoundedRectangle(cornerRadius: 6, style: .continuous)
             .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
         )
-
+      
       VStack(alignment: .leading, spacing: 4) {
         Text(channel.title)
           .font(.system(size: 15, weight: .semibold))
           .foregroundStyle(Color.KinoPub.text)
           .lineLimit(1)
-
+        
         programmeInfo
       }
-
+      
       Spacer(minLength: 0)
     }
     .contentShape(Rectangle())
@@ -76,7 +76,7 @@ struct ChannelEPGRow: View {
         .fill(isSelected ? Color.KinoPub.selectionBackground : Color.clear)
     )
   }
-
+  
   /// Now/next block. Degrades gracefully: with no EPG match it shows a single muted line.
   @ViewBuilder
   private var programmeInfo: some View {
@@ -97,7 +97,7 @@ struct ChannelEPGRow: View {
       EPGProgressBar(progress: current.progress(at: now))
         .frame(height: 3)
         .padding(.top, 1)
-
+      
       if let next {
         nextLine(next)
       }
@@ -118,21 +118,21 @@ struct ChannelEPGRow: View {
         .foregroundStyle(Color.KinoPub.subtitle)
     }
   }
-
+  
   /// "Next: <title> · 13:30"
   private func nextLine(_ program: EPGProgram) -> some View {
     (Text("\("Next".localized): ").foregroundColor(Color.KinoPub.subtitle)
      + Text(program.title).foregroundColor(Color.KinoPub.text)
      + Text(" · \(EPGTimeFormat.time.string(from: program.start))").foregroundColor(Color.KinoPub.subtitle))
-      .font(.system(size: 12))
-      .lineLimit(1)
+    .font(.system(size: 12))
+    .lineLimit(1)
   }
 }
 
 /// A thin rounded progress bar (0...1) used for the on-air programme.
 struct EPGProgressBar: View {
   let progress: Double
-
+  
   var body: some View {
     GeometryReader { geo in
       ZStack(alignment: .leading) {

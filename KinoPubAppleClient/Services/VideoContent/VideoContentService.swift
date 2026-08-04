@@ -9,8 +9,12 @@ import Foundation
 import KinoPubBackend
 
 protocol VideoContentService {
-  func fetch(shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem>
-  func search(query: String?, contentType: MediaType?, field: String?, page: Int?) async throws -> PaginatedData<MediaItem>
+  func fetch(
+    shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool
+  ) async throws -> PaginatedData<MediaItem>
+  func search(
+    query: String?, contentType: MediaType?, field: String?, page: Int?
+  ) async throws -> PaginatedData<MediaItem>
   func filter(filter: MediaItemsFilter, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem>
   /// Films of a person via the `/v1/items?cast=`/`director=` FILTER (reliable, unlike the
   /// `search?field=cast` full-text match). `field` is "cast" or "director"; no type restriction so
@@ -39,46 +43,50 @@ extension VideoContentService {
   func fetch(shortcut: MediaShortcut, contentType: MediaType, page: Int?) async throws -> PaginatedData<MediaItem> {
     try await fetch(shortcut: shortcut, contentType: contentType, page: page, forceRefresh: false)
   }
-
+  
   func filter(filter: MediaItemsFilter, page: Int?) async throws -> PaginatedData<MediaItem> {
     try await self.filter(filter: filter, page: page, forceRefresh: false)
   }
 }
 
 struct VideoContentServiceMock: VideoContentService {
-
-  func fetch(shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> {
+  
+  func fetch(
+    shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool
+  ) async throws -> PaginatedData<MediaItem> {
     return PaginatedData.mock(data: [])
   }
-
-  func search(query: String?, contentType: MediaType?, field: String?, page: Int?) async throws -> PaginatedData<MediaItem> {
+  
+  func search(
+    query: String?, contentType: MediaType?, field: String?, page: Int?
+  ) async throws -> PaginatedData<MediaItem> {
     return PaginatedData.mock(data: [])
   }
-
+  
   func filter(filter: MediaItemsFilter, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> {
     return PaginatedData.mock(data: [])
   }
-
+  
   func itemsByPerson(name: String, field: String, page: Int?) async throws -> PaginatedData<MediaItem> {
     return PaginatedData.mock(data: [])
   }
-
+  
   func fetchGenres(type: MediaType?) async throws -> [MediaGenre] {
     return []
   }
-
+  
   func fetchCountries() async throws -> [Country] {
     return []
   }
-
+  
   func fetchDetails(for id: String) async throws -> SingleItemData<MediaItem> {
     return SingleItemData.mock(data: MediaItem.mock())
   }
-
+  
   func fetchMediaLinks(mediaID: Int) async throws -> MediaLinksData {
     MediaLinksData(id: mediaID, files: [], subtitles: nil, thumbnail: nil)
   }
-
+  
   func fetchMediaVideoLink(file: String, type: String) async throws -> MediaVideoLinkData {
     MediaVideoLinkData(url: "")
   }
@@ -90,25 +98,25 @@ struct VideoContentServiceMock: VideoContentService {
   func fetchBookmarkItems(id: String) async throws -> ArrayData<MediaItem> {
     return ArrayData.mock(data: [])
   }
-
+  
   func fetchHistory(page: Int?) async throws -> HistoryData {
     return HistoryData.mock(data: [])
   }
-
+  
   func fetchWatchingSerials(subscribed: Int?, type: String?) async throws -> ArrayData<WatchingSerial> {
     return ArrayData.mock(data: [])
   }
-
+  
   func fetchWatchingMovies() async throws -> ArrayData<WatchingSerial> {
     return ArrayData.mock(data: [])
   }
-
+  
   func fetchTVChannels() async throws -> [TVChannel] {
     return []
   }
-
+  
   func fetchComments(for id: Int) async throws -> CommentsData {
     return CommentsData.mock()
   }
-
+  
 }

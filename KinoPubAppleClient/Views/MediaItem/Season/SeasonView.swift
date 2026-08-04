@@ -12,7 +12,7 @@ import KinoPubBackend
 
 struct SeasonView: View {
   @StateObject private var model: SeasonModel
-
+  
   init(model: @autoclosure @escaping () -> SeasonModel) {
     _model = StateObject(wrappedValue: model())
   }
@@ -34,21 +34,30 @@ struct SeasonView: View {
   private var episodeQueue: [Episode] {
     model.season.episodes.map { model.filledEpisode($0) }
   }
-
+  
   var listView: some View {
     ScrollView {
-      LazyVGrid(columns: gridLayout, content: {
-        ForEach(model.season.episodes, id: \.id) { item in
-          NavigationLink(value: model.linkProvider.episodePlayer(for: model.filledEpisode(item),
-                                                                  queue: episodeQueue)) {
-            SeasonItemView(episode: item, onDownload: { file in
-              model.startDownload(episode: item, file: file)
-            })
+      LazyVGrid(
+        columns: gridLayout,
+        content: {
+          ForEach(model.season.episodes, id: \.id) { item in
+            NavigationLink(
+              value: model.linkProvider.episodePlayer(
+                for: model.filledEpisode(item),
+                queue: episodeQueue)
+            ) {
+              SeasonItemView(
+                episode: item,
+                onDownload: { file in
+                  model.startDownload(episode: item, file: file)
+                }
+              )
               .padding(.bottom, 16)
+            }
+            .buttonStyle(.plain)
           }
-          .buttonStyle(.plain)
         }
-      })
+      )
       .padding(.horizontal, 16)
     }
   }

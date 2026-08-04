@@ -19,20 +19,20 @@ struct SportView: View {
   @State private var path: [Route] = []
   /// When pushed inside the custom "Ещё" stack, render bare (the More tab provides the stack).
   @Environment(\.sectionEmbedded) private var sectionEmbedded
-
+  
   /// Ticking clock: the on-air programme and progress bars refresh against this (~every 30s).
   @State private var now = Date()
   private let ticker = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
-
+  
   /// Caps the top player on wide screens so it never stretches full-width ugly.
   private let playerMaxWidth: CGFloat = 900
   /// Comfortable reading width for the channel list on very wide screens.
   private let listMaxWidth: CGFloat = 900
-
+  
   init(model: @autoclosure @escaping () -> SportModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   var body: some View {
     if sectionEmbedded {
       sectionContent
@@ -42,7 +42,7 @@ struct SportView: View {
       }
     }
   }
-
+  
   private var sectionContent: some View {
     content
       .kinoScreen("Sport".localized)
@@ -50,7 +50,7 @@ struct SportView: View {
       .onReceive(ticker) { now = $0 }
       .handleError(state: $errorHandler.state)
   }
-
+  
   @ViewBuilder
   private var content: some View {
     if model.isLoading {
@@ -61,9 +61,9 @@ struct SportView: View {
       guideLayout
     }
   }
-
+  
   // MARK: - Unified layout: player pinned on top, channel + programme list below
-
+  
   /// One arrangement everywhere: the 16:9 player stays pinned at the top (outside the scroll),
   /// and the channels scroll underneath. Tapping a row switches the top player.
   private var guideLayout: some View {
@@ -74,7 +74,7 @@ struct SportView: View {
       channelList
     }
   }
-
+  
   /// Thin status strip under the player: a spinner + "loading guide" while the EPG downloads,
   /// then a "guide updated at HH:mm" confirmation (also reassures after pull-to-refresh).
   @ViewBuilder
@@ -105,7 +105,7 @@ struct SportView: View {
     .padding(.horizontal, 16)
     .padding(.vertical, model.isLoadingGuide || model.guideUpdatedAt != nil ? 8 : 0)
   }
-
+  
   /// Always-on-top player. Centered and width-capped on wide screens; black 16:9 always.
   @ViewBuilder
   private var playerHeader: some View {
@@ -113,7 +113,7 @@ struct SportView: View {
       if let channel = model.selectedChannel, let url = URL(string: channel.stream) {
         // InlinePlayerView already applies its own black 16:9 frame and rounded clip.
         InlinePlayerView(url: url)
-          .id(channel.id) // recreate the AVPlayer when the channel changes
+          .id(channel.id)  // recreate the AVPlayer when the channel changes
       } else {
         // No selection yet (or an empty stream): a quiet placeholder in the player area.
         ZStack {
@@ -127,23 +127,26 @@ struct SportView: View {
     }
     .frame(maxWidth: playerMaxWidth)
     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    .frame(maxWidth: .infinity) // center the capped player on wide screens
+    .frame(maxWidth: .infinity)  // center the capped player on wide screens
     .padding(16)
     .background(Color.KinoPub.background)
   }
-
+  
   /// The scrolling channel list. Each row merges the channel with its now/next programme info.
   private var channelList: some View {
     ScrollView {
       LazyVStack(spacing: 6) {
         ForEach(model.channels) { channel in
-          Button { model.selectedChannel = channel } label: {
-            ChannelEPGRow(channel: channel,
-                          current: model.currentProgram(for: channel, at: now),
-                          next: model.nextProgram(for: channel, at: now),
-                          now: now,
-                          isSelected: channel.id == model.selectedChannel?.id,
-                          isLoadingGuide: model.isLoadingGuide)
+          Button {
+            model.selectedChannel = channel
+          } label: {
+            ChannelEPGRow(
+              channel: channel,
+              current: model.currentProgram(for: channel, at: now),
+              next: model.nextProgram(for: channel, at: now),
+              now: now,
+              isSelected: channel.id == model.selectedChannel?.id,
+              isLoadingGuide: model.isLoadingGuide)
           }
           .buttonStyle(.plain)
           .accessibilityLabel(channel.title)
@@ -151,15 +154,15 @@ struct SportView: View {
         }
       }
       .frame(maxWidth: listMaxWidth)
-      .frame(maxWidth: .infinity) // center the list on very wide screens
+      .frame(maxWidth: .infinity)  // center the list on very wide screens
       .padding(.horizontal, 12)
       .padding(.vertical, 10)
     }
     .background(Color.KinoPub.background)
   }
-
+  
   // MARK: - Loading placeholder (no fullscreen spinner)
-
+  
   /// Mirror the real layout while channels load: a locked black 16:9 player on top and a few
   /// redacted channel rows below — never a fullscreen loader.
   private var loadingPlaceholder: some View {
@@ -179,7 +182,7 @@ struct SportView: View {
       .disabled(true)
     }
   }
-
+  
   /// A redacted stand-in for a `ChannelEPGRow` (logo plate + a few text lines + progress bar).
   private var skeletonRow: some View {
     HStack(spacing: 12) {
@@ -203,7 +206,7 @@ struct SportView: View {
     .padding(.vertical, 10)
     .redacted(reason: .placeholder)
   }
-
+  
   private var lockedPlayerPlaceholder: some View {
     Rectangle()
       .fill(Color.black)
@@ -214,9 +217,9 @@ struct SportView: View {
       .padding(16)
       .background(Color.KinoPub.background)
   }
-
+  
   // MARK: - States
-
+  
   private var emptyState: some View {
     EmptyStateView(systemImage: "sportscourt", title: "No live broadcasts right now".localized)
   }
@@ -225,7 +228,7 @@ struct SportView: View {
 /// Shared channel logo artwork on a black plate.
 struct ChannelArtwork: View {
   let logo: String?
-
+  
   var body: some View {
     ZStack {
       Color.black
@@ -246,10 +249,15 @@ struct ChannelArtwork: View {
 
 struct SportView_Previews: PreviewProvider {
   static var previews: some View {
-    SportView(model: SportModel(itemsService: VideoContentServiceMock(),
-                                epgService: EPGServiceMock(),
-                                authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
-                                errorHandler: ErrorHandler()))
-      .appPreviewEnvironment()
+    SportView(
+      model: SportModel(
+        itemsService: VideoContentServiceMock(),
+        epgService: EPGServiceMock(),
+        authState: AuthState(
+          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock()),
+        errorHandler: ErrorHandler())
+    )
+    .appPreviewEnvironment()
   }
 }

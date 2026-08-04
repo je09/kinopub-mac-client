@@ -16,9 +16,9 @@ import KinoPubBackend
 ///   Стендапы = movie+genre101, 3D = type=3d.
 enum CatalogPreset: String, CaseIterable, Identifiable, Hashable {
   case cartoons, cartoonSeries, anime, standup, threeD
-
+  
   var id: String { rawValue }
-
+  
   var title: String {
     switch self {
     case .cartoons: return "Cartoons"
@@ -28,7 +28,7 @@ enum CatalogPreset: String, CaseIterable, Identifiable, Hashable {
     case .threeD: return "3D"
     }
   }
-
+  
   var systemImage: String {
     switch self {
     case .cartoons: return "teddybear"
@@ -38,7 +38,7 @@ enum CatalogPreset: String, CaseIterable, Identifiable, Hashable {
     case .threeD: return "cube"
     }
   }
-
+  
   var filter: MediaItemsFilter {
     switch self {
     case .cartoons: return MediaItemsFilter(contentType: .movie, genres: [23], countries: [])
@@ -48,7 +48,7 @@ enum CatalogPreset: String, CaseIterable, Identifiable, Hashable {
     case .threeD: return MediaItemsFilter(contentType: .movie, rawType: "3d", genres: [], countries: [])
     }
   }
-
+  
   /// Presets shown in the UI (incl. 3D). Each can be hidden in Profile → Sections like any other.
   static var visible: [CatalogPreset] { allCases }
 }
@@ -67,7 +67,7 @@ enum SidebarItem: Hashable, Identifiable {
   case history
   case downloads
   case profile
-
+  
   var id: String {
     switch self {
     case .search: return "search"
@@ -85,12 +85,12 @@ enum SidebarItem: Hashable, Identifiable {
     case .profile: return "profile"
     }
   }
-
+  
   // Library categories shown in the sidebar, ordered like the website.
   static let libraryCategories: [MediaType] = [
-    .movie, .serial, .concert, .documovie, .docuserial, .tvshow
+    .movie, .serial, .concert, .documovie, .docuserial, .tvshow,
   ]
-
+  
   /// Sections usable without a network connection (everything else is locked offline).
   var isAvailableOffline: Bool {
     switch self {
@@ -98,7 +98,7 @@ enum SidebarItem: Hashable, Identifiable {
     default: return false
     }
   }
-
+  
   var title: String {
     switch self {
     case .search: return "Search"
@@ -116,7 +116,7 @@ enum SidebarItem: Hashable, Identifiable {
     case .profile: return "Profile"
     }
   }
-
+  
   var systemImage: String {
     switch self {
     case .search: return "magnifyingglass"

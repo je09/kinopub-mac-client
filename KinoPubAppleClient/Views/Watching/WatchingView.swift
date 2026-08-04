@@ -19,11 +19,11 @@ struct WatchingView: View {
   // navigation stack so they never share one path binding (which would crash on switch).
   @State private var path: [Route] = []
   @Environment(\.sectionEmbedded) private var sectionEmbedded
-
+  
   init(model: @autoclosure @escaping () -> WatchingModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   var body: some View {
     if sectionEmbedded {
       sectionContent
@@ -33,7 +33,7 @@ struct WatchingView: View {
       }
     }
   }
-
+  
   private var sectionContent: some View {
     // WidthReader gives the responsive grid the real width; the chips are the first scrolling
     // element so the large title collapses on scroll.
@@ -55,7 +55,7 @@ struct WatchingView: View {
     // pull-to-refresh and sub-tab changes drive subsequent fetches.
     .handleError(state: $errorHandler.state)
   }
-
+  
   @ViewBuilder
   private func gridBody(width: CGFloat) -> some View {
     if model.isLoading {
@@ -67,32 +67,38 @@ struct WatchingView: View {
       serialsGrid(width: width)
     }
   }
-
+  
   var episodesTypePicker: some View {
-    FilterChipBar(items: WatchingEpisodesType.allCases.map {
-                    FilterChipItem(id: $0.rawValue, title: $0.title.localized)
-                  },
-                  selection: Binding(
-                    get: { model.episodesType.rawValue },
-                    set: { if let type = WatchingEpisodesType(rawValue: $0) {
-                      model.select(episodesType: type)
-                    } }
-                  ))
+    FilterChipBar(
+      items: WatchingEpisodesType.allCases.map {
+        FilterChipItem(id: $0.rawValue, title: $0.title.localized)
+      },
+      selection: Binding(
+        get: { model.episodesType.rawValue },
+        set: {
+          if let type = WatchingEpisodesType(rawValue: $0) {
+            model.select(episodesType: type)
+          }
+        }
+      ))
   }
-
+  
   // Serials vs movies sub-filter for "Я смотрю".
   var watchlistKindPicker: some View {
-    FilterChipBar(items: WatchlistKind.allCases.map {
-                    FilterChipItem(id: $0.rawValue, title: $0.title.localized)
-                  },
-                  selection: Binding(
-                    get: { model.watchlistKind.rawValue },
-                    set: { if let kind = WatchlistKind(rawValue: $0) {
-                      model.select(watchlistKind: kind)
-                    } }
-                  ))
+    FilterChipBar(
+      items: WatchlistKind.allCases.map {
+        FilterChipItem(id: $0.rawValue, title: $0.title.localized)
+      },
+      selection: Binding(
+        get: { model.watchlistKind.rawValue },
+        set: {
+          if let kind = WatchlistKind(rawValue: $0) {
+            model.select(watchlistKind: kind)
+          }
+        }
+      ))
   }
-
+  
   private func serialsGrid(width: CGFloat) -> some View {
     LazyVGrid(columns: PosterGridLayout.columns(width: width, horizontalPadding: 20), spacing: 24) {
       ForEach(model.serials) { serial in
@@ -105,7 +111,7 @@ struct WatchingView: View {
     .padding(.horizontal, 20)
     .padding(.top, 8)
   }
-
+  
   private func skeletonGrid(width: CGFloat) -> some View {
     LazyVGrid(columns: PosterGridLayout.columns(width: width, horizontalPadding: 20), spacing: 24) {
       ForEach(0..<12, id: \.self) { _ in
@@ -119,7 +125,7 @@ struct WatchingView: View {
 
 struct WatchingSerialView: View {
   var serial: WatchingSerial
-
+  
   var body: some View {
     VStack(alignment: .center) {
       ZStack(alignment: .topTrailing) {
@@ -142,7 +148,7 @@ struct WatchingSerialView: View {
     }
     .background(Color.clear)
   }
-
+  
   var image: some View {
     // Match the common grid card (ContentItemView): 2:3 poster filling the column width.
     Color.KinoPub.skeleton
@@ -160,7 +166,7 @@ struct WatchingSerialView: View {
       }
       .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
-
+  
   func newBadge(count: Int) -> some View {
     Text("+\(count)")
       .font(.system(size: 13.0, weight: .bold))
@@ -175,9 +181,14 @@ struct WatchingSerialView: View {
 
 struct WatchingView_Previews: PreviewProvider {
   static var previews: some View {
-    WatchingView(model: WatchingModel(itemsService: VideoContentServiceMock(),
-                                      authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
-                                      errorHandler: ErrorHandler()))
-      .appPreviewEnvironment()
+    WatchingView(
+      model: WatchingModel(
+        itemsService: VideoContentServiceMock(),
+        authState: AuthState(
+          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock()),
+        errorHandler: ErrorHandler())
+    )
+    .appPreviewEnvironment()
   }
 }

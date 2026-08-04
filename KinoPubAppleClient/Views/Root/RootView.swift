@@ -40,7 +40,7 @@ struct WindowHeroMedia: Equatable {
 
 struct WindowHeroMediaPreferenceKey: PreferenceKey {
   static let defaultValue: WindowHeroMedia? = nil
-
+  
   static func reduce(value: inout WindowHeroMedia?, nextValue: () -> WindowHeroMedia?) {
     value = nextValue() ?? value
   }
@@ -55,14 +55,17 @@ extension EnvironmentValues {
 
 extension View {
   func moreBackButton() -> some View { self }
-
+  
   /// Supplies every app-wide observable dependency for previews. The preview runner evaluates all
   /// providers in one process, so a missing object aborts that process before Canvas can render.
   func appPreviewEnvironment() -> some View {
     environmentObject(NavigationState())
-      .environmentObject(AuthState(authService: AuthorizationServiceMock(),
-                                   accessTokenService: AccessTokenServiceMock(),
-                                   deviceService: DeviceServiceMock()))
+      .environmentObject(
+        AuthState(
+          authService: AuthorizationServiceMock(),
+          accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock())
+      )
       .environmentObject(ErrorHandler())
       .environmentObject(NetworkMonitor())
       .environmentObject(AppearanceSettings())
@@ -72,11 +75,11 @@ extension View {
 
 struct RootView: View {
   @EnvironmentObject private var appearance: AppearanceSettings
-
+  
   var body: some View {
     SidebarView()
       .tint(appearance.accent.color)
-      // Custom drawing uses `Color.accentColor`; keep it synchronized with native control tint.
+    // Custom drawing uses `Color.accentColor`; keep it synchronized with native control tint.
       .accentColor(appearance.accent.color)
   }
 }

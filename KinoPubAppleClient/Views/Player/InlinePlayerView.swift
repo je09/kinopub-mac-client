@@ -12,7 +12,7 @@ import AVFoundation
 
 struct InlinePlayerView: View {
   let url: URL
-
+  
   var body: some View {
     PlatformInlinePlayer(url: url)
       .aspectRatio(16.0 / 9.0, contentMode: .fit)
@@ -23,7 +23,7 @@ struct InlinePlayerView: View {
 
 struct PlatformInlinePlayer: NSViewRepresentable {
   let url: URL
-
+  
   func makeNSView(context: Context) -> AVPlayerView {
     let view = AVPlayerView()
     view.player = AVPlayer(url: url)
@@ -33,9 +33,9 @@ struct PlatformInlinePlayer: NSViewRepresentable {
     view.player?.play()
     return view
   }
-
+  
   func updateNSView(_ view: AVPlayerView, context: Context) {}
-
+  
   static func dismantleNSView(_ view: AVPlayerView, coordinator: ()) {
     view.player?.pause()
     view.player = nil

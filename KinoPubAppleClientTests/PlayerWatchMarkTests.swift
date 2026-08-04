@@ -10,7 +10,7 @@ final class PlayerWatchMarkTests: XCTestCase {
       .appendingPathComponent("PlayerWatchMarkTests-\(UUID().uuidString)", isDirectory: true)
     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: directory) }
-
+    
     let saver = PlayerTestFileSaver(directory: directory)
     let database = DownloadedFilesDatabase<DownloadMeta>(fileSaver: saver)
     let service = ControlledUserActionsService()
@@ -20,19 +20,19 @@ final class PlayerWatchMarkTests: XCTestCase {
       downloadedFilesDatabase: database,
       actionsService: service
     )
-
+    
     manager.saveWatchMark(time: 10)
     await service.waitForCallCount(1)
-
+    
     // These arrive while the first request is blocked. The queue must retain only the newest
     // position for the same media identity and reject the delayed lower value.
     manager.saveWatchMark(time: 20)
     manager.saveWatchMark(time: 15)
     manager.saveWatchMark(time: 30)
-
+    
     await service.releaseFirstCall()
     await service.waitForCallCount(2)
-
+    
     let calls = await service.recordedCalls()
     XCTAssertEqual(calls.map(\.time), [10, 30])
     XCTAssertEqual(calls.map(\.id), [42, 42])
@@ -50,19 +50,19 @@ private struct PlayerTestItem: PlayableItem {
 
 private final class PlayerTestFileSaver: FileSaving {
   let directory: URL
-
+  
   init(directory: URL) {
     self.directory = directory
   }
-
+  
   func saveFile(from sourceURL: URL, to destinationURL: URL) throws {
     try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
   }
-
+  
   func removeFile(at sourceURL: URL) throws {
     try FileManager.default.removeItem(at: sourceURL)
   }
-
+  
   func getDocumentsDirectoryURL(forFilename filename: String) -> URL {
     directory.appendingPathComponent(filename)
   }
@@ -75,10 +75,10 @@ private actor ControlledUserActionsService: UserActionsService {
     let video: Int?
     let season: Int?
   }
-
+  
   private var calls: [Call] = []
   private var firstCallContinuation: CheckedContinuation<Void, Never>?
-
+  
   func markWatch(id: Int, time: Int, video: Int?, season: Int?) async throws {
     calls.append(Call(id: id, time: time, video: video, season: season))
     if calls.count == 1 {
@@ -87,20 +87,20 @@ private actor ControlledUserActionsService: UserActionsService {
       }
     }
   }
-
+  
   func waitForCallCount(_ count: Int) async {
     while calls.count < count {
       await Task.yield()
     }
   }
-
+  
   func releaseFirstCall() {
     firstCallContinuation?.resume()
     firstCallContinuation = nil
   }
-
+  
   func recordedCalls() -> [Call] { calls }
-
+  
   func toggleWatching(id: Int, video: Int?, season: Int?) async throws {}
   func toggleWatchlist(id: Int) async throws {}
   func toggleBookmark(itemId: Int, folderId: Int) async throws {}

@@ -12,31 +12,31 @@ extension APIClientError: @retroactive CustomStringConvertible {
   public var description: String {
     errorDescription ?? "Unknown KinoPub API error"
   }
-
+  
   var isAuthorizationPending: Bool {
     backendError?.errorCode == .authorizationPending
   }
-
+  
   var shouldSlowAuthorizationPolling: Bool {
     backendError?.errorCode == .slowDown
   }
-
+  
   var isActivationCodeExpired: Bool {
     backendError?.errorCode == .expiredToken
   }
-
+  
   var isRetryableTransportError: Bool {
     guard case .networkError(let error) = self, !(error is BackendError) else { return false }
     if error is URLError { return true }
     let nsError = error as NSError
     return nsError.domain == NSURLErrorDomain
   }
-
+  
   private var backendError: BackendError? {
     guard case .networkError(let error) = self else { return nil }
     return error as? BackendError
   }
-
+  
 }
 
 extension Error {

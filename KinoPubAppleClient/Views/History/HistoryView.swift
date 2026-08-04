@@ -15,38 +15,39 @@ struct HistoryView: View {
   @EnvironmentObject var errorHandler: ErrorHandler
   @Environment(\.appContext) var appContext
   @StateObject private var catalog: HistoryModel
-
+  
   init(catalog: @autoclosure @escaping () -> HistoryModel) {
     _catalog = StateObject(wrappedValue: catalog())
   }
-
+  
   var body: some View {
     NavigationStack(path: $navigationState.historyRoutes) {
       historyList
-      .kinoScreen("History".localized)
-      .routeDestinations()
-      .handleError(state: $errorHandler.state)
-      .toast(message: $catalog.toastMessage)
+        .kinoScreen("History".localized)
+        .routeDestinations()
+        .handleError(state: $errorHandler.state)
+        .toast(message: $catalog.toastMessage)
     }
   }
-
+  
   // MARK: - Filter tabs
-
+  
   var filterTabs: some View {
-    FilterChipBar(items: filterItems,
-                  selection: Binding(
-                    get: { catalog.selectedType?.rawValue ?? "all" },
-                    set: { catalog.selectedType = $0 == "all" ? nil : MediaType(rawValue: $0) }
-                  ))
+    FilterChipBar(
+      items: filterItems,
+      selection: Binding(
+        get: { catalog.selectedType?.rawValue ?? "all" },
+        set: { catalog.selectedType = $0 == "all" ? nil : MediaType(rawValue: $0) }
+      ))
   }
-
+  
   private var filterItems: [FilterChipItem] {
     [FilterChipItem(id: "all", title: "All".localized)]
-      + catalog.availableTypes.map { FilterChipItem(id: $0.rawValue, title: $0.title.localized) }
+    + catalog.availableTypes.map { FilterChipItem(id: $0.rawValue, title: $0.title.localized) }
   }
-
+  
   // MARK: - History list
-
+  
   var historyList: some View {
     GeometryReader { geometryProxy in
       if catalog.isLoadingSkeleton {
@@ -58,16 +59,20 @@ struct HistoryView: View {
       }
     }
   }
-
+  
   func skeletonList(width: CGFloat) -> some View {
-    ContentItemsListView(width: width, items: $catalog.items, onLoadMoreContent: { _ in
-    }, onRefresh: {
-      await catalog.refresh()
-    }, navigationLinkProvider: { item in
-      RouteLinkProvider().link(for: item)
-    }, statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) })
+    ContentItemsListView(
+      width: width, items: $catalog.items,
+      onLoadMoreContent: { _ in
+      },
+      onRefresh: {
+        await catalog.refresh()
+      },
+      navigationLinkProvider: { item in
+        RouteLinkProvider().link(for: item)
+      }, statusOverlay: { AnyView(MediaCardStatusBadge(item: $0)) })
   }
-
+  
   func groupedList(width: CGFloat) -> some View {
     ScrollView {
       // Chips scroll with the content so the large title collapses.
@@ -108,7 +113,7 @@ struct HistoryView: View {
       await catalog.refresh()
     }
   }
-
+  
   func sectionHeader(_ title: String) -> some View {
     HStack {
       Text(title)
@@ -122,11 +127,11 @@ struct HistoryView: View {
     .padding(.horizontal, 20)
     .padding(.vertical, 6)
   }
-
+  
   var emptyState: some View {
     EmptyStateView(systemImage: "clock.arrow.circlepath", title: "No history yet".localized)
   }
-
+  
   func gridLayout(width: CGFloat) -> [GridItem] {
     PosterGridLayout.columns(width: width, horizontalPadding: 20)
   }
@@ -139,9 +144,9 @@ struct HistoryView: View {
 /// `ContentItemView` initializer is not public.
 struct HistoryItemCell: View {
   let historyItem: HistoryItem
-
+  
   private var mediaItem: MediaItem { historyItem.item }
-
+  
   var body: some View {
     VStack(alignment: .center, spacing: 8) {
       Color.KinoPub.skeleton
@@ -158,7 +163,7 @@ struct HistoryItemCell: View {
           }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
+      
       VStack(alignment: .center, spacing: 2) {
         Text(mediaItem.localizedTitle)
           .lineLimit(1)
@@ -184,9 +189,14 @@ struct HistoryItemCell: View {
 
 struct HistoryView_Previews: PreviewProvider {
   static var previews: some View {
-    HistoryView(catalog: HistoryModel(itemsService: VideoContentServiceMock(),
-                                      authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
-                                      errorHandler: ErrorHandler()))
-      .appPreviewEnvironment()
+    HistoryView(
+      catalog: HistoryModel(
+        itemsService: VideoContentServiceMock(),
+        authState: AuthState(
+          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock()),
+        errorHandler: ErrorHandler())
+    )
+    .appPreviewEnvironment()
   }
 }

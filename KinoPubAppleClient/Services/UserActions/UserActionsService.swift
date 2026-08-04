@@ -36,41 +36,41 @@ struct UserActionsServiceMock: UserActionsService {
   }
   
   func toggleWatching(id: Int, video: Int?, season: Int?) async throws {
-
+    
   }
-
+  
   func toggleWatchlist(id: Int) async throws {
-
+    
   }
-
+  
   func toggleBookmark(itemId: Int, folderId: Int) async throws {
-
+    
   }
-
+  
   func fetchBookmarks() async throws -> [Bookmark] {
     []
   }
-
+  
   func createBookmarkFolder(title: String) async throws -> Int {
     0
   }
-
+  
   func removeBookmarkFolder(id: Int) async throws {
-
+    
   }
-
+  
   func foldersContaining(itemId: Int) async throws -> [Int] {
     []
   }
-
+  
   func fetchWatchMark(id: Int, video: Int?, season: Int?) async throws -> WatchData {
     WatchData.mock
   }
-
+  
   func vote(id: Int, like: Int) async throws -> VoteData {
     VoteData(voted: like == 1, total: nil, positive: nil, negative: nil, rating: nil)
   }
-
+  
   func clearHistory(forMedia id: Int) async throws {}
   func clearHistory(forSeason id: Int) async throws {}
   func clearHistory(forItem id: Int) async throws {}

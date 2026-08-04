@@ -62,7 +62,7 @@ struct AppContext: AppContextProtocol {
   var actionsService: UserActionsService
   var localProgressStore: LocalWatchProgressStore
   var libraryState: MediaLibraryStore
-
+  
   static let shared: AppContext = {
     let configuration = BundleConfiguration()
     let keychainStorage = KeychainStorageImpl()
@@ -73,12 +73,14 @@ struct AppContext: AppContextProtocol {
     let fileSaver = FileSaver()
     let downloadedFilesDatabase = DownloadedFilesDatabase<DownloadMeta>(fileSaver: fileSaver)
     let downloadsControlDatabase = DownloadsControlDatabase<DownloadMeta>(fileSaver: fileSaver)
-    let downloadManager = DownloadManager<DownloadMeta>(fileSaver: fileSaver,
-                                                        database: downloadedFilesDatabase,
-                                                        controlDatabase: downloadsControlDatabase)
+    let downloadManager = DownloadManager<DownloadMeta>(
+      fileSaver: fileSaver,
+      database: downloadedFilesDatabase,
+      controlDatabase: downloadsControlDatabase)
     let downloadNotificationManager = DownloadNotificationManager()
-    let seasonDownloadManager = SeasonDownloadManager(downloadManager: downloadManager,
-                                                      notifications: downloadNotificationManager)
+    let seasonDownloadManager = SeasonDownloadManager(
+      downloadManager: downloadManager,
+      notifications: downloadNotificationManager)
     // Post a local notification when a download finishes/fails. Episodes that belong to a bulk
     // season download are folded into a single "season downloaded" notification instead.
     downloadManager.onDownloadFinished = { [weak seasonDownloadManager, weak downloadNotificationManager] url, meta in
@@ -93,44 +95,48 @@ struct AppContext: AppContextProtocol {
     // Api Client
     let apiClient = makeApiClient(with: configuration.baseURL, accessTokenService: accessTokenService)
     let actionsService = UserActionsServiceImpl(apiClient: apiClient)
-
+    
     // Single client-side library state: optimistic bookmarks/watchlist/watched + cached bookmark
     // folders + audio-track prefs + a façade over downloads and watch progress — one source of truth.
     let localProgressStore = LocalWatchProgressStore()
-    let libraryState = MediaLibraryStore(downloadManager: downloadManager,
-                                         downloadedFilesDatabase: downloadedFilesDatabase,
-                                         progressStore: localProgressStore,
-                                         actionsService: actionsService)
-
-    let authService = AuthorizationServiceImpl(apiClient: apiClient,
-                                               configuration: configuration,
-                                               accessTokenService: accessTokenService)
-    return AppContext(configuration: configuration,
-                      authService: authService,
-                      contentService: VideoContentServiceImpl(apiClient: apiClient),
-                      epgService: EPGServiceImpl(),
-                      collectionsService: CollectionsServiceImpl(apiClient: apiClient),
-                      deviceService: DeviceServiceImpl(apiClient: apiClient),
-                      accessTokenService: accessTokenService,
-                      userService: UserServiceImpl(apiClient: apiClient),
-                      keychainStorage: keychainStorage,
-                      fileSaver: fileSaver,
-                      downloadManager: downloadManager,
-                      downloadedFilesDatabase: downloadedFilesDatabase,
-                      downloadNotificationManager: downloadNotificationManager,
-                      seasonDownloadManager: seasonDownloadManager,
-                      actionsService: actionsService,
-                      localProgressStore: localProgressStore,
-                      libraryState: libraryState)
+    let libraryState = MediaLibraryStore(
+      downloadManager: downloadManager,
+      downloadedFilesDatabase: downloadedFilesDatabase,
+      progressStore: localProgressStore,
+      actionsService: actionsService)
+    
+    let authService = AuthorizationServiceImpl(
+      apiClient: apiClient,
+      configuration: configuration,
+      accessTokenService: accessTokenService)
+    return AppContext(
+      configuration: configuration,
+      authService: authService,
+      contentService: VideoContentServiceImpl(apiClient: apiClient),
+      epgService: EPGServiceImpl(),
+      collectionsService: CollectionsServiceImpl(apiClient: apiClient),
+      deviceService: DeviceServiceImpl(apiClient: apiClient),
+      accessTokenService: accessTokenService,
+      userService: UserServiceImpl(apiClient: apiClient),
+      keychainStorage: keychainStorage,
+      fileSaver: fileSaver,
+      downloadManager: downloadManager,
+      downloadedFilesDatabase: downloadedFilesDatabase,
+      downloadNotificationManager: downloadNotificationManager,
+      seasonDownloadManager: seasonDownloadManager,
+      actionsService: actionsService,
+      localProgressStore: localProgressStore,
+      libraryState: libraryState)
   }()
   
   // MARK: - API Client building
   
   private static func makeApiClient(with baseURL: String, accessTokenService: AccessTokenService) -> APIClient {
-    APIClient(baseUrl: baseURL,
-              // Never install the cURL/response debug plugins here: they include bearer tokens,
-              // OAuth responses, and account data in unified logs.
-              plugins: [AccessTokenPlugin(accessTokenService: accessTokenService)],
-              cache: ResponseCache())
+    APIClient(
+      baseUrl: baseURL,
+      // Never install the cURL/response debug plugins here: they include bearer tokens,
+      // OAuth responses, and account data in unified logs.
+      plugins: [AccessTokenPlugin(accessTokenService: accessTokenService)],
+      cache: ResponseCache())
   }
 }

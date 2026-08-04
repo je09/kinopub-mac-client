@@ -21,11 +21,13 @@ struct MediaItemHeaderView: View {
   public var mediaItem: MediaItem
   public var linkProvider: NavigationLinkProvider
   public var isSkeleton: Bool
-
-  public init(size: HeaderSize = .standard,
-              mediaItem: MediaItem,
-              linkProvider: NavigationLinkProvider,
-              isSkeleton: Bool) {
+  
+  public init(
+    size: HeaderSize = .standard,
+    mediaItem: MediaItem,
+    linkProvider: NavigationLinkProvider,
+    isSkeleton: Bool
+  ) {
     self.headerSize = size
     self.mediaItem = mediaItem
     self.isSkeleton = isSkeleton
@@ -76,9 +78,10 @@ struct MediaItemHeaderView: View {
 
 struct MediaItemHeaderView_Previews: PreviewProvider {
   static var previews: some View {
-    MediaItemHeaderView(size: .standard,
-                        mediaItem: MediaItem.mock(),
-                        linkProvider: RouteLinkProvider(),
-                        isSkeleton: true)
+    MediaItemHeaderView(
+      size: .standard,
+      mediaItem: MediaItem.mock(),
+      linkProvider: RouteLinkProvider(),
+      isSkeleton: true)
   }
 }

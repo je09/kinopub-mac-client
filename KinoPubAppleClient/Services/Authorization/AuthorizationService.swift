@@ -24,15 +24,15 @@ protocol AuthorizationServiceProvider {
 }
 
 struct AuthorizationServiceMock: AuthorizationService {
-
+  
   func fetchDeviceCode() async throws -> VerificationResponse {
     throw MockError.mock
   }
-
+  
   func fetchToken(by verification: VerificationResponse) async throws {
     throw MockError.mock
   }
-
+  
   func refreshToken() async throws {
     throw MockError.mock
   }
@@ -40,5 +40,5 @@ struct AuthorizationServiceMock: AuthorizationService {
   func logout() {
     
   }
-
+  
 }

@@ -11,24 +11,26 @@ import KinoPubBackend
 import KinoPubUI
 
 struct FilterView: View {
-
+  
   @Environment(\.dismiss) private var dismiss
   @StateObject private var model: FilterModel
-
+  
   private let onApply: (MediaItemsFilter) -> Void
   private let onClear: () -> Void
-
+  
   private let yearRange = Array(1912...2026)
   private let ratingRange = Array(0...10)
-
-  init(model: @autoclosure @escaping () -> FilterModel,
-       onApply: @escaping (MediaItemsFilter) -> Void = { _ in },
-       onClear: @escaping () -> Void = {}) {
+  
+  init(
+    model: @autoclosure @escaping () -> FilterModel,
+    onApply: @escaping (MediaItemsFilter) -> Void = { _ in },
+    onClear: @escaping () -> Void = {}
+  ) {
     _model = StateObject(wrappedValue: model())
     self.onApply = onApply
     self.onClear = onClear
   }
-
+  
   var body: some View {
     NavigationStack {
       Form {
@@ -61,9 +63,9 @@ struct FilterView: View {
     }
     .presentationDetents([.medium, .large])
   }
-
+  
   // MARK: - Genre / Country
-
+  
   var genreSection: some View {
     Section {
       Picker("Genre".localized, selection: $model.selectedGenre) {
@@ -75,7 +77,7 @@ struct FilterView: View {
       .pickerStyle(.menu)
     }
   }
-
+  
   @ViewBuilder
   var countrySection: some View {
     if !model.countries.isEmpty {
@@ -90,9 +92,9 @@ struct FilterView: View {
       }
     }
   }
-
+  
   // MARK: - Year range
-
+  
   var yearSection: some View {
     Section {
       Toggle("Release Year".localized, isOn: $model.yearFilterEnabled)
@@ -102,9 +104,9 @@ struct FilterView: View {
       }
     }
   }
-
+  
   // MARK: - Ratings
-
+  
   var kinopoiskRatingSection: some View {
     Section {
       Toggle("Kinopoisk Rating".localized, isOn: $model.kinopoiskFilterEnabled)
@@ -113,7 +115,7 @@ struct FilterView: View {
       }
     }
   }
-
+  
   var imdbRatingSection: some View {
     Section {
       Toggle("IMDB Rating".localized, isOn: $model.imdbFilterEnabled)
@@ -122,9 +124,9 @@ struct FilterView: View {
       }
     }
   }
-
+  
   // MARK: - Quality checkboxes
-
+  
   var qualitySection: some View {
     Section {
       Toggle("Want HD".localized, isOn: $model.wantHD)
@@ -133,9 +135,9 @@ struct FilterView: View {
       Toggle("Want AC3".localized, isOn: $model.wantAC3)
     }
   }
-
+  
   // MARK: - Helpers
-
+  
   func yearPicker(title: String, selection: Binding<Int>) -> some View {
     Picker(title, selection: selection) {
       ForEach(yearRange, id: \.self) { year in
@@ -144,7 +146,7 @@ struct FilterView: View {
     }
     .pickerStyle(.menu)
   }
-
+  
   func ratingSlider(title: String, value: Binding<Double>) -> some View {
     VStack(alignment: .leading, spacing: 6) {
       HStack {
@@ -159,4 +161,3 @@ struct FilterView: View {
     }
   }
 }
-

@@ -14,20 +14,20 @@ import Combine
 
 @MainActor
 class HistoryModel: ObservableObject {
-
+  
   private var authState: AuthState
   private var errorHandler: ErrorHandler
   private var contentService: VideoContentService
   private var bag = Set<AnyCancellable>()
   private var loadGeneration = 0
   private var pagesInFlight = Set<String>()
-
+  
   @Published public var items: [MediaItem] = MediaItem.skeletonMock()
   @Published public var historyItems: [HistoryItem] = []
   @Published public var pagination: Pagination?
   @Published public var selectedType: MediaType?
   @Published public var toastMessage: ToastMessage?
-
+  
   init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
     self.contentService = itemsService
     self.authState = authState
@@ -35,32 +35,32 @@ class HistoryModel: ObservableObject {
     // Load on creation, not via the view's `.task` (unreliable in a compact split view / nested stack).
     Task { await fetchItems() }
   }
-
+  
   // MARK: - Derived state (filtering + day grouping)
-
+  
   /// Whether the screen is still showing the initial skeleton placeholders.
   var isLoadingSkeleton: Bool {
     items.first(where: { $0.skeleton ?? false }) != nil
   }
-
+  
   /// Media types present in the loaded history, in `MediaType.allCases` order. Used to build the filter pills.
   var availableTypes: [MediaType] {
     let present = Set(historyItems.compactMap { MediaType(rawValue: $0.item.type) })
     return MediaType.allCases.filter { present.contains($0) }
   }
-
+  
   /// History items after applying the selected type filter, preserving recency order.
   private var filteredHistoryItems: [HistoryItem] {
     guard let selectedType else { return historyItems }
     return historyItems.filter { $0.item.type == selectedType.rawValue }
   }
-
+  
   /// Filtered history grouped by calendar day, newest day first, recency preserved within a day.
   var groupedSections: [HistorySection] {
     let calendar = Calendar.current
     var order: [Date] = []
     var buckets: [Date: [HistoryItem]] = [:]
-
+    
     for historyItem in filteredHistoryItems {
       let timestamp = historyItem.lastSeen ?? historyItem.time ?? 0
       let day = calendar.startOfDay(for: Date(timeIntervalSince1970: timestamp))
@@ -70,26 +70,27 @@ class HistoryModel: ObservableObject {
       }
       buckets[day]?.append(historyItem)
     }
-
-    return order
+    
+    return
+    order
       .sorted(by: >)
       .map { day in
         HistorySection(day: day, items: buckets[day] ?? [])
       }
   }
-
+  
   func fetchItems() async {
     guard authState.userState == .authorized else {
       subscribeForAuth()
       return
     }
-
+    
     let generation = loadGeneration
     let page = pagination.map { $0.current + 1 }
     let pageKey = "\(generation):\(page ?? 1)"
     guard pagesInFlight.insert(pageKey).inserted else { return }
     defer { pagesInFlight.remove(pageKey) }
-
+    
     do {
       let data = try await contentService.fetchHistory(page: page)
       guard generation == loadGeneration else { return }
@@ -100,7 +101,7 @@ class HistoryModel: ObservableObject {
       errorHandler.setError(error)
     }
   }
-
+  
   private func handleData(_ data: HistoryData) {
     let newItems = data.history.map { $0.item }
     if isLoadingSkeleton {
@@ -112,12 +113,12 @@ class HistoryModel: ObservableObject {
     }
     pagination = data.pagination
   }
-
+  
   func loadMoreContent(after item: MediaItem) {
     guard let pagination = pagination else {
       return
     }
-
+    
     if self.items.last == item, pagination.current < pagination.total {
       Logger.app.debug("load more history after item: \(item.id)")
       Task {
@@ -125,7 +126,7 @@ class HistoryModel: ObservableObject {
       }
     }
   }
-
+  
   /// Remove a title from watch history (kinoapi `clear-for-media`), optimistically dropping it from
   /// the list and re-syncing on failure.
   func removeFromHistory(_ historyItem: HistoryItem) {
@@ -148,7 +149,7 @@ class HistoryModel: ObservableObject {
       }
     }
   }
-
+  
   @Sendable @MainActor
   func refresh() async {
     loadGeneration &+= 1
@@ -160,7 +161,7 @@ class HistoryModel: ObservableObject {
     Logger.app.debug("refetch history")
     await fetchItems()
   }
-
+  
   private func subscribeForAuth() {
     authState.$userState.filter({ $0 == .authorized }).first().sink { [weak self] _ in
       Task {
@@ -168,16 +169,16 @@ class HistoryModel: ObservableObject {
       }
     }.store(in: &bag)
   }
-
+  
 }
 
 /// A single day's worth of history entries, used to render a grouped section.
 struct HistorySection: Identifiable {
   let day: Date
   let items: [HistoryItem]
-
+  
   var id: Date { day }
-
+  
   /// Localized header: "Today"/"Yesterday" when applicable, otherwise a medium localized date.
   var title: String {
     let calendar = Calendar.current
@@ -189,7 +190,7 @@ struct HistorySection: Identifiable {
     }
     return HistorySection.dateFormatter.string(from: day)
   }
-
+  
   private static let dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateStyle = .medium

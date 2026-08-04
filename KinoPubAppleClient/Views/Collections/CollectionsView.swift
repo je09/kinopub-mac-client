@@ -16,11 +16,11 @@ struct CollectionsView: View {
   @Environment(\.appContext) var appContext
   @StateObject private var model: CollectionsModel
   @Environment(\.sectionEmbedded) private var sectionEmbedded
-
+  
   init(model: @autoclosure @escaping () -> CollectionsModel) {
     _model = StateObject(wrappedValue: model())
   }
-
+  
   var body: some View {
     if sectionEmbedded {
       sectionContent
@@ -30,7 +30,7 @@ struct CollectionsView: View {
       }
     }
   }
-
+  
   private var sectionContent: some View {
     content
       .kinoScreen("Collections".localized)
@@ -40,7 +40,7 @@ struct CollectionsView: View {
       .refreshable { await model.refresh() }
       .handleError(state: $errorHandler.state)
   }
-
+  
   @ViewBuilder
   private var content: some View {
     ScrollView {
@@ -54,9 +54,9 @@ struct CollectionsView: View {
     }
     .background(Color.KinoPub.background)
   }
-
+  
   // MARK: - Sort
-
+  
   // Icon-only toolbar menu, matching the sort control used elsewhere (bookmarks, collection detail).
   private var sortMenu: some View {
     Menu {
@@ -69,21 +69,25 @@ struct CollectionsView: View {
       Image(systemName: "arrow.up.arrow.down")
     }
   }
-
+  
   /// One horizontal shelf per collection (title → opens the collection), mirroring the Bookmarks list.
   private var collectionsList: some View {
     LazyVStack(alignment: .leading, spacing: 28) {
       ForEach(model.collections) { collection in
-        MediaShelf(title: collection.title,
-                   headerValue: Route.collection(collection)) {
+        MediaShelf(
+          title: collection.title,
+          headerValue: Route.collection(collection)
+        ) {
           if let items = model.collectionItems[collection.id] {
             let shown = Array(items.prefix(10))
             ForEach(shown) { item in
               NavigationLink(value: Route.details(item)) {
-                PosterCard(imageURL: item.posters.medium,
-                           title: item.localizedTitle,
-                           imdbRating: item.imdbRating,
-                           kinopoiskRating: item.kinopoiskRating)
+                PosterCard(
+                  imageURL: item.posters.medium,
+                  title: item.localizedTitle,
+                  imdbRating: item.imdbRating,
+                  kinopoiskRating: item.kinopoiskRating
+                )
                 .overlay(alignment: .topTrailing) { MediaCardStatusBadge(item: item) }
               }
               .buttonStyle(.plain)
@@ -106,7 +110,7 @@ struct CollectionsView: View {
     }
     .padding(.vertical, 16)
   }
-
+  
   /// "+N more" tile shown at the end of a collection shelf; matches the poster tile's footprint.
   private func moreCard(_ count: Int) -> some View {
     VStack(alignment: .leading, spacing: 6) {
@@ -134,7 +138,7 @@ struct CollectionsView: View {
     }
     .frame(width: 140)
   }
-
+  
   /// Skeleton shelves shown while the collection list loads (matches the real shelf layout).
   private var placeholderList: some View {
     LazyVStack(alignment: .leading, spacing: 28) {
@@ -146,9 +150,9 @@ struct CollectionsView: View {
     }
     .padding(.vertical, 16)
   }
-
+  
   // MARK: - States
-
+  
   private var emptyState: some View {
     EmptyStateView(systemImage: "rectangle.stack", title: "No collections yet".localized)
   }
@@ -157,11 +161,11 @@ struct CollectionsView: View {
 /// A poster tile for a single collection.
 struct CollectionCard: View {
   let collection: Collection
-
+  
   private var imageURL: String? {
     collection.posters?.big ?? collection.posters?.medium ?? collection.posters?.small
   }
-
+  
   var body: some View {
     Color.KinoPub.skeleton
       .aspectRatio(3.0 / 4.0, contentMode: .fit)
@@ -178,8 +182,9 @@ struct CollectionCard: View {
       }
       .overlay(alignment: .bottom) {
         // Stronger scrim so the title stays legible over busy poster art.
-        LinearGradient(colors: [.clear, .black.opacity(0.5), .black.opacity(0.97)],
-                       startPoint: .top, endPoint: .bottom)
+        LinearGradient(
+          colors: [.clear, .black.opacity(0.5), .black.opacity(0.97)],
+          startPoint: .top, endPoint: .bottom)
       }
       .overlay(alignment: .bottomLeading) {
         Text(collection.title)
@@ -200,9 +205,14 @@ struct CollectionCard: View {
 
 struct CollectionsView_Previews: PreviewProvider {
   static var previews: some View {
-    CollectionsView(model: CollectionsModel(collectionsService: CollectionsServiceMock(),
-                                            authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
-                                            errorHandler: ErrorHandler()))
-      .appPreviewEnvironment()
+    CollectionsView(
+      model: CollectionsModel(
+        collectionsService: CollectionsServiceMock(),
+        authState: AuthState(
+          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock()),
+        errorHandler: ErrorHandler())
+    )
+    .appPreviewEnvironment()
   }
 }

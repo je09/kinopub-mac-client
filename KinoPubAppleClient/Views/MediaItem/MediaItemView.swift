@@ -12,14 +12,14 @@ import KinoPubBackend
 import KinoPubKit
 
 struct MediaItemView: View {
-
+  
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject private var navigationState: NavigationState
   @EnvironmentObject private var libraryState: MediaLibraryStore
   @Environment(\.appContext) private var appContext
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @StateObject private var itemModel: MediaItemModel
-
+  
   @State private var plotExpanded: Bool = false
   @State private var selectedSeasonNumber: Int?
   @State private var showComments: Bool = false
@@ -35,25 +35,27 @@ struct MediaItemView: View {
   /// Person picked in the Cast & Crew modal — pushed onto this page's stack after the modal closes.
   @State private var pendingPersonRoute: Route?
   @State private var showPerson: Bool = false
-
+  
   init(model: @autoclosure @escaping () -> MediaItemModel) {
     _itemModel = StateObject(wrappedValue: model())
   }
-
+  
   private var mediaItem: MediaItem { itemModel.mediaItem }
   private var isSkeleton: Bool { !itemModel.itemLoaded }
-
+  
   /// The macOS sidebar lets facets deep-link into a catalog section.
   private var usesSidebarSections: Bool {
     return true
   }
-
+  
   /// A tappable facet (genre/country/year). On wide layouts it selects the matching Library
   /// section in the sidebar and pre-filters it; on compact it pushes a filtered catalog.
   @ViewBuilder
-  private func sectionFacet<Label: View>(filter: MediaItemsFilter,
-                                         route: (any Hashable)?,
-                                         @ViewBuilder label: () -> Label) -> some View {
+  private func sectionFacet<Label: View>(
+    filter: MediaItemsFilter,
+    route: (any Hashable)?,
+    @ViewBuilder label: () -> Label
+  ) -> some View {
     if usesSidebarSections {
       Button {
         navigationState.pendingCategoryFilter = filter
@@ -66,7 +68,7 @@ struct MediaItemView: View {
       facetLink(route, label: label)
     }
   }
-
+  
   /// Wraps `label` in a NavigationLink to `route` when one exists; otherwise
   /// renders the label as-is. Lets tappable metadata degrade gracefully on
   /// link providers that don't support facet routes.
@@ -81,7 +83,7 @@ struct MediaItemView: View {
       label()
     }
   }
-
+  
   var body: some View {
     ScrollView(.vertical) {
       VStack(alignment: .leading, spacing: 28) {
@@ -114,16 +116,20 @@ struct MediaItemView: View {
     .sheet(isPresented: $showComments) {
       CommentsView(mediaId: mediaItem.id)
     }
-    .sheet(isPresented: $showCastCrew, onDismiss: {
-      // The modal closed; if a person was picked, open their section on this page.
-      if pendingPersonRoute != nil { showPerson = true }
-    }) {
-      CastCrewView(directors: itemModel.directorNames,
-                   actors: itemModel.castNames,
-                   staff: itemModel.staff,
-                   onSelect: { name, field in
-                     pendingPersonRoute = .personSearch(name, field, name)
-                   })
+    .sheet(
+      isPresented: $showCastCrew,
+      onDismiss: {
+        // The modal closed; if a person was picked, open their section on this page.
+        if pendingPersonRoute != nil { showPerson = true }
+      }
+    ) {
+      CastCrewView(
+        directors: itemModel.directorNames,
+        actors: itemModel.castNames,
+        staff: itemModel.staff,
+        onSelect: { name, field in
+          pendingPersonRoute = .personSearch(name, field, name)
+        })
     }
     // Programmatic push onto whichever navigation stack hosts this page.
     .navigationDestination(isPresented: $showPerson) {
@@ -168,41 +174,44 @@ struct MediaItemView: View {
     }
     .handleError(state: $errorHandler.state)
   }
-
+  
   // MARK: - Hero
-
+  
   private let heroHeight: CGFloat = 552
-
+  
   private var windowBackdropMedia: WindowHeroMedia? {
     let poster = mediaItem.posters.wide ?? mediaItem.posters.big
     let trailerURL = mediaItem.trailer?.url
     let trailer = (!reduceMotion && !(trailerURL?.isEmpty ?? true)) ? trailerURL : nil
     guard !poster.isEmpty || trailer != nil else { return nil }
-    return WindowHeroMedia(posterURL: poster,
-                           videoURL: trailer,
-                           revealVideo: trailer != nil,
-                           height: heroHeight,
-                           strongTextScrim: true)
+    return WindowHeroMedia(
+      posterURL: poster,
+      videoURL: trailer,
+      revealVideo: trailer != nil,
+      height: heroHeight,
+      strongTextScrim: true)
   }
-
+  
   private var hero: some View {
-    HeroBackdrop(imageURL: nil,
-                 height: heroHeight,
-                 tallBlur: true,
-                 blurReduction: 50,
-                 bottomScrim: false,
-                 transparentBase: true) {
+    HeroBackdrop(
+      imageURL: nil,
+      height: heroHeight,
+      tallBlur: true,
+      blurReduction: 50,
+      bottomScrim: false,
+      transparentBase: true
+    ) {
       VStack(alignment: .leading, spacing: 10) {
         Text(mediaItem.localizedTitle)
           .font(.system(size: 34, weight: .bold))
           .foregroundStyle(.white)
           .skeleton(enabled: isSkeleton, size: CGSize(width: 240, height: 36))
-
+        
         Text(genreLine)
           .font(.system(size: 15, weight: .semibold))
           .foregroundStyle(.white)
           .skeleton(enabled: isSkeleton, size: CGSize(width: 180, height: 16))
-
+        
         if !mediaItem.plot.isEmpty {
           VStack(alignment: .leading, spacing: 4) {
             Text(mediaItem.plot)
@@ -218,27 +227,32 @@ struct MediaItemView: View {
             .buttonStyle(.plain)
           }
         }
-
+        
         MetadataRow(items: heroBadges, textColor: .white.opacity(0.82))
-
+        
         // kino.pub / КП / IMDb badges in the hero (no background pill here).
         // Ratings + the user's like/dislike, side by side — wraps to two rows on narrow screens.
-        let ratings = ContentItemRatingView(imdbScore: mediaItem.imdbRating,
-                                            kinopoiskScore: mediaItem.kinopoiskRating,
-                                            kinopubScore: mediaItem.ratingPercentage > 0 ? mediaItem.ratingPercentage / 10.0 : nil,
-                                            showsBackground: false)
+        let ratings = ContentItemRatingView(
+          imdbScore: mediaItem.imdbRating,
+          kinopoiskScore: mediaItem.kinopoiskRating,
+          kinopubScore: mediaItem.ratingPercentage > 0 ? mediaItem.ratingPercentage / 10.0 : nil,
+          showsBackground: false)
         ViewThatFits(in: .horizontal) {
-          HStack(spacing: 12) { ratings; voteControl }
-          VStack(alignment: .leading, spacing: 8) { ratings; voteControl }
+          HStack(spacing: 12) {
+            ratings; voteControl
+          }
+          VStack(alignment: .leading, spacing: 8) {
+            ratings; voteControl
+          }
         }
-
+        
         heroActions
           .padding(.top, 6)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
-
+  
   private var genreLine: String {
     let typeTitle = (MediaType(rawValue: mediaItem.type)?.title) ?? ""
     var parts: [String] = []
@@ -246,7 +260,7 @@ struct MediaItemView: View {
     parts.append(contentsOf: mediaItem.genres.compactMap { $0.title })
     return parts.joined(separator: " · ")
   }
-
+  
   private var heroBadges: [MetadataRow.Item] {
     var items: [MetadataRow.Item] = []
     if mediaItem.year > 0 {
@@ -271,7 +285,7 @@ struct MediaItemView: View {
     }
     return items
   }
-
+  
   /// Best-effort quality badge. `quality` carries the max vertical resolution
   /// (e.g. 2160, 1080). We only show a badge when the value is meaningful.
   private var qualityBadgeText: String? {
@@ -281,9 +295,9 @@ struct MediaItemView: View {
     default: return nil
     }
   }
-
+  
   // MARK: - Hero actions
-
+  
   @ViewBuilder
   private var heroActions: some View {
     if usesSidebarSections {
@@ -303,7 +317,7 @@ struct MediaItemView: View {
       }
     }
   }
-
+  
   @ViewBuilder
   private var secondaryActions: some View {
     // Watchlist ("Буду смотреть") is a serials-only feature on kino.pub; for movies use Bookmarks.
@@ -321,7 +335,7 @@ struct MediaItemView: View {
     // Trailer button removed from the hero — the Trailers shelf below already exposes it.
     // Like/dislike moved next to the ratings (see `voteControl`).
   }
-
+  
   /// 3D view-mode picker for 3D titles (Side-by-Side / Over-Under × 2D / Anaglyph). Writes the
   /// shared preference the player reads — on a flat screen true stereo can't be shown, so it's either
   /// one eye as 2D or a red-cyan anaglyph (for glasses).
@@ -329,7 +343,9 @@ struct MediaItemView: View {
   private var threeDModeButton: some View {
     Menu {
       ForEach(ThreeDMode.allCases) { mode in
-        Button { threeDModeRaw = mode.rawValue } label: {
+        Button {
+          threeDModeRaw = mode.rawValue
+        } label: {
           if threeDModeRaw == mode.rawValue {
             Label(mode.title.localized, systemImage: "checkmark")
           } else {
@@ -346,16 +362,18 @@ struct MediaItemView: View {
     .fixedSize()
     .accessibilityLabel("3D mode")
   }
-
+  
   private var watchlistButton: some View {
     // Optimistic client state first, server flag as the fallback.
     let inWatchlist = libraryState.inWatchlist(itemId: mediaItem.id) ?? (mediaItem.inWatchlist == true)
-    return circleIconButton(inWatchlist ? "checkmark" : "plus",
-                            accessibility: inWatchlist ? "Remove from Watchlist" : "Add to Watchlist") {
+    return circleIconButton(
+      inWatchlist ? "checkmark" : "plus",
+      accessibility: inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"
+    ) {
       itemModel.toggleWatchlist()
     }
   }
-
+  
   /// Like / dislike pills with their counts, shown next to the ratings. kino.pub voting is one-time.
   private var voteControl: some View {
     HStack(spacing: 8) {
@@ -363,7 +381,7 @@ struct MediaItemView: View {
       voteButton(up: false)
     }
   }
-
+  
   private func voteButton(up: Bool) -> some View {
     let active = itemModel.myVote == (up ? .up : .down)
     let count = up ? itemModel.likeCount : itemModel.dislikeCount
@@ -386,21 +404,24 @@ struct MediaItemView: View {
       .foregroundStyle(active ? activeForeground : Color.KinoPub.text)
       .padding(.horizontal, 11)
       .padding(.vertical, 6)
-      .background(Capsule(style: .continuous)
-        .fill(active ? activeColor : Color.KinoPub.selectionBackground))
+      .background(
+        Capsule(style: .continuous)
+          .fill(active ? activeColor : Color.KinoPub.selectionBackground))
     }
     .buttonStyle(.plain)
     .accessibilityLabel(up ? "Like" : "Dislike")
   }
-
+  
   private var watchedButton: some View {
     let watched = itemModel.isMovieWatched
-    return circleIconButton(watched ? "eye.fill" : "eye",
-                            accessibility: watched ? "Mark as Unwatched" : "Mark as Watched") {
+    return circleIconButton(
+      watched ? "eye.fill" : "eye",
+      accessibility: watched ? "Mark as Unwatched" : "Mark as Watched"
+    ) {
       itemModel.toggleWatched()
     }
   }
-
+  
   @ViewBuilder
   private var bookmarkMenu: some View {
     Menu {
@@ -437,7 +458,7 @@ struct MediaItemView: View {
     .accessibilityLabel("Add to Bookmark")
     .accessibilityIdentifier(AccessibilityID.bookmarkPicker)
   }
-
+  
   private var downloadButton: some View {
     Menu {
       downloadMenu
@@ -450,7 +471,7 @@ struct MediaItemView: View {
     .fixedSize()
     .accessibilityLabel("Download")
   }
-
+  
   @ViewBuilder
   private var playButton: some View {
     let title = (hasResume ? "Continue" : (mediaItem.isSeries ? "Watch" : "Play")).localized
@@ -468,15 +489,15 @@ struct MediaItemView: View {
       .buttonStyle(.plain)
     }
   }
-
+  
   // MARK: - Continue ("Netflix-style") resume logic — shared with Home via MediaItem.continueEpisode()
-
+  
   /// The series episode to continue (shared logic with the Home shelf). Falls back to the local
   /// store so a just-watched episode resumes instantly, before the server refetch lands.
   private var continueTarget: (season: Season, episode: Episode)? {
     mediaItem.continueEpisode() ?? itemModel.localSeriesContinue()
   }
-
+  
   /// Whether the play button should read "Continue" rather than "Play"/"Watch".
   private var hasResume: Bool {
     if mediaItem.isSeries { return continueTarget != nil }
@@ -484,7 +505,7 @@ struct MediaItemView: View {
     let localTime = itemModel.localResumeSeconds(season: nil, episode: mediaItem.videos?.first?.number)
     return serverTime > 0 || localTime > 0
   }
-
+  
   /// Episode to start for a series: the continue target if any, else the first episode.
   private var seriesPlayEpisode: Episode? {
     if let target = continueTarget {
@@ -492,7 +513,7 @@ struct MediaItemView: View {
     }
     return firstPlayableEpisode
   }
-
+  
   private func playLabel(_ title: String, subtitle: String? = nil, fullWidth: Bool = false) -> some View {
     HStack(spacing: 10) {
       Image(systemName: "play.fill")
@@ -511,21 +532,23 @@ struct MediaItemView: View {
     .frame(maxWidth: fullWidth ? .infinity : nil)
     .background(Capsule().fill(Color.accentColor))
   }
-
+  
   /// Resume detail shown under "Continue": "S{n} · E{n} · {time}" for series, just time for movies.
   private var resumeSubtitle: String? {
     guard hasResume else { return nil }
     if mediaItem.isSeries, let target = continueTarget {
       let base = "S\(target.season.number) · E\(target.episode.number)"
-      let time = max(target.episode.watching.time,
-                     itemModel.localResumeSeconds(season: target.season.number, episode: target.episode.number))
+      let time = max(
+        target.episode.watching.time,
+        itemModel.localResumeSeconds(season: target.season.number, episode: target.episode.number))
       return time > 0 ? "\(base) · \(Self.resumeTime(time))" : base
     }
-    let time = max(mediaItem.videos?.first?.watching.time ?? 0,
-                   itemModel.localResumeSeconds(season: nil, episode: mediaItem.videos?.first?.number))
+    let time = max(
+      mediaItem.videos?.first?.watching.time ?? 0,
+      itemModel.localResumeSeconds(season: nil, episode: mediaItem.videos?.first?.number))
     return time > 0 ? Self.resumeTime(time) : nil
   }
-
+  
   private static func resumeTime(_ seconds: Int) -> String {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = seconds >= 3600 ? [.hour, .minute, .second] : [.minute, .second]
@@ -533,7 +556,7 @@ struct MediaItemView: View {
     formatter.zeroFormattingBehavior = .pad
     return formatter.string(from: TimeInterval(seconds)) ?? ""
   }
-
+  
   private func circleIcon(_ systemName: String) -> some View {
     Image(systemName: systemName)
       .font(.system(size: 18, weight: .semibold))
@@ -541,7 +564,7 @@ struct MediaItemView: View {
       .frame(width: 50, height: 50)
       .background(Circle().fill(Color.white.opacity(0.18)))
   }
-
+  
   /// Download icon glyph for a movie's download button, reflecting the client library state.
   private var movieDownloadGlyph: String {
     guard !mediaItem.isSeries else { return "arrow.down.to.line" }
@@ -551,7 +574,7 @@ struct MediaItemView: View {
     case .none: return "arrow.down.to.line"
     }
   }
-
+  
   /// Small badge on an episode card showing whether it's downloaded or downloading.
   @ViewBuilder
   private func downloadBadge(itemId: Int, video: Int?, season: Int?) -> some View {
@@ -569,19 +592,21 @@ struct MediaItemView: View {
       EmptyView()
     }
   }
-
-  private func circleIconButton(_ systemName: String,
-                                accessibility: String,
-                                action: @escaping () -> Void) -> some View {
+  
+  private func circleIconButton(
+    _ systemName: String,
+    accessibility: String,
+    action: @escaping () -> Void
+  ) -> some View {
     Button(action: action) {
       circleIcon(systemName)
     }
     .buttonStyle(.plain)
     .accessibilityLabel(accessibility)
   }
-
+  
   // MARK: - Download menu (Season ▸ Episode ▸ Quality)
-
+  
   @ViewBuilder
   private var downloadMenu: some View {
     if mediaItem.isSeries, let seasons = mediaItem.seasons, !seasons.isEmpty {
@@ -596,17 +621,23 @@ struct MediaItemView: View {
     } else {
       switch libraryState.downloadStatus(itemId: mediaItem.id, video: nil, season: nil) {
       case .downloaded:
-        Button { } label: { Label("Downloaded".localized, systemImage: "checkmark.circle.fill") }
-          .disabled(true)
+        Button {
+        } label: {
+          Label("Downloaded".localized, systemImage: "checkmark.circle.fill")
+        }
+        .disabled(true)
       case .downloading:
-        Button { } label: { Label("Downloading…".localized, systemImage: "arrow.down.circle") }
-          .disabled(true)
+        Button {
+        } label: {
+          Label("Downloading…".localized, systemImage: "arrow.down.circle")
+        }
+        .disabled(true)
       case .none:
         qualityButtons(for: movieDownloadable)
       }
     }
   }
-
+  
   /// Per-episode entry in the season download menu. Shows the episode name (not just "S1E1") and
   /// disables itself when that episode is already downloaded or downloading.
   @ViewBuilder
@@ -614,21 +645,27 @@ struct MediaItemView: View {
     let title = episodeMenuTitle(episode, in: season)
     switch libraryState.downloadStatus(itemId: mediaItem.id, video: episode.number, season: season.number) {
     case .downloaded:
-      Button { } label: { Label(title, systemImage: "checkmark.circle.fill") }.disabled(true)
+      Button {
+      } label: {
+        Label(title, systemImage: "checkmark.circle.fill")
+      }.disabled(true)
     case .downloading:
-      Button { } label: { Label(title, systemImage: "arrow.down.circle") }.disabled(true)
+      Button {
+      } label: {
+        Label(title, systemImage: "arrow.down.circle")
+      }.disabled(true)
     case .none:
       Menu(title) { qualityButtons(for: episodeDownloadable(episode, in: season)) }
     }
   }
-
+  
   /// "S1E1 · Episode name" (or just "S1E1" when the episode has no distinct title).
   private func episodeMenuTitle(_ episode: Episode, in season: Season) -> String {
     let code = "S\(season.number)E\(episode.number)"
     let name = episode.title.trimmingCharacters(in: .whitespaces)
     return name.isEmpty ? code : "\(code) · \(name)"
   }
-
+  
   /// "Download whole season" entry: one tap per quality (plus a best-available option) that queues
   /// every episode of the season at once.
   @ViewBuilder
@@ -647,21 +684,23 @@ struct MediaItemView: View {
       Label("Download whole season".localized, systemImage: "square.and.arrow.down.on.square")
     }
   }
-
+  
   private var movieDownloadable: DownloadableMediaItem {
-    DownloadableMediaItem(name: mediaItem.title,
-                          files: mediaItem.files,
-                          mediaItem: mediaItem,
-                          watchingMetadata: WatchingMetadata(id: mediaItem.id, video: nil, season: nil))
+    DownloadableMediaItem(
+      name: mediaItem.title,
+      files: mediaItem.files,
+      mediaItem: mediaItem,
+      watchingMetadata: WatchingMetadata(id: mediaItem.id, video: nil, season: nil))
   }
-
+  
   private func episodeDownloadable(_ episode: Episode, in season: Season) -> DownloadableMediaItem {
-    DownloadableMediaItem(name: "S\(season.number)E\(episode.number)",
-                          files: episode.files,
-                          mediaItem: mediaItem,
-                          watchingMetadata: WatchingMetadata(id: episode.id, video: episode.number, season: season.number))
+    DownloadableMediaItem(
+      name: "S\(season.number)E\(episode.number)",
+      files: episode.files,
+      mediaItem: mediaItem,
+      watchingMetadata: WatchingMetadata(id: episode.id, video: episode.number, season: season.number))
   }
-
+  
   @ViewBuilder
   private func qualityButtons(for item: DownloadableMediaItem) -> some View {
     ForEach(item.files.dedupedByQuality) { file in
@@ -670,18 +709,24 @@ struct MediaItemView: View {
       }
     }
   }
-
+  
   /// Download entry in an episode's context menu. Once an episode is downloaded (or downloading) we
   /// show a disabled status row instead of the quality picker, so it can't be queued twice.
   @ViewBuilder
   private func episodeDownloadMenu(_ episode: Episode, in season: Season) -> some View {
     switch libraryState.downloadStatus(itemId: mediaItem.id, video: episode.number, season: season.number) {
     case .downloaded:
-      Button { } label: { Label("Downloaded".localized, systemImage: "checkmark.circle.fill") }
-        .disabled(true)
+      Button {
+      } label: {
+        Label("Downloaded".localized, systemImage: "checkmark.circle.fill")
+      }
+      .disabled(true)
     case .downloading:
-      Button { } label: { Label("Downloading…".localized, systemImage: "arrow.down.circle") }
-        .disabled(true)
+      Button {
+      } label: {
+        Label("Downloading…".localized, systemImage: "arrow.down.circle")
+      }
+      .disabled(true)
     case .none:
       Menu {
         qualityButtons(for: episodeDownloadable(episode, in: season))
@@ -690,32 +735,35 @@ struct MediaItemView: View {
       }
     }
   }
-
+  
   /// Long-press preview for an episode card — the card on a padded background so its rounded corners
   /// (and the text under the thumbnail) aren't clipped by the context-menu lift.
   private func episodePreview(_ episode: Episode, in season: Season) -> some View {
-    EpisodeCard(imageURL: episode.thumbnail,
-                overline: "\("Episode".localized) \(episode.number)",
-                title: episode.fixedTitle,
-                footnote: "\(max(episode.duration / 60, 1)) мин",
-                progress: episodeProgress(episode, in: season))
-      .padding(14)
-      .background(Color.KinoPub.background)
+    EpisodeCard(
+      imageURL: episode.thumbnail,
+      overline: "\("Episode".localized) \(episode.number)",
+      title: episode.fixedTitle,
+      footnote: "\(max(episode.duration / 60, 1)) мин",
+      progress: episodeProgress(episode, in: season)
+    )
+    .padding(14)
+    .background(Color.KinoPub.background)
   }
-
+  
   private var firstPlayableEpisode: Episode? {
     guard let season = mediaItem.seasons?.first,
-          let episode = season.episodes.first else { return nil }
+          let episode = season.episodes.first
+    else { return nil }
     return filledEpisode(episode, in: season)
   }
-
+  
   /// Every episode in playback order, with the parent metadata needed for watch sync.
   private var episodeQueue: [Episode] {
     mediaItem.orderedEpisodes.map { filledEpisode($0.episode, in: $0.season) }
   }
-
+  
   // MARK: - Episodes
-
+  
   @ViewBuilder
   private var episodesSection: some View {
     if mediaItem.isSeries, let seasons = mediaItem.seasons, !seasons.isEmpty {
@@ -726,13 +774,18 @@ struct MediaItemView: View {
           ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(alignment: .top, spacing: 14) {
               ForEach(season.episodes, id: \.id) { episode in
-                NavigationLink(value: itemModel.linkProvider.episodePlayer(for: filledEpisode(episode, in: season),
-                                                                            queue: episodeQueue)) {
-                  EpisodeCard(imageURL: episode.thumbnail,
-                              overline: "\("Episode".localized) \(episode.number)",
-                              title: episode.fixedTitle,
-                              footnote: "\(max(episode.duration / 60, 1)) мин",
-                              progress: episodeProgress(episode, in: season))
+                NavigationLink(
+                  value: itemModel.linkProvider.episodePlayer(
+                    for: filledEpisode(episode, in: season),
+                    queue: episodeQueue)
+                ) {
+                  EpisodeCard(
+                    imageURL: episode.thumbnail,
+                    overline: "\("Episode".localized) \(episode.number)",
+                    title: episode.fixedTitle,
+                    footnote: "\(max(episode.duration / 60, 1)) мин",
+                    progress: episodeProgress(episode, in: season)
+                  )
                   .overlay(alignment: .topTrailing) {
                     if itemModel.isEpisodeWatched(episode) {
                       // Neutral "watched" eye (not the loud accent checkmark).
@@ -757,8 +810,9 @@ struct MediaItemView: View {
                     itemModel.toggleEpisodeWatched(episode: episode, season: season.number)
                   } label: {
                     let watched = itemModel.isEpisodeWatched(episode)
-                    Label(watched ? "Mark as Unwatched".localized : "Mark as Watched".localized,
-                          systemImage: watched ? "eye.fill" : "eye")
+                    Label(
+                      watched ? "Mark as Unwatched".localized : "Mark as Watched".localized,
+                      systemImage: watched ? "eye.fill" : "eye")
                   }
                   episodeDownloadMenu(episode, in: season)
                 } preview: {
@@ -781,7 +835,7 @@ struct MediaItemView: View {
       }
     }
   }
-
+  
   /// The most recently watched (or in-progress) episode across all seasons.
   private func lastWatchedEpisode(in seasons: [Season]) -> (season: Season, episode: Episode)? {
     var best: (season: Season, episode: Episode)?
@@ -798,7 +852,7 @@ struct MediaItemView: View {
     }
     return best
   }
-
+  
   /// Default to the season holding the last watched episode; fall back to the first season.
   private func currentSeason(in seasons: [Season]) -> Season {
     if let number = selectedSeasonNumber, let match = seasons.first(where: { $0.number == number }) {
@@ -806,18 +860,19 @@ struct MediaItemView: View {
     }
     return lastWatchedEpisode(in: seasons)?.season ?? seasons[0]
   }
-
+  
   private func scrollToResume(proxy: ScrollViewProxy, seasons: [Season]) {
     // Only auto-scroll while showing the auto-selected season (don't fight manual season changes).
     guard selectedSeasonNumber == nil,
           let target = lastWatchedEpisode(in: seasons),
-          target.season.number == currentSeason(in: seasons).number else { return }
+          target.season.number == currentSeason(in: seasons).number
+    else { return }
     withAnimation {
       // Center the current episode horizontally so it's the focus when the series page opens.
       proxy.scrollTo(target.episode.id, anchor: .center)
     }
   }
-
+  
   @ViewBuilder
   private func seasonPicker(seasons: [Season], current: Season) -> some View {
     if seasons.count > 1 {
@@ -851,14 +906,14 @@ struct MediaItemView: View {
         .padding(.horizontal, 20)
     }
   }
-
+  
   private func filledEpisode(_ episode: Episode, in season: Season) -> Episode {
     episode.seasonNumber = season.number
     episode.mediaId = season.mediaId ?? mediaItem.id
     episode.mediaTitle = mediaItem.localizedTitle
     return episode
   }
-
+  
   private func episodeProgress(_ episode: Episode, in season: Season) -> Double? {
     if itemModel.isEpisodeWatched(episode) { return 1.0 }
     let serverProgress = episode.watching.time > 0 ? episode.watchProgress.fraction : nil
@@ -867,17 +922,17 @@ struct MediaItemView: View {
     guard let best = [serverProgress, localProgress].compactMap({ $0 }).max() else { return nil }
     return min(max(best, 0.02), 1.0)
   }
-
+  
   // MARK: - Loading skeletons
   // Reserve the same footprint as the real shelf while a dynamically-loaded block is in flight, so it
   // swaps content in place (or collapses once) instead of popping in and shoving the page around.
-
+  
   private func skeletonPosterShelf(_ title: String) -> some View {
     MediaShelf(title: title, showsChevron: false) {
       ForEach(0..<6, id: \.self) { _ in PosterCard.placeholder() }
     }
   }
-
+  
   private var skeletonTrailerShelf: some View {
     // Render the real card with no image so the placeholder is exactly the trailer cell's size.
     MediaShelf(title: "Trailers".localized, showsChevron: false) {
@@ -885,14 +940,14 @@ struct MediaItemView: View {
         .redacted(reason: .placeholder)
     }
   }
-
+  
   private var skeletonImagesShelf: some View {
     // StillThumbnail with no URL renders its skeleton fill at the exact still size.
     MediaShelf(title: "Images".localized, showsChevron: false) {
       ForEach(0..<6, id: \.self) { _ in StillThumbnail(url: nil) }
     }
   }
-
+  
   // Approximate the text blocks (heights can't be exact for multi-line copy, but reserving close to
   // the real footprint turns the extras pop-in into a barely-perceptible settle).
   private func skeletonTextSection(_ title: String, rows: Int, rowHeight: CGFloat) -> some View {
@@ -908,9 +963,9 @@ struct MediaItemView: View {
       .padding(.horizontal, 20)
     }
   }
-
+  
   // MARK: - Trailers
-
+  
   @ViewBuilder
   private var trailersSection: some View {
     if mediaItem.trailer?.url != nil {
@@ -925,14 +980,16 @@ struct MediaItemView: View {
       skeletonTrailerShelf
     }
   }
-
+  
   // MARK: - Related
-
+  
   @ViewBuilder
   private var relatedSection: some View {
     if !itemModel.relatedItems.isEmpty {
-      MediaShelf(title: "Related".localized,
-                 headerValue: Route.mediaList(itemModel.relatedItems, "Related".localized)) {
+      MediaShelf(
+        title: "Related".localized,
+        headerValue: Route.mediaList(itemModel.relatedItems, "Related".localized)
+      ) {
         ForEach(itemModel.relatedItems) { item in
           NavigationLink(value: itemModel.linkProvider.link(for: item)) {
             PosterCard(imageURL: item.posters.medium, title: item.localizedTitle)
@@ -944,9 +1001,9 @@ struct MediaItemView: View {
       skeletonPosterShelf("Related".localized)
     }
   }
-
+  
   // MARK: - More from director / with actor
-
+  
   @ViewBuilder
   private func peopleShelf(_ title: String, items: [MediaItem], headerValue: (any Hashable)? = nil) -> some View {
     if !items.isEmpty {
@@ -961,35 +1018,37 @@ struct MediaItemView: View {
       }
     }
   }
-
+  
   @ViewBuilder
   private var moreFromDirectorSection: some View {
     if let director = itemModel.primaryDirector {
       if !itemModel.moreFromDirector.isEmpty {
-        peopleShelf(String(format: "More from %@".localized, director),
-                    items: itemModel.moreFromDirector,
-                    headerValue: Route.personSearch(director, "director", director))
+        peopleShelf(
+          String(format: "More from %@".localized, director),
+          items: itemModel.moreFromDirector,
+          headerValue: Route.personSearch(director, "director", director))
       } else if !itemModel.moreFromLoaded {
         skeletonPosterShelf(String(format: "More from %@".localized, director))
       }
     }
   }
-
+  
   @ViewBuilder
   private var moreWithActorSection: some View {
     if let actor = itemModel.primaryActor {
       if !itemModel.moreWithActor.isEmpty {
-        peopleShelf(String(format: "More with %@".localized, actor),
-                    items: itemModel.moreWithActor,
-                    headerValue: Route.personSearch(actor, "cast", actor))
+        peopleShelf(
+          String(format: "More with %@".localized, actor),
+          items: itemModel.moreWithActor,
+          headerValue: Route.personSearch(actor, "cast", actor))
       } else if !itemModel.moreWithLoaded {
         skeletonPosterShelf(String(format: "More with %@".localized, actor))
       }
     }
   }
-
+  
   // MARK: - Cast & Crew
-
+  
   @ViewBuilder
   private var castSection: some View {
     // Prefer the richer Kinopoisk crew (photos + characters + English names) when available,
@@ -1000,7 +1059,7 @@ struct MediaItemView: View {
       castNamesShelf
     }
   }
-
+  
   private var staffShelf: some View {
     // Lead with a single main director, then the cast — seeing actors matters more than a long list
     // of every director/crew member (the full ordered list stays available in the modal).
@@ -1009,19 +1068,22 @@ struct MediaItemView: View {
     let others = itemModel.staff.filter { $0.professionKey != "DIRECTOR" && $0.professionKey != "ACTOR" }
     let ordered = Array(directors.prefix(1)) + actors + others
     let top = Array(ordered.prefix(14))
-    return MediaShelf(title: "Cast & Crew".localized,
-                      showsChevron: itemModel.staff.count > top.count,
-                      onHeaderTap: { showCastCrew = true }) {
+    return MediaShelf(
+      title: "Cast & Crew".localized,
+      showsChevron: itemModel.staff.count > top.count,
+      onHeaderTap: { showCastCrew = true }
+    ) {
       ForEach(top) { member in
         facetLink(staffRoute(member)) {
-          CastAvatarView(imageURL: member.posterUrl,
-                         name: member.displayName,
-                         role: staffRole(member))
+          CastAvatarView(
+            imageURL: member.posterUrl,
+            name: member.displayName,
+            role: staffRole(member))
         }
       }
     }
   }
-
+  
   @ViewBuilder
   private var castNamesShelf: some View {
     // Just the main director up front, then the cast (the full director list is in the modal).
@@ -1030,40 +1092,44 @@ struct MediaItemView: View {
     let actors = Array(allActors.prefix(12))
     let hasMore = allActors.count > actors.count || itemModel.directorNames.count > directors.count
     if !actors.isEmpty || !directors.isEmpty {
-      MediaShelf(title: "Cast & Crew".localized,
-                 showsChevron: hasMore,
-                 onHeaderTap: hasMore ? { showCastCrew = true } : nil) {
+      MediaShelf(
+        title: "Cast & Crew".localized,
+        showsChevron: hasMore,
+        onHeaderTap: hasMore ? { showCastCrew = true } : nil
+      ) {
         ForEach(directors, id: \.self) { name in
           facetLink(itemModel.directorRoute(name)) {
-            CastAvatarView(imageURL: ActorImageProvider.photoURLString(for: name),
-                           name: name, role: "Director".localized)
+            CastAvatarView(
+              imageURL: ActorImageProvider.photoURLString(for: name),
+              name: name, role: "Director".localized)
           }
         }
         ForEach(actors, id: \.self) { name in
           facetLink(itemModel.actorRoute(name)) {
-            CastAvatarView(imageURL: ActorImageProvider.photoURLString(for: name),
-                           name: name, role: "Actor".localized)
+            CastAvatarView(
+              imageURL: ActorImageProvider.photoURLString(for: name),
+              name: name, role: "Actor".localized)
           }
         }
       }
     }
   }
-
+  
   /// For an actor show the character (`description`); for crew show the profession.
   private func staffRole(_ member: KpStaffMember) -> String? {
     let character = member.description?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     if !character.isEmpty { return character }
     return member.professionText
   }
-
+  
   private func staffRoute(_ member: KpStaffMember) -> (any Hashable)? {
     member.professionKey == "DIRECTOR"
-      ? itemModel.directorRoute(member.displayName)
-      : itemModel.actorRoute(member.displayName)
+    ? itemModel.directorRoute(member.displayName)
+    : itemModel.actorRoute(member.displayName)
   }
-
+  
   // MARK: - Kinopoisk extras (stills / facts / reviews)
-
+  
   /// A titled vertical section header with an optional "see all" chevron, matching the shelf headers.
   private func extrasHeader(_ title: String, action: (() -> Void)?) -> some View {
     Button(action: { action?() }) {
@@ -1084,17 +1150,21 @@ struct MediaItemView: View {
     .buttonStyle(.plain)
     .disabled(action == nil)
   }
-
+  
   @ViewBuilder
   private var imagesSection: some View {
     if !itemModel.images.isEmpty {
       let preview = Array(itemModel.images.prefix(15))
       let hasMore = itemModel.images.count > preview.count
-      MediaShelf(title: "Images".localized,
-                 showsChevron: hasMore,
-                 onHeaderTap: hasMore ? { stillSelection = StillSelection(index: 0) } : nil) {
+      MediaShelf(
+        title: "Images".localized,
+        showsChevron: hasMore,
+        onHeaderTap: hasMore ? { stillSelection = StillSelection(index: 0) } : nil
+      ) {
         ForEach(Array(preview.enumerated()), id: \.offset) { idx, image in
-          Button { stillSelection = StillSelection(index: idx) } label: {
+          Button {
+            stillSelection = StillSelection(index: idx)
+          } label: {
             StillThumbnail(url: image.previewUrl ?? image.imageUrl)
           }
           .buttonStyle(.plain)
@@ -1104,7 +1174,7 @@ struct MediaItemView: View {
       skeletonImagesShelf
     }
   }
-
+  
   @ViewBuilder
   private var factsSection: some View {
     if !itemModel.facts.isEmpty {
@@ -1121,7 +1191,7 @@ struct MediaItemView: View {
       skeletonTextSection("Facts".localized, rows: 3, rowHeight: 56)
     }
   }
-
+  
   @ViewBuilder
   private var reviewsSection: some View {
     if !itemModel.reviews.items.isEmpty {
@@ -1138,9 +1208,9 @@ struct MediaItemView: View {
       skeletonTextSection("Reviews".localized, rows: 2, rowHeight: 110)
     }
   }
-
+  
   // MARK: - Comments
-
+  
   @ViewBuilder
   private var commentsSection: some View {
     if FeatureFlags.comments, !isSkeleton {
@@ -1170,9 +1240,9 @@ struct MediaItemView: View {
       .buttonStyle(.plain)
     }
   }
-
+  
   // MARK: - Description
-
+  
   @ViewBuilder
   private var descriptionSection: some View {
     if !mediaItem.plot.isEmpty {
@@ -1195,7 +1265,7 @@ struct MediaItemView: View {
       .padding(.horizontal, 20)
     }
   }
-
+  
   /// Tappable genre chips. Each opens a catalog filtered by that genre, scoped
   /// to this item's own content type (a serial's genre opens serials, etc.).
   @ViewBuilder
@@ -1205,8 +1275,10 @@ struct MediaItemView: View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 8) {
           ForEach(genres, id: \.id) { genre in
-            sectionFacet(filter: itemModel.genreFilter(id: genre.id),
-                         route: itemModel.genreRoute(id: genre.id, title: genre.title ?? "")) {
+            sectionFacet(
+              filter: itemModel.genreFilter(id: genre.id),
+              route: itemModel.genreRoute(id: genre.id, title: genre.title ?? "")
+            ) {
               chip(genre.title?.uppercased() ?? "")
             }
           }
@@ -1214,7 +1286,7 @@ struct MediaItemView: View {
       }
     }
   }
-
+  
   private func chip(_ text: String) -> some View {
     Text(text)
       .font(.system(size: 12, weight: .semibold))
@@ -1225,18 +1297,20 @@ struct MediaItemView: View {
         Capsule().fill(Color.accentColor.opacity(0.15))
       )
   }
-
+  
   // MARK: - Information & Languages
-
+  
   private var infoSection: some View {
-    MediaItemInfoSection(mediaItem: mediaItem,
-                         itemModel: itemModel,
-                         usesSidebar: usesSidebarSections,
-                         openSection: { filter in
-                           navigationState.pendingCategoryFilter = filter
-                           navigationState.sidebarSelection = .category(filter.contentType)
-                         })
-      .padding(.horizontal, 20)
+    MediaItemInfoSection(
+      mediaItem: mediaItem,
+      itemModel: itemModel,
+      usesSidebar: usesSidebarSections,
+      openSection: { filter in
+        navigationState.pendingCategoryFilter = filter
+        navigationState.sidebarSelection = .category(filter.contentType)
+      }
+    )
+    .padding(.horizontal, 20)
   }
 }
 
@@ -1246,25 +1320,31 @@ struct MediaItemView: View {
 /// layout and falls back to a stacked one when too narrow. Preserves the
 /// IMDB / Kinopoisk deep links (issue #44).
 private struct MediaItemInfoSection: View {
-
+  
   let mediaItem: MediaItem
   @ObservedObject var itemModel: MediaItemModel
   let usesSidebar: Bool
   let openSection: (MediaItemsFilter) -> Void
-
+  
   /// A tappable facet that deep-links into a section (wide) or pushes a filtered catalog (compact).
   @ViewBuilder
-  private func sectionFacet<Label: View>(filter: MediaItemsFilter,
-                                         route: (any Hashable)?,
-                                         @ViewBuilder label: () -> Label) -> some View {
+  private func sectionFacet<Label: View>(
+    filter: MediaItemsFilter,
+    route: (any Hashable)?,
+    @ViewBuilder label: () -> Label
+  ) -> some View {
     if usesSidebar {
-      Button { openSection(filter) } label: { label() }
-        .buttonStyle(.plain)
+      Button {
+        openSection(filter)
+      } label: {
+        label()
+      }
+      .buttonStyle(.plain)
     } else {
       facetLink(route, label: label)
     }
   }
-
+  
   var body: some View {
     // Prefer a two-column layout, but fall back to a stacked layout when the
     // available width is too narrow to fit both columns comfortably.
@@ -1280,20 +1360,21 @@ private struct MediaItemInfoSection: View {
       }
     }
   }
-
+  
   // MARK: - Information
-
+  
   private var information: some View {
     VStack(alignment: .leading, spacing: 12) {
       sectionTitle("Information".localized)
-
+      
       if mediaItem.year > 0 {
-        facetRow(label: "Premiere".localized,
-                 value: "\(mediaItem.year)",
-                 filter: itemModel.yearFilter(mediaItem.year),
-                 route: itemModel.yearRoute(mediaItem.year))
+        facetRow(
+          label: "Premiere".localized,
+          value: "\(mediaItem.year)",
+          filter: itemModel.yearFilter(mediaItem.year),
+          route: itemModel.yearRoute(mediaItem.year))
       }
-
+      
       if !mediaItem.countries.isEmpty {
         VStack(alignment: .leading, spacing: 2) {
           Text("Country".localized.uppercased())
@@ -1301,15 +1382,17 @@ private struct MediaItemInfoSection: View {
             .foregroundStyle(Color.KinoPub.subtitle)
           FlowLayout(spacing: 10, lineSpacing: 6) {
             ForEach(Array(mediaItem.countries.enumerated()), id: \.offset) { _, country in
-              sectionFacet(filter: itemModel.countryFilter(id: country.id),
-                           route: itemModel.countryRoute(id: country.id, title: country.title)) {
+              sectionFacet(
+                filter: itemModel.countryFilter(id: country.id),
+                route: itemModel.countryRoute(id: country.id, title: country.title)
+              ) {
                 facetValueText(country.title, isLink: true)
               }
             }
           }
         }
       }
-
+      
       if !itemModel.directorNames.isEmpty {
         VStack(alignment: .leading, spacing: 2) {
           Text("Director".localized.uppercased())
@@ -1324,21 +1407,22 @@ private struct MediaItemInfoSection: View {
           }
         }
       }
-
+      
       if (mediaItem.imdbRating ?? 0) > 0 || (mediaItem.kinopoiskRating ?? 0) > 0 || (kinopubScore ?? 0) > 0 {
         VStack(alignment: .leading, spacing: 4) {
           Text("Rating".localized.uppercased())
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(Color.KinoPub.subtitle)
-          RatingsDetailRow(kinopubScore: kinopubScore,
-                           kinopubVotes: mediaItem.ratingVotes,
-                           imdbScore: mediaItem.imdbRating,
-                           imdbVotes: mediaItem.imdbVotes,
-                           kinopoiskScore: mediaItem.kinopoiskRating,
-                           kinopoiskVotes: mediaItem.kinopoiskVotes)
+          RatingsDetailRow(
+            kinopubScore: kinopubScore,
+            kinopubVotes: mediaItem.ratingVotes,
+            imdbScore: mediaItem.imdbRating,
+            imdbVotes: mediaItem.imdbVotes,
+            kinopoiskScore: mediaItem.kinopoiskRating,
+            kinopoiskVotes: mediaItem.kinopoiskVotes)
         }
       }
-
+      
       if mediaItem.isSeries {
         infoRow(label: "Status".localized, value: statusValue)
         if let total = totalValue {
@@ -1348,19 +1432,19 @@ private struct MediaItemInfoSection: View {
       }
     }
   }
-
+  
   // MARK: - Series info helpers
-
+  
   private var statusValue: String {
     mediaItem.finished ? "Finished".localized : "Ongoing".localized
   }
-
+  
   private var totalValue: String? {
     guard let seasons = mediaItem.seasons, !seasons.isEmpty else { return nil }
     let episodes = seasons.reduce(0) { $0 + $1.episodes.count }
     return "\(seasons.count) \("seasons".localized), \(episodes) \("episodes".localized)"
   }
-
+  
   private var durationValue: String {
     let average = mediaItem.duration.average
     let total = mediaItem.duration.total
@@ -1374,7 +1458,7 @@ private struct MediaItemInfoSection: View {
     }
     return parts.joined(separator: ", ")
   }
-
+  
   private static func clock(_ seconds: Double) -> String {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = [.hour, .minute, .second]
@@ -1382,16 +1466,16 @@ private struct MediaItemInfoSection: View {
     formatter.zeroFormattingBehavior = .pad
     return formatter.string(from: seconds) ?? ""
   }
-
+  
   private static func abbreviated(_ seconds: Double) -> String {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = [.day, .hour, .minute]
     formatter.unitsStyle = .abbreviated
     return formatter.string(from: seconds) ?? ""
   }
-
+  
   // MARK: - Languages
-
+  
   @ViewBuilder
   private var languages: some View {
     let voice = mediaItem.voice?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -1402,15 +1486,15 @@ private struct MediaItemInfoSection: View {
       }
     }
   }
-
+  
   // MARK: - Building blocks
-
+  
   private func sectionTitle(_ text: String) -> some View {
     Text(text)
       .font(.system(size: 22, weight: .bold))
       .foregroundStyle(Color.KinoPub.text)
   }
-
+  
   private func infoRow(label: String, value: String) -> some View {
     VStack(alignment: .leading, spacing: 2) {
       Text(label.uppercased())
@@ -1421,11 +1505,13 @@ private struct MediaItemInfoSection: View {
         .foregroundStyle(Color.KinoPub.text)
     }
   }
-
+  
   /// An info row whose value is tappable (when a `route` exists) to open a
   /// filtered catalog (e.g. year).
   @ViewBuilder
-  private func facetRow(label: String, value: String, filter: MediaItemsFilter? = nil, route: (any Hashable)?) -> some View {
+  private func facetRow(
+    label: String, value: String, filter: MediaItemsFilter? = nil, route: (any Hashable)?
+  ) -> some View {
     VStack(alignment: .leading, spacing: 2) {
       Text(label.uppercased())
         .font(.system(size: 11, weight: .semibold))
@@ -1441,7 +1527,7 @@ private struct MediaItemInfoSection: View {
       }
     }
   }
-
+  
   @ViewBuilder
   private func facetLink<Label: View>(_ route: (any Hashable)?, @ViewBuilder label: () -> Label) -> some View {
     if let route {
@@ -1453,13 +1539,13 @@ private struct MediaItemInfoSection: View {
       label()
     }
   }
-
+  
   private func facetValueText(_ value: String, isLink: Bool) -> some View {
     Text(value)
       .font(.system(size: 14, weight: isLink ? .semibold : .regular))
       .foregroundStyle(isLink ? Color.accentColor : Color.KinoPub.text)
   }
-
+  
   @ViewBuilder
   private func ratingRow(label: String, value: String, url: URL?) -> some View {
     if let url {
@@ -1471,7 +1557,7 @@ private struct MediaItemInfoSection: View {
       ratingContent(label: label, value: value, isLink: false)
     }
   }
-
+  
   private func ratingContent(label: String, value: String, isLink: Bool) -> some View {
     VStack(alignment: .leading, spacing: 2) {
       Text(label.uppercased())
@@ -1489,19 +1575,19 @@ private struct MediaItemInfoSection: View {
       }
     }
   }
-
+  
   // MARK: - Deep links (issue #44)
-
+  
   /// kino.pub's own rating on a 0–10 scale (the API gives it as a 0–100 percentage). nil when unrated.
   private var kinopubScore: Double? {
     mediaItem.ratingPercentage > 0 ? mediaItem.ratingPercentage / 10.0 : nil
   }
-
+  
   private var imdbURL: URL? {
     guard let imdb = mediaItem.imdb, imdb > 0 else { return nil }
     return URL(string: "https://www.imdb.com/title/tt\(String(format: "%07d", imdb))/")
   }
-
+  
   private var kinopoiskURL: URL? {
     guard let kinopoisk = mediaItem.kinopoisk, kinopoisk > 0 else { return nil }
     return URL(string: "https://www.kinopoisk.ru/film/\(kinopoisk)/")
@@ -1519,9 +1605,9 @@ struct CastCrewView: View {
   /// dismisses itself first, then the presenter opens that person's section (like More with / More from).
   var onSelect: ((_ name: String, _ field: String) -> Void)?
   @Environment(\.dismiss) private var dismiss
-
+  
   private let columns = [GridItem(.adaptive(minimum: 100), spacing: 14, alignment: .top)]
-
+  
   var body: some View {
     NavigationStack {
       ScrollView {
@@ -1544,7 +1630,7 @@ struct CastCrewView: View {
       }
     }
   }
-
+  
   /// Kinopoisk crew grouped by profession ("Режиссёры", "Актёры", …), preserving the API order.
   @ViewBuilder
   private var staffContent: some View {
@@ -1554,12 +1640,15 @@ struct CastCrewView: View {
         sectionTitle(profession)
         LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
           ForEach(members) { member in
-            personButton(name: member.displayName,
-                         field: member.professionKey == "DIRECTOR" ? "director" : "cast") {
-              CastAvatarView(imageURL: member.posterUrl,
-                             name: member.displayName,
-                             role: member.description?.isEmpty == false ? member.description : nil,
-                             diameter: 80)
+            personButton(
+              name: member.displayName,
+              field: member.professionKey == "DIRECTOR" ? "director" : "cast"
+            ) {
+              CastAvatarView(
+                imageURL: member.posterUrl,
+                name: member.displayName,
+                role: member.description?.isEmpty == false ? member.description : nil,
+                diameter: 80)
             }
           }
         }
@@ -1567,7 +1656,7 @@ struct CastCrewView: View {
       }
     }
   }
-
+  
   /// Wraps a person avatar so tapping it dismisses the modal and opens that person's section.
   @ViewBuilder
   private func personButton<Label: View>(name: String, field: String, @ViewBuilder label: () -> Label) -> some View {
@@ -1579,7 +1668,7 @@ struct CastCrewView: View {
     }
     .buttonStyle(.plain)
   }
-
+  
   private var orderedProfessionGroups: [(String, [KpStaffMember])] {
     var order: [String] = []
     var map: [String: [KpStaffMember]] = [:]
@@ -1590,7 +1679,7 @@ struct CastCrewView: View {
     }
     return order.map { ($0, map[$0] ?? []) }
   }
-
+  
   @ViewBuilder
   private func namesSection(title: String, names: [String], field: String) -> some View {
     VStack(alignment: .leading, spacing: 14) {
@@ -1598,15 +1687,16 @@ struct CastCrewView: View {
       LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
         ForEach(names, id: \.self) { name in
           personButton(name: name, field: field) {
-            CastAvatarView(imageURL: ActorImageProvider.photoURLString(for: name),
-                           name: name, diameter: 80)
+            CastAvatarView(
+              imageURL: ActorImageProvider.photoURLString(for: name),
+              name: name, diameter: 80)
           }
         }
       }
       .padding(.horizontal, 20)
     }
   }
-
+  
   private func sectionTitle(_ text: String) -> some View {
     Text(text)
       .font(.system(size: 20, weight: .bold))
@@ -1644,7 +1734,7 @@ struct StillThumbnail: View {
 /// camera, cast, music, …) and sits in a tinted rounded square.
 struct FactCard: View {
   let fact: KpFact
-
+  
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
       let glyph = FactGlyph.for(fact)
@@ -1671,7 +1761,7 @@ enum FactGlyph {
   static func `for`(_ fact: KpFact) -> (symbol: String, color: Color) {
     let text = fact.text.lowercased()
     func has(_ words: [String]) -> Bool { words.contains { text.contains($0) } }
-
+    
     if fact.isBlooper { return ("exclamationmark.bubble.fill", Color(red: 0.45, green: 0.48, blue: 0.55)) }
     if has(["оскар", "преми", "награ", "номина", "глобус", "канн", "бафта", "пальм"]) {
       return ("trophy.fill", Color(red: 0.84, green: 0.66, blue: 0.16))
@@ -1679,7 +1769,10 @@ enum FactGlyph {
     if has(["бюджет", "млн", "миллион", "миллиард", "доллар", "гонорар", "сбор", "касс", "$", "заработа", "стои"]) {
       return ("dollarsign.circle.fill", Color(red: 0.20, green: 0.70, blue: 0.42))
     }
-    if has(["роль", "сыгра", "актёр", "актер", "актрис", "кастинг", "пробы", "дублёр", "дублер", "каскадёр", "каскадер", "сниматься"]) {
+    if has([
+      "роль", "сыгра", "актёр", "актер", "актрис", "кастинг", "пробы", "дублёр", "дублер", "каскадёр", "каскадер",
+      "сниматься",
+    ]) {
       return ("theatermasks.fill", Color(red: 0.56, green: 0.36, blue: 0.80))
     }
     if has(["режиссёр", "режиссер", "постанов", "снял фильм", "снимать фильм"]) {
@@ -1717,11 +1810,11 @@ enum FactGlyph {
 struct ReviewCard: View {
   let review: KpReview
   @State private var expanded = false
-
+  
   private var bodyText: String { KinopoiskText.plain(review.description ?? "") }
   /// Kinopoisk reviews are long-form; show the expand toggle when the body clearly exceeds ~4 lines.
   private var isExpandable: Bool { bodyText.count > 220 }
-
+  
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       // Sentiment dot + author + date.
@@ -1743,7 +1836,7 @@ struct ReviewCard: View {
         }
         Spacer(minLength: 0)
       }
-
+      
       if let title = review.title?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
         Text(title)
           .font(.system(.headline, design: .serif).weight(.semibold))
@@ -1751,7 +1844,7 @@ struct ReviewCard: View {
           .lineLimit(2)
           .multilineTextAlignment(.leading)
       }
-
+      
       Text(bodyText)
         .font(.system(.subheadline, design: .serif))
         .foregroundStyle(Color.KinoPub.text.opacity(0.92))
@@ -1759,7 +1852,7 @@ struct ReviewCard: View {
         .lineLimit(expanded ? nil : 4)
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, alignment: .leading)
-
+      
       if isExpandable {
         Button(expanded ? "Show less".localized : "Show more".localized) {
           withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
@@ -1773,7 +1866,7 @@ struct ReviewCard: View {
     .padding(16)
     .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.KinoPub.selectionBackground))
   }
-
+  
   private var typeColor: Color {
     switch (review.type ?? "").uppercased() {
     case "POSITIVE": return Color(red: 0.30, green: 0.78, blue: 0.45)
@@ -1781,7 +1874,7 @@ struct ReviewCard: View {
     default: return Color.KinoPub.subtitle
     }
   }
-
+  
   private var formattedDate: String? {
     guard let raw = review.date, !raw.isEmpty else { return nil }
     let parser = DateFormatter()
@@ -1841,13 +1934,13 @@ struct StillsViewer: View {
   let startIndex: Int
   @Environment(\.dismiss) private var dismiss
   @State private var index: Int
-
+  
   init(images: [KpImage], startIndex: Int) {
     self.images = images
     self.startIndex = startIndex
     _index = State(initialValue: startIndex)
   }
-
+  
   var body: some View {
     NavigationStack {
       TabView(selection: $index) {
@@ -1871,15 +1964,17 @@ struct StillsViewer: View {
 enum KinopoiskText {
   static func plain(_ html: String) -> String {
     var s = html.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
-    let entities = ["&nbsp;": " ", "&mdash;": "—", "&ndash;": "–", "&laquo;": "«", "&raquo;": "»",
-                    "&quot;": "\"", "&hellip;": "…", "&amp;": "&", "&lt;": "<", "&gt;": ">",
-                    "&rsquo;": "’", "&lsquo;": "‘", "&ldquo;": "“", "&rdquo;": "”"]
+    let entities = [
+      "&nbsp;": " ", "&mdash;": "—", "&ndash;": "–", "&laquo;": "«", "&raquo;": "»",
+      "&quot;": "\"", "&hellip;": "…", "&amp;": "&", "&lt;": "<", "&gt;": ">",
+      "&rsquo;": "’", "&lsquo;": "‘", "&ldquo;": "“", "&rdquo;": "”",
+    ]
     for (k, v) in entities { s = s.replacingOccurrences(of: k, with: v) }
     s = decodeNumericEntities(s)
     s = s.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
     return s.trimmingCharacters(in: .whitespacesAndNewlines)
   }
-
+  
   /// Replace decimal (`&#171;`) and hex (`&#xAB;`) HTML character references with their characters.
   private static func decodeNumericEntities(_ s: String) -> String {
     guard s.contains("&#"), let regex = try? NSRegularExpression(pattern: "&#(x?)([0-9a-fA-F]+);") else { return s }
@@ -1907,12 +2002,15 @@ enum KinopoiskText {
 struct MediaItemView_Previews: PreviewProvider {
   struct Preview: View {
     var body: some View {
-      MediaItemView(model: MediaItemModel(mediaItemId: MediaItem.mock().id,
-                                          itemsService: VideoContentServiceMock(),
-                                          downloadManager: DownloadManager<DownloadMeta>(fileSaver: FileSaver(),
-                                                                                      database: DownloadedFilesDatabase<DownloadMeta>(fileSaver: FileSaver())),
-                                          linkProvider: RouteLinkProvider(),
-                                          errorHandler: ErrorHandler()))
+      MediaItemView(
+        model: MediaItemModel(
+          mediaItemId: MediaItem.mock().id,
+          itemsService: VideoContentServiceMock(),
+          downloadManager: DownloadManager<DownloadMeta>(
+            fileSaver: FileSaver(),
+            database: DownloadedFilesDatabase<DownloadMeta>(fileSaver: FileSaver())),
+          linkProvider: RouteLinkProvider(),
+          errorHandler: ErrorHandler()))
     }
   }
   static var previews: some View {

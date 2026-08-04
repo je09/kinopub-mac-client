@@ -12,19 +12,19 @@ struct EPGProgram: Identifiable, Hashable, Codable {
   let title: String
   let start: Date
   let stop: Date
-
+  
   /// Stable within a channel's schedule (start time is unique per channel in XMLTV).
   var id: String { "\(Int(start.timeIntervalSince1970))-\(title)" }
-
+  
   init(title: String, start: Date, stop: Date) {
     self.title = title
     self.start = start
     self.stop = stop
   }
-
+  
   /// True while `date` falls inside the broadcast window.
   func isLive(at date: Date) -> Bool { start <= date && date < stop }
-
+  
   /// Fraction elapsed at `date`, clamped to 0...1 (0 before it starts, 1 once it has ended).
   func progress(at date: Date) -> Double {
     let total = stop.timeIntervalSince(start)

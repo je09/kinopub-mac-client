@@ -18,15 +18,17 @@ final class FilteDataServiceImpl: FilterDataService {
   
   func fetchGenres() async throws -> [MediaGenre] {
     let request = GenresRequest()
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: ArrayData<MediaGenre>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: ArrayData<MediaGenre>.self)
     return response.items
   }
   
   func fetchCountries() async throws -> [Country] {
     let request = CountriesRequest()
-    let response = try await apiClient.performRequest(with: request,
-                                                      decodingType: ArrayData<Country>.self)
+    let response = try await apiClient.performRequest(
+      with: request,
+      decodingType: ArrayData<Country>.self)
     return response.items
   }
   

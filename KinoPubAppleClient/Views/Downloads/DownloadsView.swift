@@ -18,11 +18,11 @@ struct DownloadsView: View {
   @StateObject private var catalog: DownloadsCatalog
   @Environment(\.sectionEmbedded) private var sectionEmbedded
   @State private var showStorage = false
-
+  
   init(catalog: @autoclosure @escaping () -> DownloadsCatalog) {
     _catalog = StateObject(wrappedValue: catalog())
   }
-
+  
   var body: some View {
     if sectionEmbedded {
       sectionContent
@@ -32,7 +32,7 @@ struct DownloadsView: View {
       }
     }
   }
-
+  
   private var sectionContent: some View {
     ZStack {
       if catalog.isEmpty {
@@ -52,18 +52,22 @@ struct DownloadsView: View {
   
   private var hasActive: Bool { !catalog.activeDownloads.isEmpty }
   private var hasCompleted: Bool { !catalog.downloadedItems.isEmpty }
-
+  
   var downloadsList: some View {
     List {
       if hasActive {
         Section {
           activeDownloadsList
-        } header: { sectionHeader("Active") }
+        } header: {
+          sectionHeader("Active")
+        }
       }
       if hasCompleted {
         Section {
           downloadedFilesList
-        } header: { sectionHeader("Downloaded") }
+        } header: {
+          sectionHeader("Downloaded")
+        }
       }
       if catalog.totalBytes > 0 {
         Button {
@@ -87,7 +91,7 @@ struct DownloadsView: View {
     .scrollContentBackground(.hidden)
     .background(Color.KinoPub.background)
   }
-
+  
   /// Floating glass-capsule section header — matches the History sticky headers (Liquid Glass on OS 26).
   private func sectionHeader(_ key: String) -> some View {
     Text(key.localized)
@@ -97,25 +101,31 @@ struct DownloadsView: View {
       .padding(.horizontal, 14)
       .padding(.vertical, 7)
       .glassCapsule()
-      // Match the History sticky headers' left indent (20pt), not the List's default tight inset.
+    // Match the History sticky headers' left indent (20pt), not the List's default tight inset.
       .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 6, trailing: 4))
       .listRowBackground(Color.clear)
   }
-
+  
   /// `NavigationLink` in a macOS `List` row can lose the click to the row itself, so push directly.
   private func playRow<Label: View>(_ route: Route, @ViewBuilder label: () -> Label) -> some View {
-    Button { navigationState.downloadsRoutes.append(route) } label: { label() }
-      .buttonStyle(.plain)
+    Button {
+      navigationState.downloadsRoutes.append(route)
+    } label: {
+      label()
+    }
+    .buttonStyle(.plain)
   }
-
+  
   var activeDownloadsList: some View {
     // In-progress downloads are NOT navigable (file isn't ready) — so the pause/resume button
     // is tappable instead of the whole row opening the player.
     ForEach(catalog.activeDownloads, id: \.url) { download in
-      DownloadedItemView(mediaItem: download.metadata,
-                         progress: download.progress,
-                         speed: download.speed,
-                         remaining: download.remainingTime) { _ in
+      DownloadedItemView(
+        mediaItem: download.metadata,
+        progress: download.progress,
+        speed: download.speed,
+        remaining: download.remainingTime
+      ) { _ in
         catalog.toggle(download: download)
       }
       .contextMenu { detailLink(for: download.metadata) }
@@ -125,7 +135,7 @@ struct DownloadsView: View {
     })
     .listRowBackground(Color.KinoPub.background)
   }
-
+  
   var downloadedFilesList: some View {
     ForEach(catalog.downloadedItems, id: \.originalURL) { fileInfo in
       playRow(Route.player(fileInfo.metadata)) {
@@ -138,7 +148,7 @@ struct DownloadsView: View {
     })
     .listRowBackground(Color.KinoPub.background)
   }
-
+  
   /// Long-press menu entry to jump from a download to its movie/series detail page.
   /// `DownloadMeta.id` is the series/movie content id, so detailsByID opens the right title.
   @ViewBuilder
@@ -147,8 +157,9 @@ struct DownloadsView: View {
     // for older saved entries whose `episode` label may be wrong.
     let isSeries = meta.metadata.season != nil || meta.metadata.video != nil
     NavigationLink(value: Route.detailsByID(meta.id)) {
-      Label(isSeries ? "Go to Series".localized : "Go to Movie".localized,
-            systemImage: "info.circle")
+      Label(
+        isSeries ? "Go to Series".localized : "Go to Movie".localized,
+        systemImage: "info.circle")
     }
   }
   
@@ -167,7 +178,7 @@ struct StorageBreakdownView: View {
   @State private var breakdown: StorageUsage?
   @State private var busy = false
   @State private var toast: ToastMessage?
-
+  
   var body: some View {
     NavigationStack {
       List {
@@ -179,7 +190,9 @@ struct StorageBreakdownView: View {
             row("Other".localized, breakdown.other)
           }
           Section {
-            HStack { Text("Total".localized).bold(); Spacer(); Text(format(breakdown.total)).bold() }
+            HStack {
+              Text("Total".localized).bold(); Spacer(); Text(format(breakdown.total)).bold()
+            }
           }
           Section {
             Button("Clear image cache".localized) {
@@ -198,7 +211,9 @@ struct StorageBreakdownView: View {
             }
           }
         } else {
-          HStack { Spacer(); ProgressView(); Spacer() }
+          HStack {
+            Spacer(); ProgressView(); Spacer()
+          }
         }
       }
       .navigationTitle("Storage".localized)
@@ -211,7 +226,7 @@ struct StorageBreakdownView: View {
     .toast(message: $toast)
     .onAppear(perform: recompute)
   }
-
+  
   /// Confirms a cleanup action so it's obvious it ran: how much was freed, or that there was nothing.
   private func announce(freed: Int64) {
     if freed > 0 {
@@ -220,21 +235,25 @@ struct StorageBreakdownView: View {
       toast = .info("Nothing to clear".localized)
     }
   }
-
+  
   private func row(_ title: String, _ bytes: Int64) -> some View {
-    HStack { Text(title); Spacer(); Text(format(bytes)).foregroundStyle(Color.KinoPub.subtitle) }
+    HStack {
+      Text(title); Spacer(); Text(format(bytes)).foregroundStyle(Color.KinoPub.subtitle)
+    }
   }
-
+  
   private func format(_ bytes: Int64) -> String {
     ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
   }
-
+  
   private func recompute() {
     busy = true
     let downloadURLs = (AppContext.shared.downloadedFilesDatabase.readData() ?? []).map { $0.localFileURL }
     Task.detached(priority: .utility) {
       let result = StorageUsage.compute(downloadURLs: downloadURLs)
-      await MainActor.run { self.breakdown = result; self.busy = false }
+      await MainActor.run {
+        self.breakdown = result; self.busy = false
+      }
     }
   }
 }
@@ -246,7 +265,7 @@ private struct StorageUsage {
   let imageCache: Int64
   let epg: Int64
   var other: Int64 { max(0, total - downloads - imageCache - epg) }
-
+  
   static func compute(downloadURLs: [URL]) -> StorageUsage {
     let home = URL(fileURLWithPath: NSHomeDirectory())
     let containers = ["Documents", "Library", "tmp"].map { home.appendingPathComponent($0) }
@@ -254,18 +273,21 @@ private struct StorageUsage {
     let downloads = downloadURLs.reduce(Int64(0)) { total, url in
       total + ((try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0)
     }
-    return StorageUsage(total: total,
-                        downloads: downloads,
-                        imageCache: Int64(ImageCache.shared.diskUsageBytes()),
-                        epg: EPGServiceImpl.diskUsageBytes())
+    return StorageUsage(
+      total: total,
+      downloads: downloads,
+      imageCache: Int64(ImageCache.shared.diskUsageBytes()),
+      epg: EPGServiceImpl.diskUsageBytes())
   }
-
+  
   private static func directorySize(at url: URL) -> Int64 {
-    guard let enumerator = FileManager.default.enumerator(
-      at: url,
-      includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
-      options: [.skipsHiddenFiles]
-    ) else { return 0 }
+    guard
+      let enumerator = FileManager.default.enumerator(
+        at: url,
+        includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
+        options: [.skipsHiddenFiles]
+      )
+    else { return 0 }
     var bytes: Int64 = 0
     for case let fileURL as URL in enumerator {
       let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
@@ -282,8 +304,11 @@ struct DownloadsView_Previews: PreviewProvider {
     
     let downloadManager = DownloadManager<DownloadMeta>(fileSaver: FileSaver(), database: database)
     
-    DownloadsView(catalog: DownloadsCatalog(downloadsDatabase: database,
-                                            downloadManager: downloadManager))
-      .appPreviewEnvironment()
+    DownloadsView(
+      catalog: DownloadsCatalog(
+        downloadsDatabase: database,
+        downloadManager: downloadManager)
+    )
+    .appPreviewEnvironment()
   }
 }

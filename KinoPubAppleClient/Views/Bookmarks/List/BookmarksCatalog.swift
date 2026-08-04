@@ -13,16 +13,16 @@ import Combine
 
 @MainActor
 class BookmarksCatalog: ObservableObject {
-
+  
   private var authState: AuthState
   private var contentService: VideoContentService
   private var errorHandler: ErrorHandler
   private var bag = Set<AnyCancellable>()
-
+  
   @Published public var items: [Bookmark] = Bookmark.skeletonMock()
   /// Items per bookmark folder (by folder id), powering the Home-style shelves.
   @Published public var folderItems: [Int: [MediaItem]] = [:]
-
+  
   init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
     self.contentService = itemsService
     self.authState = authState
@@ -31,7 +31,7 @@ class BookmarksCatalog: ObservableObject {
     // Load on creation, not via the view's `.task` (unreliable in a compact split view / nested stack).
     Task { await fetchItems() }
   }
-
+  
   /// Keep the folder list in sync with the shared cache so a folder deleted on its detail screen
   /// disappears here too (without a manual refresh).
   private func observeFolderCache() {
@@ -46,13 +46,13 @@ class BookmarksCatalog: ObservableObject {
       }
       .store(in: &bag)
   }
-
+  
   func fetchItems() async {
     guard authState.userState == .authorized else {
       subscribeForAuth()
       return
     }
-
+    
     // Folder list comes from the shared session cache (single source of truth across the app);
     // only each folder's contents are fetched here.
     await AppContext.shared.libraryState.loadBookmarkFoldersIfNeeded()
@@ -60,7 +60,7 @@ class BookmarksCatalog: ObservableObject {
     items = bookmarks
     await loadFolderItems(bookmarks)
   }
-
+  
   /// Loads each folder's contents concurrently so every shelf can show its posters.
   private func loadFolderItems(_ bookmarks: [Bookmark]) async {
     let service = contentService
@@ -76,9 +76,7 @@ class BookmarksCatalog: ObservableObject {
       }
     }
   }
-
   
-
   @Sendable @MainActor
   func refresh() async {
     items = Bookmark.skeletonMock()
@@ -88,7 +86,7 @@ class BookmarksCatalog: ObservableObject {
     await AppContext.shared.libraryState.reloadBookmarkFolders()
     await fetchItems()
   }
-
+  
   private func subscribeForAuth() {
     authState.$userState.filter({ $0 == .authorized }).first().sink { [weak self] _ in
       Task {
@@ -96,5 +94,5 @@ class BookmarksCatalog: ObservableObject {
       }
     }.store(in: &bag)
   }
-
+  
 }

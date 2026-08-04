@@ -17,9 +17,9 @@ import Combine
 enum WatchingTab: String, CaseIterable, Identifiable {
   case newEpisodes = "new"
   case watchlist
-
+  
   var id: String { rawValue }
-
+  
   var title: String {
     switch self {
     case .newEpisodes:
@@ -36,9 +36,9 @@ enum WatchingEpisodesType: String, CaseIterable, Identifiable {
   case serial
   case docuserial
   case tvshow
-
+  
   var id: String { rawValue }
-
+  
   var mediaType: MediaType {
     switch self {
     case .serial: return .serial
@@ -46,7 +46,7 @@ enum WatchingEpisodesType: String, CaseIterable, Identifiable {
     case .tvshow: return .tvshow
     }
   }
-
+  
   var title: String { mediaType.title }
 }
 
@@ -55,9 +55,9 @@ enum WatchingEpisodesType: String, CaseIterable, Identifiable {
 enum WatchlistKind: String, CaseIterable, Identifiable {
   case serials
   case movies
-
+  
   var id: String { rawValue }
-
+  
   var title: String {
     switch self {
     case .serials: return "Series"
@@ -68,13 +68,13 @@ enum WatchlistKind: String, CaseIterable, Identifiable {
 
 @MainActor
 class WatchingModel: ObservableObject {
-
+  
   private var authState: AuthState
   private var errorHandler: ErrorHandler
   private var contentService: VideoContentService
   private var bag = Set<AnyCancellable>()
   private var loadGeneration = 0
-
+  
   @Published public var serials: [WatchingSerial] = []
   @Published public var isLoading: Bool = true
   /// Fixed for the lifetime of the screen — "New episodes" and "Watching" are now two separate
@@ -83,11 +83,13 @@ class WatchingModel: ObservableObject {
   @Published public var episodesType: WatchingEpisodesType = .serial
   /// Serials vs movies sub-filter for the "Watching" / "Я смотрю" tab.
   @Published public var watchlistKind: WatchlistKind = .serials
-
-  init(itemsService: VideoContentService,
-       authState: AuthState,
-       errorHandler: ErrorHandler,
-       tab: WatchingTab = .newEpisodes) {
+  
+  init(
+    itemsService: VideoContentService,
+    authState: AuthState,
+    errorHandler: ErrorHandler,
+    tab: WatchingTab = .newEpisodes
+  ) {
     self.contentService = itemsService
     self.authState = authState
     self.errorHandler = errorHandler
@@ -98,13 +100,13 @@ class WatchingModel: ObservableObject {
     // `fetchItems` no-ops until authorized and retries via `subscribeForAuth`.
     Task { await fetchItems() }
   }
-
+  
   func fetchItems() async {
     guard authState.userState == .authorized else {
       subscribeForAuth()
       return
     }
-
+    
     loadGeneration &+= 1
     let generation = loadGeneration
     isLoading = true
@@ -138,24 +140,24 @@ class WatchingModel: ObservableObject {
       errorHandler.setError(error)
     }
   }
-
+  
   func select(episodesType: WatchingEpisodesType) {
     guard episodesType != self.episodesType else { return }
     self.episodesType = episodesType
   }
-
+  
   func select(watchlistKind: WatchlistKind) {
     guard watchlistKind != self.watchlistKind else { return }
     self.watchlistKind = watchlistKind
   }
-
+  
   @Sendable @MainActor
   func refresh() async {
     errorHandler.reset()
     Logger.app.debug("refetch watching serials")
     await fetchItems()
   }
-
+  
   // Refetch whenever the new-episodes content-type sub-tab or the watchlist serials/movies sub-tab changes.
   private func subscribeForReload() {
     // Each @Published fires its current value on subscribe, so drop both initial emissions.
@@ -167,7 +169,7 @@ class WatchingModel: ObservableObject {
       }
       .store(in: &bag)
   }
-
+  
   private func subscribeForAuth() {
     authState.$userState.filter({ $0 == .authorized }).first().sink { [weak self] _ in
       Task {
@@ -175,5 +177,5 @@ class WatchingModel: ObservableObject {
       }
     }.store(in: &bag)
   }
-
+  
 }

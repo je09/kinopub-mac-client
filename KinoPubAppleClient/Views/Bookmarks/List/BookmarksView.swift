@@ -15,11 +15,11 @@ struct BookmarksView: View {
   @Environment(\.appContext) var appContext
   @StateObject private var catalog: BookmarksCatalog
   @Environment(\.sectionEmbedded) private var sectionEmbedded
-
+  
   init(catalog: @autoclosure @escaping () -> BookmarksCatalog) {
     _catalog = StateObject(wrappedValue: catalog())
   }
-
+  
   var body: some View {
     if sectionEmbedded {
       sectionContent
@@ -29,7 +29,7 @@ struct BookmarksView: View {
       }
     }
   }
-
+  
   private var sectionContent: some View {
     bookmarksList
       .kinoScreen("Bookmarks".localized)
@@ -41,17 +41,21 @@ struct BookmarksView: View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: 28) {
         ForEach(catalog.items) { bookmark in
-          MediaShelf(title: bookmark.title,
-                     onHeaderTap: {
-                       navigationState.bookmarksRoutes.append(Route.bookmark(bookmark))
-                     }) {
+          MediaShelf(
+            title: bookmark.title,
+            onHeaderTap: {
+              navigationState.bookmarksRoutes.append(Route.bookmark(bookmark))
+            }
+          ) {
             if let items = catalog.folderItems[bookmark.id] {
               ForEach(items) { item in
                 NavigationLink(value: Route.details(item)) {
-                  PosterCard(imageURL: item.posters.medium,
-                             title: item.localizedTitle,
-                             imdbRating: item.imdbRating,
-                             kinopoiskRating: item.kinopoiskRating)
+                  PosterCard(
+                    imageURL: item.posters.medium,
+                    title: item.localizedTitle,
+                    imdbRating: item.imdbRating,
+                    kinopoiskRating: item.kinopoiskRating
+                  )
                   .overlay(alignment: .topTrailing) { MediaCardStatusBadge(item: item) }
                 }
                 .buttonStyle(.plain)
@@ -73,9 +77,14 @@ struct BookmarksView: View {
 
 struct BookmarksView_Previews: PreviewProvider {
   static var previews: some View {
-    BookmarksView(catalog: BookmarksCatalog(itemsService: VideoContentServiceMock(),
-                                            authState: AuthState(authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(), deviceService: DeviceServiceMock()),
-                                            errorHandler: ErrorHandler()))
-      .appPreviewEnvironment()
+    BookmarksView(
+      catalog: BookmarksCatalog(
+        itemsService: VideoContentServiceMock(),
+        authState: AuthState(
+          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
+          deviceService: DeviceServiceMock()),
+        errorHandler: ErrorHandler())
+    )
+    .appPreviewEnvironment()
   }
 }
