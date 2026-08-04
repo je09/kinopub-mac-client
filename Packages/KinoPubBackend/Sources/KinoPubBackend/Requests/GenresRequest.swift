@@ -22,11 +22,11 @@ public struct GenresRequest: Endpoint, CacheableRequest {
     "/v1/genres"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     guard let type = type else { return nil }
     // Web shows different genres per section; if the API ignores `type` it
     // harmlessly returns all genres.

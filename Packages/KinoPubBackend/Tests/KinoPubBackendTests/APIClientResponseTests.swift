@@ -72,7 +72,7 @@ final class APIClientResponseTests: XCTestCase {
     sessionMock.data = json.data(using: .utf8)
 
     let response: SingleItemData<MediaItem> = try await apiClient.performRequest(
-      with: RequestData(path: "/v1/items/555", method: "GET"),
+      with: RequestData(path: "/v1/items/555", method: .get),
       decodingType: SingleItemData<MediaItem>.self
     )
 
@@ -121,7 +121,7 @@ final class APIClientResponseTests: XCTestCase {
     sessionMock.data = json.data(using: .utf8)
 
     let response: PaginatedData<MediaItem> = try await apiClient.performRequest(
-      with: RequestData(path: "/v1/items", method: "GET"),
+      with: RequestData(path: "/v1/items", method: .get),
       decodingType: PaginatedData<MediaItem>.self
     )
 
@@ -146,7 +146,7 @@ final class APIClientResponseTests: XCTestCase {
 
     do {
       let _: SingleItemData<MediaItem> = try await apiClient.performRequest(
-        with: RequestData(path: "/v1/items/1", method: "GET"),
+        with: RequestData(path: "/v1/items/1", method: .get),
         decodingType: SingleItemData<MediaItem>.self
       )
       XCTFail("Expected a network error but decoding succeeded")
@@ -174,7 +174,7 @@ final class APIClientResponseTests: XCTestCase {
 
     do {
       let _: AccessToken = try await apiClient.performRequest(
-        with: RequestData(path: "/oauth2/device", method: "POST"),
+        with: RequestData(path: "/oauth2/device", method: .post),
         decodingType: AccessToken.self
       )
       XCTFail("Expected an authorization-pending error but decoding succeeded")
@@ -199,7 +199,7 @@ final class APIClientResponseTests: XCTestCase {
 
     do {
       let _: AccessToken = try await apiClient.performRequest(
-        with: RequestData(path: "/oauth2/device", method: "POST"),
+        with: RequestData(path: "/oauth2/device", method: .post),
         decodingType: AccessToken.self
       )
       XCTFail("Expected a backend error but decoding succeeded")
@@ -218,7 +218,7 @@ final class APIClientResponseTests: XCTestCase {
 
     do {
       let _: SingleItemData<MediaItem> = try await apiClient.performRequest(
-        with: RequestData(path: "/v1/items/1", method: "GET"),
+        with: RequestData(path: "/v1/items/1", method: .get),
         decodingType: SingleItemData<MediaItem>.self
       )
       XCTFail("Expected a decoding error but decoding succeeded")

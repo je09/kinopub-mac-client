@@ -14,8 +14,8 @@ public struct CreateBookmarkFolderRequest: Endpoint {
   }
 
   public var path: String { "/v1/bookmarks/create" }
-  public var method: String { "POST" }
-  public var parameters: [String: Any]? { ["title": title] }
+  public var method: HTTPMethod { .post }
+  public var parameters: HTTPParameters? { ["title": title] }
   public var headers: [String: String]? { nil }
   // `title` is read from the form BODY only — as a query param the server returns
   // 400 "Title is too short" (verified live). Must be a body POST.

@@ -21,11 +21,11 @@ public struct ToggleBookmarkFolderRequest: Endpoint {
     "/v1/bookmarks/toggle-item"
   }
 
-  public var method: String {
-    "POST"
+  public var method: HTTPMethod {
+    .post
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     [
       "item": item,
       "folder": folder

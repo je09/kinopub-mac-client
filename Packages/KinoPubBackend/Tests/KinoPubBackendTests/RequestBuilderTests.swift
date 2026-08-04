@@ -11,9 +11,9 @@ import XCTest
 
 struct RequestData: Endpoint {
   var path: String
-  var method: String
+  var method: HTTPMethod
   var headers: [String: String]?
-  var parameters: [String: Any]?
+  var parameters: HTTPParameters?
 }
 
 class RequestBuilderTests: XCTestCase {
@@ -32,7 +32,7 @@ class RequestBuilderTests: XCTestCase {
     }
 
     func testBuildRequest_WithPath_ReturnsCorrectURL() {
-        let requestData = RequestData(path: "/testPath", method: "GET")
+        let requestData = RequestData(path: "/testPath", method: .get)
         let request = requestBuilder.build(with: requestData)
 
         XCTAssertEqual(request?.url, URL(string: "https://api.example.com/testPath"))
@@ -40,7 +40,7 @@ class RequestBuilderTests: XCTestCase {
 
     func testBuildRequest_WithHeaders_SetsHeadersCorrectly() {
         let headers = ["Authorization": "Bearer token123"]
-        let requestData = RequestData(path: "/testPath", method: "GET", headers: headers)
+        let requestData = RequestData(path: "/testPath", method: .get, headers: headers)
         let request = requestBuilder.build(with: requestData)
 
         XCTAssertEqual(request?.value(forHTTPHeaderField: "Authorization"), "Bearer token123")
@@ -48,7 +48,7 @@ class RequestBuilderTests: XCTestCase {
 
     func testBuildRequest_WithGETParameters_EncodesParametersInURL() {
         let parameters = ["key1": "value1", "key2": "value2"]
-        let requestData = RequestData(path: "/testPath", method: "GET", parameters: parameters)
+        let requestData = RequestData(path: "/testPath", method: .get, parameters: parameters)
         let request = requestBuilder.build(with: requestData)
 
         let expectedURL = URL(string: "https://api.example.com/testPath?key1=value1&key2=value2")!

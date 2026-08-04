@@ -19,11 +19,11 @@ public struct ToggleWatchlistRequest: Endpoint {
     "/v1/watching/togglewatchlist"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     [
       "id": id
     ]

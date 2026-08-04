@@ -21,11 +21,11 @@ public struct UpdateDeviceSettingsRequest: Endpoint {
     "/v1/device/\(id)/settings"
   }
 
-  public var method: String {
-    "POST"
+  public var method: HTTPMethod {
+    .post
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     // camelCase keys, booleans as 1/0, in the form body. The web modal posts streamingType/
     // serverLocation/support4k/supportHevc; the endpoint also accepts mixedPlaylist + supportHdr
     // (verified live). mixedPlaylist makes HEVC masters carry an h264 fallback (AVPlayer can't open

@@ -24,11 +24,11 @@ public struct GetWatchingDataRequest: Endpoint {
     "/v1/watching"
   }
   
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
   
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     [
       "id": id,
       "video": video,

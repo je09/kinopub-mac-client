@@ -21,11 +21,11 @@ public struct RemoveBookmarkFolderRequest: Endpoint {
     "/v1/bookmarks/remove-folder"
   }
 
-  public var method: String {
-    "POST"
+  public var method: HTTPMethod {
+    .post
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     ["folder": id]
   }
 

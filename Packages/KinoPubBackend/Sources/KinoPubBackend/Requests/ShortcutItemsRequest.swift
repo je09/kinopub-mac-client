@@ -23,11 +23,11 @@ public struct ShortcutItemsRequest: Endpoint {
     "/v1/items/\(shortcut.rawValue)"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     var params = [
       "type": contentType.rawValue
     ]

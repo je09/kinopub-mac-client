@@ -72,12 +72,12 @@ public struct FilterItemsRequest: Endpoint {
     "/v1/items"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
-    var params = [String: Any]()
+  public var parameters: HTTPParameters? {
+    var params = HTTPParameters()
 
     if let rawType = rawType, !rawType.isEmpty {
       params["type"] = rawType

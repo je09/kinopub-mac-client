@@ -7,8 +7,8 @@ public struct MediaLinksRequest: Endpoint {
   public init(mediaID: Int) { self.mediaID = mediaID }
 
   public var path: String { "/v1/items/media-links" }
-  public var method: String { "GET" }
-  public var parameters: [String: Any]? { ["mid": mediaID] }
+  public var method: HTTPMethod { .get }
+  public var parameters: HTTPParameters? { ["mid": mediaID] }
   public var headers: [String: String]? { nil }
   public var forceSendAsGetParams: Bool { true }
 }
@@ -24,8 +24,8 @@ public struct MediaVideoLinkRequest: Endpoint {
   }
 
   public var path: String { "/v1/items/media-video-link" }
-  public var method: String { "GET" }
-  public var parameters: [String: Any]? { ["file": file, "type": type] }
+  public var method: HTTPMethod { .get }
+  public var parameters: HTTPParameters? { ["file": file, "type": type] }
   public var headers: [String: String]? { nil }
   public var forceSendAsGetParams: Bool { true }
 }

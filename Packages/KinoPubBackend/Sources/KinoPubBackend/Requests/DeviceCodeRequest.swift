@@ -30,11 +30,11 @@ public struct DeviceCodeRequest: Endpoint {
     "/oauth2/device"
   }
 
-  public var method: String {
-    "POST"
+  public var method: HTTPMethod {
+    .post
   }
 
-  public var parameters: [String: Any]? {
+  public var parameters: HTTPParameters? {
     var params = [
       "grant_type": grantType.rawValue,
       "client_id": clientID,

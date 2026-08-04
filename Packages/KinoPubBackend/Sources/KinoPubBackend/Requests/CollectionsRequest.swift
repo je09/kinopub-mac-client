@@ -23,12 +23,12 @@ public struct CollectionsRequest: Endpoint {
     "/v1/collections"
   }
 
-  public var method: String {
-    "GET"
+  public var method: HTTPMethod {
+    .get
   }
 
-  public var parameters: [String: Any]? {
-    var params = [String: Any]()
+  public var parameters: HTTPParameters? {
+    var params = HTTPParameters()
 
     if let page = page {
       params["page"] = "\(page)"

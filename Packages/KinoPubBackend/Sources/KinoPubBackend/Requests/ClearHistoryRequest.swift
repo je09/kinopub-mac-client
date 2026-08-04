@@ -22,8 +22,8 @@ public struct ClearHistoryRequest: Endpoint {
   }
 
   public var path: String { "/v1/history/\(scope.rawValue)" }
-  public var method: String { "POST" }
-  public var parameters: [String: Any]? { ["id": id] }
+  public var method: HTTPMethod { .post }
+  public var parameters: HTTPParameters? { ["id": id] }
   public var headers: [String: String]? { nil }
   public var forceSendAsGetParams: Bool { true }
 }
