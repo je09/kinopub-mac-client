@@ -34,14 +34,6 @@ struct Sidebar: View {
         }
       }
 
-      Section {
-        ForEach(visibility.libraryItems) { item in
-          if isEditingSections || visibility.isVisible(item) { row(item) }
-        }
-      } header: {
-        libraryHeader
-      }
-
       if isEditingSections || visibility.personalItems.contains(where: visibility.isVisible) {
         Section {
           ForEach(visibility.personalItems) { item in
@@ -57,6 +49,14 @@ struct Sidebar: View {
         } header: {
           sectionHeader("My Library")
         }
+      }
+
+      Section {
+        ForEach(visibility.libraryItems) { item in
+          if isEditingSections || visibility.isVisible(item) { row(item) }
+        }
+      } header: {
+        libraryHeader
       }
 
     }

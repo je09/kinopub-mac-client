@@ -8,7 +8,6 @@ import SwiftUI
 import KinoPubBackend
 import KinoPubKit
 import KinoPubUI
-import SkeletonUI
 
 struct ProfileView: View {
 

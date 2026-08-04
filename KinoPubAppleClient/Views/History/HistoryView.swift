@@ -8,7 +8,6 @@
 import SwiftUI
 import KinoPubUI
 import KinoPubBackend
-import SkeletonUI
 
 struct HistoryView: View {
   @EnvironmentObject var navigationState: NavigationState

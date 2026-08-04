@@ -1,0 +1,7 @@
+{
+  "code": "replacement-secret",
+  "user_code": "WXYZ-9876",
+  "verification_uri": "https://example.invalid/device",
+  "expires_in": 600,
+  "interval": 1
+}

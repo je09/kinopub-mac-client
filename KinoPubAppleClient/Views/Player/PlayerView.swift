@@ -478,15 +478,16 @@ private final class PlayerChromeView: AVPlayerView, AVPlayerViewPictureInPicture
     } else {
       titlebarContainer(in: window)?.layer?.removeAnimation(forKey: "playerChromeTransition")
     }
-    if scheduleHide, observedPlayer?.rate ?? 0 > 0 { scheduleChromeHide() }
+    if scheduleHide, observedPlayer?.rate ?? 0 > 0 {
+      scheduleChromeHide(after: isMouseInsidePlayer(in: window) ? 4.0 : 2.0)
+    }
   }
 
-  private func scheduleChromeHide() {
+  private func scheduleChromeHide(after delay: TimeInterval = 2.0) {
     hideWorkItem?.cancel()
     let work = DispatchWorkItem { [weak self] in self?.hideWindowChrome() }
     hideWorkItem = work
-
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: work)
+    DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
   }
 
   private func hideWindowChrome(requiresActivePlayback: Bool = true) {
@@ -565,7 +566,10 @@ private extension View {
                                set: { if !$0 { error.wrappedValue = nil } })) {
       Button("OK", role: .cancel) { onDismiss() }
     } message: {
-      if let message = error.wrappedValue { Text(message) }
+      if let message = error.wrappedValue {
+        Text(message)
+          .accessibilityIdentifier(AccessibilityID.playerError)
+      }
     }
   }
 }

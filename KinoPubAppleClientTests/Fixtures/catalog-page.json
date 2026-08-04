@@ -1,0 +1,15 @@
+{
+  "items": [{
+    "id": 42, "type": "movie", "subtype": "foreign", "title": "Обсессия / Obsession", "year": 2024,
+    "cast": "Fixture Actor", "director": "Fixture Director", "genres": [{"id": 1, "title": "Drama"}],
+    "countries": [{"id": 1, "title": "US"}], "voice": null, "duration": {"average": 90, "total": 5400},
+    "langs": 1, "quality": 1080, "plot": "Sanitized home-hero fixture plot.", "imdb": 1, "imdb_rating": 8.1,
+    "imdb_votes": 100, "kinopoisk": 1, "kinopoisk_rating": 8.2, "kinopoisk_votes": 200,
+    "rating": 8, "rating_votes": 10, "rating_percentage": 80, "views": 1000, "comments": 2,
+    "posters": {"small": "", "medium": "", "big": "", "wide": null}, "trailer": null,
+    "finished": false, "advert": false, "poor_quality": false, "created_at": null, "updated_at": null,
+    "in_watchlist": false, "subscribed": false, "ac3": null, "bookmarks": null, "seasons": null,
+    "videos": null, "skeleton": false
+  }],
+  "pagination": { "current": 1, "total": 1, "perpage": 20, "count": 1 }
+}

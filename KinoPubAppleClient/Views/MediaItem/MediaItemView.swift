@@ -10,7 +10,6 @@ import SwiftUI
 import KinoPubUI
 import KinoPubBackend
 import KinoPubKit
-import SkeletonUI
 
 struct MediaItemView: View {
 
@@ -110,6 +109,7 @@ struct MediaItemView: View {
       }
     }
     .background(Color.clear)
+    .accessibilityIdentifier(AccessibilityID.detailScreen)
     .preference(key: WindowHeroMediaPreferenceKey.self, value: windowBackdropMedia)
     .sheet(isPresented: $showComments) {
       CommentsView(mediaId: mediaItem.id)
@@ -435,6 +435,7 @@ struct MediaItemView: View {
     .buttonStyle(.plain)
     .fixedSize()
     .accessibilityLabel("Add to Bookmark")
+    .accessibilityIdentifier(AccessibilityID.bookmarkPicker)
   }
 
   private var downloadButton: some View {

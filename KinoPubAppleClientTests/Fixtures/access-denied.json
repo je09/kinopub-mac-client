@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "error": "access_denied",
+  "error_description": "The user denied this device."
+}

@@ -1,0 +1,11 @@
+{
+  "items": [
+    {"id": 99, "type": "movie"},
+    {"id": 42, "type": "movie", "subtype": "foreign", "title": "Valid item", "year": 2024,
+     "cast": "", "director": "", "genres": [], "countries": [], "duration": {"average": 0, "total": 1},
+     "langs": 0, "quality": 0, "plot": "", "rating": 0, "rating_votes": 0, "rating_percentage": 0,
+     "views": 0, "comments": 0, "posters": {"small": "", "medium": "", "big": ""},
+     "finished": false, "advert": false, "poor_quality": false}
+  ],
+  "pagination": {"current": 1, "total": 1, "perpage": 20}
+}

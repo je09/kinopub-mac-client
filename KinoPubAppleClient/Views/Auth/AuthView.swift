@@ -48,6 +48,7 @@ struct AuthView: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
+        .accessibilityIdentifier(AccessibilityID.authActivation)
         .keyboardShortcut(.defaultAction)
         .disabled(model.deviceCode.isEmpty || model.verificationURL.isEmpty)
 
@@ -60,6 +61,7 @@ struct AuthView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color(nsColor: .windowBackgroundColor).ignoresSafeArea())
+    .accessibilityIdentifier(AccessibilityID.authScreen)
     .interactiveDismissDisabled(true)
     .task { model.fetchDeviceCode() }
     .onReceive(model.$close) { shouldClose in
@@ -91,6 +93,7 @@ struct AuthView: View {
             .foregroundStyle(Color.KinoPub.subtitle)
         }
         .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
+        .accessibilityIdentifier(AccessibilityID.authLoading)
       } else {
         HStack(spacing: 16) {
           Text(model.deviceCode)
@@ -100,6 +103,7 @@ struct AuthView: View {
             .textSelection(.enabled)
             .accessibilityLabel("Device code")
             .accessibilityValue(model.deviceCode.map(String.init).joined(separator: " "))
+            .accessibilityIdentifier(AccessibilityID.authCode)
 
           Spacer(minLength: 8)
 

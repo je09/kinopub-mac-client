@@ -9,9 +9,14 @@ updates:
       prefix: "chore(ci)"
     labels: ["dependencies", "ci"]
 
-  # Swift Package Manager dependencies.
+  # Dependabot does not inspect local packages transitively from an Xcode project, so each package
+  # directory is listed explicitly. Xcode-project package references are monitored manually.
   - package-ecosystem: "swift"
-    directory: "/"
+    directories:
+      - "/Packages/KinoPubBackend"
+      - "/Packages/KinoPubKit"
+      - "/Packages/KinoPubLogging"
+      - "/Packages/KinoPubUI"
     schedule:
       interval: "weekly"
     commit-message:
