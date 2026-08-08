@@ -204,7 +204,8 @@ struct SidebarNavigationDetail: View {
       catalog: screenCache.model(for: .downloads) {
         DownloadsCatalog(
           downloadsDatabase: dependencies.downloadedFilesDatabase,
-          downloadManager: dependencies.downloadManager)
+          downloadManager: dependencies.downloadManager,
+          storageRepository: dependencies.storageUsageRepository)
       })
   }
   

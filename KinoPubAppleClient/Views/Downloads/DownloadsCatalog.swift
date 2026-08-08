@@ -14,10 +14,13 @@ import KinoPubKit
 final class DownloadsCatalog: ObservableObject {
   private let downloadsDatabase: DownloadedFilesDatabase<DownloadMeta>
   private let downloadManager: DownloadManager<DownloadMeta>
+  private let storageRepository: StorageUsageRepository
   
   @Published var downloadedItems: [DownloadedFileInfo<DownloadMeta>] = []
   @Published var activeDownloads: [Download<DownloadMeta>] = []
   @Published var totalBytes: Int64 = 0
+  /// On-disk sizes of downloaded files, computed off the main actor (keyed by local file URL).
+  @Published var fileSizes: [URL: Int64] = [:]
   
   private var cancellables = [AnyCancellable]()
   
@@ -25,10 +28,12 @@ final class DownloadsCatalog: ObservableObject {
   
   init(
     downloadsDatabase: DownloadedFilesDatabase<DownloadMeta>,
-    downloadManager: DownloadManager<DownloadMeta>
+    downloadManager: DownloadManager<DownloadMeta>,
+    storageRepository: StorageUsageRepository
   ) {
     self.downloadsDatabase = downloadsDatabase
     self.downloadManager = downloadManager
+    self.storageRepository = storageRepository
   }
   
   func refresh() {
@@ -76,12 +81,16 @@ final class DownloadsCatalog: ObservableObject {
   
   private func recomputeTotalSize() {
     let urls = downloadedItems.map(\.localFileURL)
-    Task.detached(priority: .utility) {
-      let bytes = urls.reduce(Int64(0)) { total, url in
-        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
-        return total + ((attributes?[.size] as? Int64) ?? 0)
+    Task {
+      var bytes: Int64 = 0
+      var sizes: [URL: Int64] = [:]
+      for url in urls {
+        let size = await storageRepository.byteSize(of: url)
+        sizes[url] = size
+        bytes += size
       }
-      await MainActor.run { [weak self] in self?.totalBytes = bytes }
+      totalBytes = bytes
+      fileSizes = sizes
     }
   }
 }

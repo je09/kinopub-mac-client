@@ -129,7 +129,10 @@ struct ProfileView: View {
       if done { dismiss() }
     }
     .sheet(isPresented: $showStorage) {
-      StorageBreakdownView()
+      StorageBreakdownView(
+        store: StorageBreakdownStore(
+          repository: dependencies.storageUsageRepository,
+          downloadedFilesDatabase: dependencies.downloadedFilesDatabase))
     }
     .alert("Are you sure?", isPresented: $showLogoutAlert) {
       Button("Logout", role: .destructive) { model.logout() }

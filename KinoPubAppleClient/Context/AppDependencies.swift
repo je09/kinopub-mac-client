@@ -60,6 +60,7 @@ struct AppDependencies {
   let actionsService: UserActionsService
   let localProgressStore: LocalWatchProgressStore
   let libraryState: LibraryViewState
+  let storageUsageRepository: StorageUsageRepository
   let commentsRepository: any CommentsRepository
   let searchRepository: any SearchRepository
 
@@ -127,11 +128,12 @@ struct AppDependencies {
       configuration: configuration,
       accessTokenService: accessTokenService,
       credentialRefresher: credentialRefresher)
+    let epgService = EPGServiceImpl()
     return AppDependencies(
       configuration: configuration,
       authService: authService,
       contentService: VideoContentServiceImpl(apiClient: apiClient),
-      epgService: EPGServiceImpl(),
+      epgService: epgService,
       collectionsService: CollectionsServiceImpl(apiClient: apiClient),
       deviceService: DeviceServiceImpl(apiClient: apiClient),
       accessTokenService: accessTokenService,
@@ -145,6 +147,7 @@ struct AppDependencies {
       actionsService: actionsService,
       localProgressStore: localProgressStore,
       libraryState: libraryState,
+      storageUsageRepository: StorageUsageRepository(epgService: epgService),
       commentsRepository: CommentsRepositoryAdapter(client: apiClient),
       searchRepository: SearchRepositoryAdapter(client: apiClient))
   }
@@ -197,6 +200,7 @@ struct AppDependencies {
       actionsService: actionsService,
       localProgressStore: localProgressStore,
       libraryState: libraryState,
+      storageUsageRepository: StorageUsageRepository(epgService: EPGServiceMock()),
       commentsRepository: PreviewCommentsRepository(),
       searchRepository: SearchRepositoryStub())
   }

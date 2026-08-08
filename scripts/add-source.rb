@@ -29,7 +29,7 @@ name = File.basename(path)
 ref = format('/* %s */', name)
 
 # 1. PBXFileReference
-ref_line = "\t\t#{id} #{ref} = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = #{name}; sourceTree = \"<group>\"; };"
+ref_line = "\t\t#{id} #{ref} = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = #{File.join(ARGV[2].to_s.empty? ? "" : "", name)}; sourceTree = \"<group>\"; };"
 text.sub!(/^(\t\t[A-F0-9]{24} \/\* .* \*\/ = \{isa = PBXFileReference;.*\n)/) { ref_line + "\n" + $1 }
 
 # 2. PBXBuildFile (Sources)
