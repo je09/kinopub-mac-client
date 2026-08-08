@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 import KinoPubBackend
+import KinoPubData
+import KinoPubDomain
 import KinoPubKit
 
 // MARK: - Env key
@@ -25,6 +27,10 @@ extension EnvironmentValues {
 
 // MARK: - AppContextProtocol
 
+protocol CommentsRepositoryProvider {
+  var commentsRepository: any CommentsRepository { get }
+}
+
 typealias AppContextProtocol = AuthorizationServiceProvider
 & VideoContentServiceProvider
 & CollectionsServiceProvider
@@ -40,6 +46,7 @@ typealias AppContextProtocol = AuthorizationServiceProvider
 & LocalWatchProgressProvider
 & MediaLibraryProvider
 & EPGServiceProvider
+& CommentsRepositoryProvider
 
 // MARK: - AppContext
 
@@ -62,6 +69,7 @@ struct AppContext: AppContextProtocol {
   var actionsService: UserActionsService
   var localProgressStore: LocalWatchProgressStore
   var libraryState: MediaLibraryStore
+  let commentsRepository: any CommentsRepository
   
   static let shared: AppContext = {
     let configuration = BundleConfiguration()
@@ -135,7 +143,8 @@ struct AppContext: AppContextProtocol {
       seasonDownloadManager: seasonDownloadManager,
       actionsService: actionsService,
       localProgressStore: localProgressStore,
-      libraryState: libraryState)
+      libraryState: libraryState,
+      commentsRepository: CommentsRepositoryAdapter(client: apiClient))
   }()
   
   // MARK: - API Client building

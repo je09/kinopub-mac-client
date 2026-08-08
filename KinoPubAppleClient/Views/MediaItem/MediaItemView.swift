@@ -114,7 +114,12 @@ struct MediaItemView: View {
     .accessibilityIdentifier(AccessibilityID.detailScreen)
     .preference(key: WindowHeroMediaPreferenceKey.self, value: windowBackdropMedia)
     .sheet(isPresented: $showComments) {
-      CommentsView(mediaId: mediaItem.id)
+      CommentsView(
+        store: CommentsStore(
+          mediaID: mediaItem.id,
+          repository: appContext.commentsRepository
+        )
+      )
     }
     .sheet(
       isPresented: $showCastCrew,
