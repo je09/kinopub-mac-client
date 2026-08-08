@@ -101,6 +101,7 @@ struct RouteDestinationView: View {
       PersonSearchView(
         model: SearchModel(
           repository: dependencies.searchRepository,
+          recentsRepository: dependencies.recentsRepository,
           errorHandler: errorHandler),
         query: query,
         field: field,
@@ -110,6 +111,7 @@ struct RouteDestinationView: View {
       GenreResultsView(
         model: SearchModel(
           repository: dependencies.searchRepository,
+          recentsRepository: dependencies.recentsRepository,
           errorHandler: errorHandler),
         genreId: id,
         title: title)

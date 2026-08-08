@@ -19,6 +19,8 @@ class ProfileModel: ObservableObject {
   
   @Published public var userData: UserData = UserData.mock()
   @Published var selectedLanguage: String
+  /// Caps streaming quality (shared with the player via `StreamQuality.userDefaultsKey`).
+  @Published var streamQuality: StreamQuality = .current
   @Published var shouldShowExitAlert: Bool = false
   /// True while the async logout (deregister device → clear session) is in flight, so the UI can
   /// disable the button and show a spinner.
@@ -78,8 +80,16 @@ class ProfileModel: ObservableObject {
   }
   
   func changeLanguage(to language: String) {
+    selectedLanguage = language
+    UserDefaults.standard.set(language, forKey: "selectedLanguage")
     UserDefaults.standard.setValue([language], forKey: "AppleLanguages")
     UserDefaults.standard.synchronize()
     shouldShowExitAlert = true
+  }
+
+  /// Caps streaming quality and persists it for the player (same key as `PlayerManager`).
+  func setStreamQuality(_ quality: StreamQuality) {
+    streamQuality = quality
+    UserDefaults.standard.set(quality.rawValue, forKey: StreamQuality.userDefaultsKey)
   }
 }

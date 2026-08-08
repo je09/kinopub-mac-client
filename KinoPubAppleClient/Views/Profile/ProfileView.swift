@@ -15,11 +15,7 @@ struct ProfileView: View {
   @EnvironmentObject var errorHandler: ErrorHandler
   @Environment(\.dependencies) var dependencies
   @StateObject private var model: ProfileModel
-  @AppStorage("selectedLanguage") private var selectedLanguage: String =
-  (Locale.current.language.languageCode?.identifier ?? "en")
-  /// Caps streaming quality; read by PlayerManager when building the AVPlayerItem.
-  @AppStorage(StreamQuality.userDefaultsKey) private var streamQuality: StreamQuality = .auto
-  
+
   @State private var showLogoutAlert: Bool = false
   @State private var showStorage: Bool = false
   @Environment(\.sectionEmbedded) private var sectionEmbedded
@@ -129,7 +125,10 @@ struct ProfileView: View {
       if done { dismiss() }
     }
     .sheet(isPresented: $showStorage) {
-      StorageBreakdownView()
+      StorageBreakdownView(
+        store: StorageBreakdownStore(
+          repository: dependencies.storageUsageRepository,
+          downloadedFilesDatabase: dependencies.downloadedFilesDatabase))
     }
     .alert("Are you sure?", isPresented: $showLogoutAlert) {
       Button("Logout", role: .destructive) { model.logout() }
@@ -204,7 +203,10 @@ struct ProfileView: View {
       HStack {
         Text("Maximum Quality".localized).foregroundStyle(Color.KinoPub.text)
         Spacer()
-        Picker("", selection: $streamQuality) {
+        Picker("", selection: Binding(
+          get: { model.streamQuality },
+          set: { model.setStreamQuality($0) }
+        )) {
           ForEach(StreamQuality.allCases) { quality in
             Text(quality.title).tag(quality)
           }
@@ -220,16 +222,16 @@ struct ProfileView: View {
       HStack {
         Text("Select Language".localized).foregroundStyle(Color.KinoPub.text)
         Spacer()
-        Picker("", selection: $selectedLanguage) {
+        Picker("", selection: Binding(
+          get: { model.selectedLanguage },
+          set: { model.changeLanguage(to: $0) }
+        )) {
           ForEach(model.availableLanguages.keys.sorted(), id: \.self) { key in
             Text(model.availableLanguages[key, default: key]).tag(key)
           }
         }
         .labelsHidden()
         .pickerStyle(MenuPickerStyle())
-        .onChange(of: selectedLanguage) { newLanguage in
-          model.changeLanguage(to: newLanguage)
-        }
       }
     }
   }

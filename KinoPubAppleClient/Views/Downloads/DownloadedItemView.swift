@@ -22,6 +22,9 @@ public struct DownloadedItemView: View {
   private var mediaItem: DownloadMeta
   private var progress: Float?
   private var fileURL: URL?
+  /// Precomputed on-disk size of the download (file or `.movpkg` bundle), from the catalog's
+  /// storage repository. Nil for in-progress rows.
+  private var fileSize: Int64?
   private var speed: Double?
   private var remaining: TimeInterval?
   private var state: DownloadRowState
@@ -31,6 +34,7 @@ public struct DownloadedItemView: View {
     mediaItem: DownloadMeta,
     progress: Float?,
     fileURL: URL? = nil,
+    fileSize: Int64? = nil,
     speed: Double? = nil,
     remaining: TimeInterval? = nil,
     state: DownloadRowState = .auto,
@@ -39,6 +43,7 @@ public struct DownloadedItemView: View {
     self.mediaItem = mediaItem
     self.progress = progress
     self.fileURL = fileURL
+    self.fileSize = fileSize
     self.speed = speed
     self.remaining = remaining
     self.state = state
@@ -142,31 +147,8 @@ public struct DownloadedItemView: View {
   }()
   
   private var fileSizeString: String? {
-    guard let fileURL else { return nil }
-    let bytes = Self.byteSize(of: fileURL)
-    guard bytes > 0 else { return nil }
-    return ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
-  }
-  
-  /// On-disk size of the download. An mp4 is a single file; an HLS download is a `.movpkg` *bundle*
-  /// (a directory), so `attributesOfItem` returns only the tiny directory entry — we must sum the
-  /// contents to report the real size.
-  private static func byteSize(of url: URL) -> Int64 {
-    let fm = FileManager.default
-    var isDirectory: ObjCBool = false
-    guard fm.fileExists(atPath: url.path, isDirectory: &isDirectory) else { return 0 }
-    guard isDirectory.boolValue else {
-      let attrs = try? fm.attributesOfItem(atPath: url.path)
-      return (attrs?[.size] as? Int64) ?? 0
-    }
-    let keys: [URLResourceKey] = [.totalFileAllocatedSizeKey, .fileAllocatedSizeKey, .fileSizeKey]
-    guard let enumerator = fm.enumerator(at: url, includingPropertiesForKeys: keys) else { return 0 }
-    var total: Int64 = 0
-    for case let child as URL in enumerator {
-      let values = try? child.resourceValues(forKeys: Set(keys))
-      total += Int64(values?.totalFileAllocatedSize ?? values?.fileAllocatedSize ?? values?.fileSize ?? 0)
-    }
-    return total
+    guard let fileSize, fileSize > 0 else { return nil }
+    return ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
   }
   
   var image: some View {

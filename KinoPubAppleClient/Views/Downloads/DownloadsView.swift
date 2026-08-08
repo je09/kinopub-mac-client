@@ -15,6 +15,7 @@ struct DownloadsView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
   @StateObject private var catalog: DownloadsCatalog
+  @Environment(\.dependencies) private var dependencies
   @Environment(\.sectionEmbedded) private var sectionEmbedded
   @State private var showStorage = false
   
@@ -45,7 +46,10 @@ struct DownloadsView: View {
       catalog.refresh()
     })
     .sheet(isPresented: $showStorage, onDismiss: { catalog.refresh() }) {
-      StorageBreakdownView()
+      StorageBreakdownView(
+        store: StorageBreakdownStore(
+          repository: dependencies.storageUsageRepository,
+          downloadedFilesDatabase: dependencies.downloadedFilesDatabase))
     }
   }
   
@@ -138,7 +142,7 @@ struct DownloadsView: View {
   var downloadedFilesList: some View {
     ForEach(catalog.downloadedItems, id: \.originalURL) { fileInfo in
       playRow(Route.player(fileInfo.metadata)) {
-        DownloadedItemView(mediaItem: fileInfo.metadata, progress: nil, fileURL: fileInfo.localFileURL) { _ in }
+        DownloadedItemView(mediaItem: fileInfo.metadata, progress: nil, fileURL: fileInfo.localFileURL, fileSize: catalog.fileSizes[fileInfo.localFileURL]) { _ in }
       }
       .contextMenu { detailLink(for: fileInfo.metadata) }
     }
@@ -170,18 +174,21 @@ struct DownloadsView: View {
 
 // MARK: - Storage breakdown
 
-/// Native macOS storage breakdown for downloads, cache, EPG data, and other app files.
+/// Native macOS storage breakdown for downloads, cache, EPG data, and other app files. Renders
+/// `StorageUsage` snapshots from the store and forwards clear intents; it never touches the
+/// filesystem or caches itself.
 struct StorageBreakdownView: View {
   @Environment(\.dismiss) private var dismiss
-  @Environment(\.dependencies) private var dependencies
-  @State private var breakdown: StorageUsage?
-  @State private var busy = false
-  @State private var toast: ToastMessage?
-  
+  @StateObject private var store: StorageBreakdownStore
+
+  init(store: @autoclosure @escaping () -> StorageBreakdownStore) {
+    _store = StateObject(wrappedValue: store())
+  }
+
   var body: some View {
     NavigationStack {
       List {
-        if let breakdown {
+        if let breakdown = store.breakdown {
           Section {
             row("Downloads".localized, breakdown.downloads)
             row("Image cache".localized, breakdown.imageCache)
@@ -195,18 +202,10 @@ struct StorageBreakdownView: View {
           }
           Section {
             Button("Clear image cache".localized) {
-              let freed = breakdown.imageCache
-              ImageCache.shared.clear()
-              announce(freed: freed)
-              recompute()
+              store.clearImageCache()
             }
             Button("Clear EPG cache".localized) {
-              let freed = breakdown.epg
-              Task {
-                await dependencies.epgService.clearCache()
-                announce(freed: freed)
-                recompute()
-              }
+              store.clearEPGCache()
             }
           }
         } else {
@@ -222,77 +221,18 @@ struct StorageBreakdownView: View {
         }
       }
     }
-    .toast(message: $toast)
-    .onAppear(perform: recompute)
+    .toast(message: $store.toast)
+    .onAppear(perform: store.refresh)
   }
-  
-  /// Confirms a cleanup action so it's obvious it ran: how much was freed, or that there was nothing.
-  private func announce(freed: Int64) {
-    if freed > 0 {
-      toast = .success(String(format: "Freed %@".localized, format(freed)))
-    } else {
-      toast = .info("Nothing to clear".localized)
-    }
-  }
-  
+
   private func row(_ title: String, _ bytes: Int64) -> some View {
     HStack {
       Text(title); Spacer(); Text(format(bytes)).foregroundStyle(Color.KinoPub.subtitle)
     }
   }
-  
+
   private func format(_ bytes: Int64) -> String {
     ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
-  }
-  
-  private func recompute() {
-    busy = true
-    let downloadURLs = (dependencies.downloadedFilesDatabase.readData() ?? []).map { $0.localFileURL }
-    Task.detached(priority: .utility) {
-      let result = StorageUsage.compute(downloadURLs: downloadURLs)
-      await MainActor.run {
-        self.breakdown = result; self.busy = false
-      }
-    }
-  }
-}
-
-/// Computed on-disk usage buckets. `total` is the whole app data container (Documents + Library + tmp).
-private struct StorageUsage {
-  let total: Int64
-  let downloads: Int64
-  let imageCache: Int64
-  let epg: Int64
-  var other: Int64 { max(0, total - downloads - imageCache - epg) }
-  
-  static func compute(downloadURLs: [URL]) -> StorageUsage {
-    let home = URL(fileURLWithPath: NSHomeDirectory())
-    let containers = ["Documents", "Library", "tmp"].map { home.appendingPathComponent($0) }
-    let total = containers.reduce(Int64(0)) { $0 + directorySize(at: $1) }
-    let downloads = downloadURLs.reduce(Int64(0)) { total, url in
-      total + ((try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0)
-    }
-    return StorageUsage(
-      total: total,
-      downloads: downloads,
-      imageCache: Int64(ImageCache.shared.diskUsageBytes()),
-      epg: EPGServiceImpl.diskUsageBytes())
-  }
-  
-  private static func directorySize(at url: URL) -> Int64 {
-    guard
-      let enumerator = FileManager.default.enumerator(
-        at: url,
-        includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
-        options: [.skipsHiddenFiles]
-      )
-    else { return 0 }
-    var bytes: Int64 = 0
-    for case let fileURL as URL in enumerator {
-      let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
-      if values?.isRegularFile == true { bytes += Int64(values?.fileSize ?? 0) }
-    }
-    return bytes
   }
 }
 
@@ -306,7 +246,8 @@ struct DownloadsView_Previews: PreviewProvider {
     DownloadsView(
       catalog: DownloadsCatalog(
         downloadsDatabase: database,
-        downloadManager: downloadManager)
+        downloadManager: downloadManager,
+        storageRepository: StorageUsageRepository(epgService: EPGServiceMock()))
     )
     .appPreviewEnvironment()
   }

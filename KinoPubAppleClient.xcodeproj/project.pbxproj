@@ -7,6 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BBBBBBBB0000000000010014 /* AuthPlatformActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000014 /* AuthPlatformActions.swift */; };
+		BBBBBBBB0000000000030002 /* StorageUsageRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000020002 /* StorageUsageRepositoryTests.swift */; };
+		BBBBBBBB0000000000030001 /* MediaDetailHierarchyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000020001 /* MediaDetailHierarchyTests.swift */; };
+		BBBBBBBB0000000000010013 /* KinopoiskTextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000013 /* KinopoiskTextSanitizer.swift */; };
+		BBBBBBBB0000000000010012 /* MediaCastCrewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000012 /* MediaCastCrewSheet.swift */; };
+		BBBBBBBB0000000000010011 /* MediaMetadataSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000011 /* MediaMetadataSection.swift */; };
+		BBBBBBBB0000000000010010 /* MediaExtrasSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000010 /* MediaExtrasSections.swift */; };
+		BBBBBBBB000000000001000F /* MediaContentSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000000F /* MediaContentSections.swift */; };
+		BBBBBBBB000000000001000E /* MediaEpisodesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000000E /* MediaEpisodesSection.swift */; };
+		BBBBBBBB000000000001000D /* MediaDownloadMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000000D /* MediaDownloadMenu.swift */; };
+		BBBBBBBB000000000001000C /* MediaHeroSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000000C /* MediaHeroSection.swift */; };
+		BBBBBBBB000000000001000B /* MediaExtrasLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000000B /* MediaExtrasLoader.swift */; };
+		BBBBBBBB000000000001000A /* MediaRecommendationsLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000000A /* MediaRecommendationsLoader.swift */; };
+		BBBBBBBB0000000000010009 /* BookmarkActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000009 /* BookmarkActionSheet.swift */; };
+		BBBBBBBB0000000000010008 /* SearchDisplayHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000008 /* SearchDisplayHelpers.swift */; };
+		BBBBBBBB0000000000010007 /* SearchSectionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000007 /* SearchSectionsSection.swift */; };
+		BBBBBBBB0000000000010006 /* SearchLiveResultsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000006 /* SearchLiveResultsSection.swift */; };
+		BBBBBBBB0000000000010005 /* SearchDiscoverySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000005 /* SearchDiscoverySection.swift */; };
+		BBBBBBBB0000000000010004 /* RecentSearchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000004 /* RecentSearchRepository.swift */; };
+		BBBBBBBB0000000000010003 /* StorageBreakdownStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000003 /* StorageBreakdownStore.swift */; };
+		BBBBBBBB0000000000010002 /* StorageUsageRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000002 /* StorageUsageRepository.swift */; };
+		BBBBBBBB0000000000010001 /* DeviceAuthorizationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000001 /* DeviceAuthorizationCoordinator.swift */; };
 		D00000000000000000000001 /* AuthModelPollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000010 /* AuthModelPollingTests.swift */; };
 		D00000000000000000000004 /* LocalWatchProgressStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */; };
 		D00000000000000000000005 /* LibraryRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000015 /* LibraryRepositoryTests.swift */; };
@@ -150,6 +172,28 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BBBBBBBB0000000000000014 /* AuthPlatformActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthPlatformActions.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000020002 /* StorageUsageRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageRepositoryTests.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000020001 /* MediaDetailHierarchyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailHierarchyTests.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000013 /* KinopoiskTextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kinopoisk/KinopoiskTextSanitizer.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000012 /* MediaCastCrewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sections/MediaCastCrewSheet.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000011 /* MediaMetadataSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sections/MediaMetadataSection.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000010 /* MediaExtrasSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sections/MediaExtrasSections.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000000F /* MediaContentSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sections/MediaContentSections.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000000E /* MediaEpisodesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sections/MediaEpisodesSection.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000000D /* MediaDownloadMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sections/MediaDownloadMenu.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000000C /* MediaHeroSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sections/MediaHeroSection.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000000B /* MediaExtrasLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaExtrasLoader.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000000A /* MediaRecommendationsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRecommendationsLoader.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000009 /* BookmarkActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/BookmarkActionSheet.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000008 /* SearchDisplayHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchDisplayHelpers.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000007 /* SearchSectionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchSectionsSection.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000006 /* SearchLiveResultsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchLiveResultsSection.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000005 /* SearchDiscoverySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchDiscoverySection.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000004 /* RecentSearchRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchRepository.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000003 /* StorageBreakdownStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageBreakdownStore.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000002 /* StorageUsageRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage/StorageUsageRepository.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000001 /* DeviceAuthorizationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthorizationCoordinator.swift; sourceTree = "<group>"; };
 		D00000000000000000000010 /* AuthModelPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModelPollingTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalWatchProgressStoreTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000015 /* LibraryRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRepositoryTests.swift; sourceTree = "<group>"; };
@@ -552,6 +596,7 @@
 		CC71E6FD2A6C0691004AFB3F /* Downloads */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000003 /* StorageBreakdownStore.swift */,
 				CC6025482AFE70F6003D8391 /* Models */,
 				CC78FC472A82CDF600C5BDFD /* DownloadsCatalog.swift */,
 				CC71E6FE2A6C069D004AFB3F /* DownloadsView.swift */,
@@ -617,6 +662,8 @@
 		D00000000000000000000013 /* KinoPubAppleClientTests */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000020002 /* StorageUsageRepositoryTests.swift */,
+				BBBBBBBB0000000000020001 /* MediaDetailHierarchyTests.swift */,
 				D00000000000000000000010 /* AuthModelPollingTests.swift */,
 				D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */,
 				D00000000000000000000015 /* LibraryRepositoryTests.swift */,
@@ -784,6 +831,15 @@
 		CCF388152A71816B00242581 /* MediaItem */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000012 /* MediaCastCrewSheet.swift */,
+				BBBBBBBB0000000000000011 /* MediaMetadataSection.swift */,
+				BBBBBBBB0000000000000010 /* MediaExtrasSections.swift */,
+				BBBBBBBB000000000000000F /* MediaContentSections.swift */,
+				BBBBBBBB000000000000000E /* MediaEpisodesSection.swift */,
+				BBBBBBBB000000000000000D /* MediaDownloadMenu.swift */,
+				BBBBBBBB000000000000000C /* MediaHeroSection.swift */,
+				BBBBBBBB000000000000000B /* MediaExtrasLoader.swift */,
+				BBBBBBBB000000000000000A /* MediaRecommendationsLoader.swift */,
 				CC21CEAE2AF6B61900EFCA8E /* Season */,
 				CC21CEA92AF6B45500EFCA8E /* Seasons */,
 				CC0146182A7835A200F858AF /* Subviews */,
@@ -806,6 +862,8 @@
 		CCF388172A7187F900242581 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000013 /* KinopoiskTextSanitizer.swift */,
+				BBBBBBBB0000000000000002 /* StorageUsageRepository.swift */,
 				CCF3883D2A71C97E00242581 /* AccessToken */,
 				CCF388182A71880100242581 /* Authorization */,
 				CCF388292A718E5700242581 /* Configuration */,
@@ -823,6 +881,8 @@
 		CCF388182A71880100242581 /* Authorization */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000014 /* AuthPlatformActions.swift */,
+				BBBBBBBB0000000000000001 /* DeviceAuthorizationCoordinator.swift */,
 				CCF388192A71882300242581 /* AuthorizationService.swift */,
 				CCF3881D2A71885900242581 /* AuthorizationServiceImpl.swift */,
 			);
@@ -877,6 +937,12 @@
 		F562CAB1C511441EB31BA078 /* Search */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000009 /* BookmarkActionSheet.swift */,
+				BBBBBBBB0000000000000008 /* SearchDisplayHelpers.swift */,
+				BBBBBBBB0000000000000007 /* SearchSectionsSection.swift */,
+				BBBBBBBB0000000000000006 /* SearchLiveResultsSection.swift */,
+				BBBBBBBB0000000000000005 /* SearchDiscoverySection.swift */,
+				BBBBBBBB0000000000000004 /* RecentSearchRepository.swift */,
 				C3B23261BD364C4AB70324D7 /* SearchView.swift */,
 				666F16BFE884475FA5F41A69 /* SearchModel.swift */,
 			);
@@ -1020,6 +1086,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBBBBBBB0000000000030002 /* StorageUsageRepositoryTests.swift in Sources */,
+				BBBBBBBB0000000000030001 /* MediaDetailHierarchyTests.swift in Sources */,
 				D00000000000000000000001 /* AuthModelPollingTests.swift in Sources */,
 				D00000000000000000000004 /* LocalWatchProgressStoreTests.swift in Sources */,
 				D00000000000000000000005 /* LibraryRepositoryTests.swift in Sources */,
@@ -1036,6 +1104,26 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBBBBBBB0000000000010014 /* AuthPlatformActions.swift in Sources */,
+				BBBBBBBB0000000000010013 /* KinopoiskTextSanitizer.swift in Sources */,
+				BBBBBBBB0000000000010012 /* MediaCastCrewSheet.swift in Sources */,
+				BBBBBBBB0000000000010011 /* MediaMetadataSection.swift in Sources */,
+				BBBBBBBB0000000000010010 /* MediaExtrasSections.swift in Sources */,
+				BBBBBBBB000000000001000F /* MediaContentSections.swift in Sources */,
+				BBBBBBBB000000000001000E /* MediaEpisodesSection.swift in Sources */,
+				BBBBBBBB000000000001000D /* MediaDownloadMenu.swift in Sources */,
+				BBBBBBBB000000000001000C /* MediaHeroSection.swift in Sources */,
+				BBBBBBBB000000000001000B /* MediaExtrasLoader.swift in Sources */,
+				BBBBBBBB000000000001000A /* MediaRecommendationsLoader.swift in Sources */,
+				BBBBBBBB0000000000010009 /* BookmarkActionSheet.swift in Sources */,
+				BBBBBBBB0000000000010008 /* SearchDisplayHelpers.swift in Sources */,
+				BBBBBBBB0000000000010007 /* SearchSectionsSection.swift in Sources */,
+				BBBBBBBB0000000000010006 /* SearchLiveResultsSection.swift in Sources */,
+				BBBBBBBB0000000000010005 /* SearchDiscoverySection.swift in Sources */,
+				BBBBBBBB0000000000010004 /* RecentSearchRepository.swift in Sources */,
+				BBBBBBBB0000000000010003 /* StorageBreakdownStore.swift in Sources */,
+				BBBBBBBB0000000000010002 /* StorageUsageRepository.swift in Sources */,
+				BBBBBBBB0000000000010001 /* DeviceAuthorizationCoordinator.swift in Sources */,
 				CCF388282A718BB600242581 /* AppDependencies.swift in Sources */,
 				CCF388212A718ADE00242581 /* VideoContentService.swift in Sources */,
 				CCF3881A2A71882300242581 /* AuthorizationService.swift in Sources */,

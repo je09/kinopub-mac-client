@@ -29,6 +29,12 @@ class MediaItemModel: ObservableObject {
   public var linkProvider: NavigationLinkProvider
   public var mediaItemId: Int
 
+  /// Supplementary recommendation shelves (related / more from director / more with actor).
+  /// Independently loadable so one failure never blanks the page.
+  public let recommendations: MediaRecommendationsLoader
+  /// Kinopoisk extras (facts / reviews / crew / stills), best-effort and independently loadable.
+  public let extras: MediaExtrasLoader
+
   @Published public var mediaItem: MediaItem = MediaItem.mock()
   @Published public var itemLoaded: Bool = false
   /// The user's like/dislike for this title this session. kino.pub voting is ONE-TIME (you can't
@@ -39,26 +45,8 @@ class MediaItemModel: ObservableObject {
   @Published public var dislikeCount: Int = 0
   /// Transient typed message shown as a toast (e.g. after toggling a bookmark).
   @Published public var toastMessage: ToastMessage?
-  @Published public var relatedItems: [MediaItem] = []
-  /// "More from this director" / "More with this actor" shelves (via /v1/items?director=/cast=).
-  @Published public var moreFromDirector: [MediaItem] = []
-  @Published public var moreWithActor: [MediaItem] = []
-  /// Kinopoisk-sourced extras (facts / reviews / full crew / stills) via the kpapp.link kpapi proxy.
-  /// Best-effort: empty when the title has no Kinopoisk id or a request fails.
-  @Published public var facts: [KpFact] = []
-  @Published public var reviews: KpReviewsPage = .empty
-  @Published public var staff: [KpStaffMember] = []
-  @Published public var images: [KpImage] = []
-  // Per-group "finished loading" flags so the view can reserve space with a skeleton shelf while a
-  // dynamically-loaded block is in flight, then swap content in place (or collapse) — instead of the
-  // section popping in from zero height and shoving the rest of the page around.
-  @Published public var relatedLoaded: Bool = false
-  @Published public var moreFromLoaded: Bool = false
-  @Published public var moreWithLoaded: Bool = false
-  @Published public var extrasLoaded: Bool = false
-  private let extrasService = KinopoiskExtrasService()
-  public var primaryDirector: String? { directorNames.first }
-  public var primaryActor: String? { castNames.first }
+  /// 3D view-mode preference (shared with the player via `PlayerManager.preferredThreeDMode`).
+  @Published public var threeDMode: ThreeDMode = PlayerManager.preferredThreeDMode
   /// Effective watched state for an episode (client optimistic override first, then server data).
   public func isEpisodeWatched(_ episode: Episode) -> Bool {
     libraryState.episodeWatched(episodeId: episode.id, serverWatched: episode.isWatched)
@@ -114,6 +102,10 @@ class MediaItemModel: ObservableObject {
     localProgressTick &+= 1
     fetchData(includeSupplementary: false)
   }
+
+  /// The lead actor/director names (first credited), used by the people shelves and cast section.
+  public var primaryDirector: String? { directorNames.first }
+  public var primaryActor: String? { castNames.first }
 
   /// Actor names parsed from the comma-separated `cast` field (trimmed, non-empty).
   public var castNames: [String] {
@@ -189,7 +181,8 @@ class MediaItemModel: ObservableObject {
     actionsService: UserActionsService,
     libraryState: LibraryViewState,
     localProgressStore: LocalWatchProgressStore,
-    seasonDownloadManager: SeasonDownloadManager
+    seasonDownloadManager: SeasonDownloadManager,
+    extrasService: KinopoiskExtrasService = KinopoiskExtrasService()
   ) {
     self.itemsService = itemsService
     self.mediaItemId = mediaItemId
@@ -200,6 +193,10 @@ class MediaItemModel: ObservableObject {
     self.libraryState = libraryState
     self.localProgressStore = localProgressStore
     self.seasonDownloadManager = seasonDownloadManager
+    self.recommendations = MediaRecommendationsLoader(
+      itemsService: itemsService,
+      errorHandler: errorHandler)
+    self.extras = MediaExtrasLoader(extrasService: extrasService)
   }
 
   func fetchData(includeSupplementary: Bool = true) {
@@ -225,74 +222,16 @@ class MediaItemModel: ObservableObject {
           folderIds: mediaItem.bookmarks?.map { $0.id } ?? [],
           inWatchlist: mediaItem.inWatchlist == true)
         if includeSupplementary {
-          fetchRelated()
-          fetchPeopleShelves()
-          fetchExtras()
+          recommendations.loadRelated(for: mediaItem)
+          recommendations.loadPeopleShelves(
+            for: mediaItem,
+            director: directorNames.first,
+            actor: castNames.first)
+          extras.load(for: mediaItem)
         }
       } catch {
         errorHandler.setError(error)
       }
-    }
-  }
-
-  /// Loads items similar to the current one (same primary genre & content type)
-  /// using the catalog filter endpoint. Errors are surfaced but never fatal.
-  func fetchRelated() {
-    Task {
-      do {
-        let contentType = MediaType(rawValue: mediaItem.type) ?? .movie
-        var genres: [Int] = []
-        if let genreId = mediaItem.genres.first?.id {
-          genres.append(genreId)
-        }
-        let filter = MediaItemsFilter(
-          contentType: contentType,
-          genres: genres,
-          countries: [],
-          year: nil,
-          age: nil,
-          sort: nil)
-        let response = try await itemsService.filter(filter: filter, page: nil)
-        relatedItems = response.items
-          .filter { $0.id != mediaItem.id }
-          .prefix(15)
-          .map { $0 }
-      } catch {
-        errorHandler.setError(error)
-      }
-      relatedLoaded = true
-    }
-  }
-
-  /// "More from director" / "More with actor" shelves, mirroring the web detail page. Best-effort:
-  /// a failure just leaves the shelf empty (no error banner).
-  func fetchPeopleShelves() {
-    let contentType = MediaType(rawValue: mediaItem.type) ?? .movie
-    if let director = directorNames.first {
-      Task {
-        let filter = MediaItemsFilter(
-          contentType: contentType, genres: [], countries: [],
-          year: nil, age: nil, sort: "rating-", director: director)
-        if let response = try? await itemsService.filter(filter: filter, page: nil) {
-          moreFromDirector = response.items.filter { $0.id != mediaItem.id }.prefix(15).map { $0 }
-        }
-        moreFromLoaded = true
-      }
-    } else {
-      moreFromLoaded = true
-    }
-    if let actor = castNames.first {
-      Task {
-        let filter = MediaItemsFilter(
-          contentType: contentType, genres: [], countries: [],
-          year: nil, age: nil, sort: "rating-", cast: actor)
-        if let response = try? await itemsService.filter(filter: filter, page: nil) {
-          moreWithActor = response.items.filter { $0.id != mediaItem.id }.prefix(15).map { $0 }
-        }
-        moreWithLoaded = true
-      }
-    } else {
-      moreWithLoaded = true
     }
   }
 
@@ -304,6 +243,12 @@ class MediaItemModel: ObservableObject {
     }
     _ = downloadManager.startDownload(url: url, withMetadata: meta)
     toastMessage = .success("Download started".localized)
+  }
+
+  /// Persists the 3D view-mode preference (shared with the player) and updates local state.
+  func setThreeDMode(_ mode: ThreeDMode) {
+    threeDMode = mode
+    PlayerManager.preferredThreeDMode = mode
   }
 
   /// Enqueues every episode of `season`. `quality` of nil downloads the best available per episode.
@@ -400,28 +345,6 @@ class MediaItemModel: ObservableObject {
   /// server says it didn't count.
   /// Load Kinopoisk extras (facts / reviews / crew / stills) for this title via the kpapp.link proxy.
   /// Requires a Kinopoisk id; each request is independent and best-effort (a failure hides its section).
-  func fetchExtras() {
-    // No Kinopoisk id → there will never be extras; mark loaded so the view doesn't reserve skeleton
-    // space for sections that can't appear.
-    guard let filmId = mediaItem.kinopoisk, filmId > 0 else {
-      extrasLoaded = true
-      return
-    }
-    // Resolve all four together and publish once, so the extras block settles in a single layout
-    // change (with the skeleton reserving its space) instead of four staggered pops.
-    Task {
-      async let f = extrasService.facts(filmId: filmId)
-      async let r = extrasService.reviews(filmId: filmId)
-      async let s = extrasService.staff(filmId: filmId)
-      async let i = extrasService.images(filmId: filmId)
-      facts = (try? await f) ?? []
-      reviews = (try? await r) ?? .empty
-      staff = (try? await s) ?? []
-      images = (try? await i) ?? []
-      extrasLoaded = true
-    }
-  }
-
   /// kino.pub gives the aggregate as `rating_votes` (total) + `rating_percentage` (% positive), not
   /// separate like/dislike counts, so derive them for the initial display. A real vote refreshes them.
   /// Also restores the user's own remembered vote so their like/dislike stays visible on revisits.
