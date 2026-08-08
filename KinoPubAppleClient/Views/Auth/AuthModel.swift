@@ -12,153 +12,133 @@ import KinoPubBackend
 import KinoPubLogging
 import OSLog
 
-struct AuthorizationPollingClock {
-  var now: () -> Date
-  var sleep: (_ seconds: TimeInterval) async throws -> Void
-  
-  static let continuous = AuthorizationPollingClock(
-    now: Date.init,
-    sleep: { try await Task.sleep(for: .seconds($0)) }
+/// Platform capabilities the activation screen needs (clipboard + opening a URL), injected so the
+/// store stays testable and free of AppKit. Production wiring is `.live`.
+struct AuthPlatformActions {
+  var copyToClipboard: (String) -> Void
+  var openURL: (URL) -> Void
+
+  static let live = AuthPlatformActions(
+    copyToClipboard: { text in
+      NSPasteboard.general.clearContents()
+      NSPasteboard.general.setString(text, forType: .string)
+    },
+    openURL: { url in
+      NSWorkspace.shared.open(url)
+    }
   )
 }
 
 @MainActor
 class AuthModel: ObservableObject {
-  
-  private var authService: AuthorizationService
+
   private var authState: AuthState
   private var errorHandler: ErrorHandler
-  
+  private let coordinator: DeviceAuthorizationCoordinator
+  private let platformActions: AuthPlatformActions
+
   @Published var deviceCode: String = ""
   @Published var close: Bool = false
   /// The page the user opens to enter the code (shown as a hint, e.g. "kino.pub/device").
   @Published var verificationURL: String = ""
-  
+  /// Explicit workflow phase, driven by the coordinator (idle → requestingCode → awaitingApproval
+  /// → slowingDown/expired → authorized/failed).
+  @Published private(set) var phase: DeviceAuthorizationCoordinator.State = .idle
+
   private var tempVerificationResponse: VerificationResponse?
-  private var pollingTask: Task<Void, Never>?
-  private let pollingClock: AuthorizationPollingClock
-  
+
   init(
     authService: AuthorizationService,
     authState: AuthState,
     errorHandler: ErrorHandler,
-    pollingClock: AuthorizationPollingClock = .continuous
+    pollingClock: AuthorizationPollingClock = .continuous,
+    platformActions: AuthPlatformActions = .live
   ) {
-    self.authService = authService
     self.authState = authState
     self.errorHandler = errorHandler
-    self.pollingClock = pollingClock
-  }
-  
-  deinit {
-    pollingTask?.cancel()
-  }
-  
-  func fetchDeviceCode() {
-    Logger.app.debug("Fetch device code...")
-    pollingTask?.cancel()
-    errorHandler.reset()
-    Task {
-      do {
-        let response = try await authService.fetchDeviceCode()
-        self.deviceCode = response.userCode
-        self.verificationURL = response.verificationUri
-        self.tempVerificationResponse = response
-        Logger.app.debug("receive device code: \(response.userCode)")
-        startPolling(for: response)
-      } catch {
-        handleError(error)
-      }
+    self.platformActions = platformActions
+    let coordinator = DeviceAuthorizationCoordinator(
+      authService: authService,
+      pollingClock: pollingClock
+    )
+    self.coordinator = coordinator
+    coordinator.setEventHandler { [weak self] event in
+      self?.handle(event)
     }
   }
-  
+
+  deinit {
+    // Stop the poll generation so a dismissed activation sheet never keeps polling or replacing
+    // expired codes. The coordinator is captured strongly by the cancellation task.
+    let coordinator = self.coordinator
+    Task { await coordinator.cancel() }
+  }
+
+  func fetchDeviceCode() {
+    Logger.app.debug("Fetch device code...")
+    errorHandler.reset()
+    Task {
+      await coordinator.requestCode()
+    }
+  }
+
+  /// Cancels polling explicitly (e.g. session teardown while the sheet stays in the hierarchy).
+  func cancelPolling() {
+    Task {
+      await coordinator.cancel()
+    }
+  }
+
   func copyCode() {
     guard !deviceCode.isEmpty else { return }
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.setString(deviceCode, forType: .string)
+    platformActions.copyToClipboard(deviceCode)
   }
-  
+
   /// Human-friendly activation page (host + path, without the scheme), e.g. "kino.pub/device".
   var activationDisplayURL: String {
     guard let url = URL(string: verificationURL), let host = url.host else { return verificationURL }
     let path = url.path
     return path.isEmpty || path == "/" ? host : host + path
   }
-  
+
   func openActivationURL() {
     guard let urlString = tempVerificationResponse?.verificationUri, let url = URL(string: urlString) else {
       return
     }
-    
+
     Logger.app.debug("open activation url: \(url)")
-    
-    NSWorkspace.shared.open(url)
+
+    platformActions.openURL(url)
   }
-  
-  private func startPolling(for response: VerificationResponse) {
-    pollingTask?.cancel()
-    pollingTask = Task { [weak self] in
-      guard let self else { return }
-      
-      var interval = max(response.interval, 1)
-      let expiresAt = pollingClock.now().addingTimeInterval(TimeInterval(response.expiresIn))
-      
-      while !Task.isCancelled {
-        if pollingClock.now() >= expiresAt {
-          Logger.app.debug("device code expired; requesting a replacement")
-          fetchDeviceCode()
-          return
-        }
-        
-        do {
-          try await pollingClock.sleep(TimeInterval(interval))
-          try Task.checkCancellation()
-          Logger.app.debug("request token...")
-          try await authService.fetchToken(by: response)
-          authState.userState = .authorized
-          authState.shouldShowAuthentication = false
-          errorHandler.reset()
-          Logger.app.debug("token requested")
-          return
-        } catch is CancellationError {
-          return
-        } catch let error as APIClientError {
-          if error.isAuthorizationPending {
-            continue
-          }
-          if error.shouldSlowAuthorizationPolling {
-            interval += 5
-            Logger.app.debug("authorization poll slowed to \(interval) seconds")
-            continue
-          }
-          if error.isActivationCodeExpired {
-            Logger.app.debug("server expired device code; requesting a replacement")
-            fetchDeviceCode()
-            return
-          }
-          if error.isRetryableTransportError {
-            Logger.app.debug("transient authorization polling error: \(error)")
-            continue
-          }
-          
-          handleError(error)
-          return
-        } catch {
-          handleError(error)
-          return
-        }
-      }
+
+  // MARK: - Coordinator events → UI state
+
+  private func handle(_ event: DeviceAuthorizationCoordinator.Event) {
+    switch event {
+    case .stateChanged(let state):
+      phase = state
+    case .codeReceived(let response):
+      deviceCode = response.userCode
+      verificationURL = response.verificationUri
+      tempVerificationResponse = response
+      Logger.app.debug("receive device code: \(response.userCode)")
+    case .authorized:
+      authState.userState = .authorized
+      authState.shouldShowAuthentication = false
+      errorHandler.reset()
+    case .failed(let error):
+      handleError(error)
     }
   }
-  
+
   private func handleError(_ error: Error) {
     Logger.app.debug("got error: \(error)")
-    
+
     guard let error = error as? APIClientError else {
       return
     }
-    
+
     errorHandler.setError(error)
   }
-  
+
 }
