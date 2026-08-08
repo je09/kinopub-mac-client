@@ -7,6 +7,7 @@
 import SwiftUI
 import KinoPubUI
 import KinoPubBackend
+import KinoPubDomain
 
 struct MainView: View {
   @EnvironmentObject var navigationState: NavigationState
@@ -245,8 +246,8 @@ struct PersonSearchView: View {
   
   /// Results sorted by the chosen option. Skeleton placeholders are kept in place (they sort to
   /// stable positions on empty fields), so loading still shows the grid.
-  private var sortedResults: [MediaItem] {
-    let anyReal = model.results.contains { !($0.skeleton ?? false) }
+  private var sortedResults: [MediaSummary] {
+    let anyReal = model.results.contains { !$0.isSkeleton }
     return anyReal ? sort.sorted(model.results) : model.results
   }
   
@@ -255,10 +256,10 @@ struct PersonSearchView: View {
       ScrollView {
         LazyVGrid(columns: PosterGridLayout.columns(width: width), spacing: 16) {
           ForEach(sortedResults, id: \.id) { item in
-            if item.skeleton ?? false {
+            if item.isSkeleton {
               PosterCard.placeholder(width: nil)
             } else {
-              NavigationLink(value: linkProvider.link(for: item)) {
+              NavigationLink(value: Route.detailsByID(item.id)) {
                 PosterCard(imageURL: item.posters.medium, title: item.localizedTitle, width: nil)
               }
               .buttonStyle(.plain)
@@ -289,7 +290,7 @@ struct PersonSearchView: View {
       }
     }
     .task {
-      model.preset(query: query, field: field)
+      model.preset(query: query, field: SearchField(rawValue: field))
     }
     .handleError(state: $errorHandler.state)
   }

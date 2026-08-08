@@ -1,130 +1,147 @@
 import XCTest
-import KinoPubBackend
+import KinoPubDomain
 @testable import KinoPub
 
 @MainActor
 final class SearchModelTests: XCTestCase {
   func testOlderMainSearchResponseCannotReplaceNewerQuery() async throws {
-    let service = ControlledSearchService()
-    let model = makeModel(service: service)
-    
+    let repository = ControlledSearchRepository()
+    let model = makeModel(repository: repository)
+
     let old = Task { await model.performSearch(query: "old") }
-    await service.waitForPendingRequestCount(3)
+    await repository.waitForPendingRequestCount(3)
     let new = Task { await model.performSearch(query: "new") }
-    await service.waitForPendingRequestCount(6)
-    
-    await service.resolve(query: "new", field: nil, page: nil, items: [.mock(id: 20)])
-    await service.resolve(query: "new", field: "cast", page: nil, items: [.mock(id: 21)])
-    await service.resolve(query: "new", field: "director", page: nil, items: [.mock(id: 22)])
+    await repository.waitForPendingRequestCount(6)
+
+    await repository.resolve(query: "new", field: .title, page: nil, items: [.testItem(id: 20)])
+    await repository.resolve(query: "new", field: .cast, page: nil, items: [.testItem(id: 21)])
+    await repository.resolve(query: "new", field: .director, page: nil, items: [.testItem(id: 22)])
     await new.value
-    
-    await service.resolve(query: "old", field: nil, page: nil, items: [.mock(id: 10)])
-    await service.resolve(query: "old", field: "cast", page: nil, items: [.mock(id: 11)])
-    await service.resolve(query: "old", field: "director", page: nil, items: [.mock(id: 12)])
+
+    await repository.resolve(query: "old", field: .title, page: nil, items: [.testItem(id: 10)])
+    await repository.resolve(query: "old", field: .cast, page: nil, items: [.testItem(id: 11)])
+    await repository.resolve(query: "old", field: .director, page: nil, items: [.testItem(id: 12)])
     await old.value
-    
+
     XCTAssertEqual(model.titleResults.map(\.id), [20])
     XCTAssertEqual(model.castResults.map(\.id), [21])
     XCTAssertEqual(model.directorResults.map(\.id), [22])
     XCTAssertFalse(model.searching)
   }
-  
+
   func testOlderFieldSearchCannotReplaceNewerQuery() async {
-    let service = ControlledSearchService()
-    let model = makeModel(service: service)
-    
+    let repository = ControlledSearchRepository()
+    let model = makeModel(repository: repository)
+
     let old = Task { await model.performFieldSearch(query: "old", field: nil) }
-    await service.waitForPendingRequestCount(1)
+    await repository.waitForPendingRequestCount(1)
     let new = Task { await model.performFieldSearch(query: "new", field: nil) }
-    await service.waitForPendingRequestCount(2)
-    
-    await service.resolve(query: "new", field: nil, page: nil, items: [.mock(id: 2)])
+    await repository.waitForPendingRequestCount(2)
+
+    await repository.resolve(query: "new", field: .title, page: nil, items: [.testItem(id: 2)])
     await new.value
-    await service.resolve(query: "old", field: nil, page: nil, items: [.mock(id: 1)])
+    await repository.resolve(query: "old", field: .title, page: nil, items: [.testItem(id: 1)])
     await old.value
-    
+
     XCTAssertEqual(model.results.map(\.id), [2])
     XCTAssertFalse(model.searching)
   }
-  
+
   func testFieldSearchFailurePublishesEmptyErrorState() async {
-    let service = ControlledSearchService()
+    let repository = ControlledSearchRepository()
     let errorHandler = ErrorHandler()
-    let model = SearchModel(
-      itemsService: service,
-      authState: AuthState(
-        authService: AuthorizationServiceMock(),
-        accessTokenService: AccessTokenServiceMock(),
-        deviceService: DeviceServiceMock()
-      ),
-      errorHandler: errorHandler
-    )
-    
+    let model = SearchModel(repository: repository, errorHandler: errorHandler)
+
     let search = Task { await model.performFieldSearch(query: "failure", field: nil) }
-    await service.waitForPendingRequestCount(1)
-    await service.reject(
-      query: "failure",
-      field: nil,
-      page: nil,
-      error: APIClientError.networkError(URLError(.notConnectedToInternet))
-    )
+    await repository.waitForPendingRequestCount(1)
+    await repository.reject(query: "failure", field: .title, page: nil, error: TestError.failed)
     await search.value
-    
+
     XCTAssertTrue(model.results.isEmpty)
     XCTAssertFalse(model.searching)
     XCTAssertTrue(errorHandler.state.showError)
   }
-  
+
+  func testCancelledSearchDiscardsLateResponseWithoutPublishing() async {
+    let repository = ControlledSearchRepository()
+    let model = makeModel(repository: repository)
+
+    let search = Task { await model.performFieldSearch(query: "slow", field: nil) }
+    await repository.waitForPendingRequestCount(1)
+    search.cancel()
+
+    await repository.resolve(query: "slow", field: .title, page: nil, items: [.testItem(id: 99)])
+    await search.value
+
+    // The cancelled task must not publish stale results or flip the loading flag.
+    XCTAssertTrue(model.results.allSatisfy { $0.isSkeleton })
+    XCTAssertTrue(model.searching)
+  }
+
   func testShortMainSearchPublishesEmptyStateWithoutRequest() async {
-    let service = ControlledSearchService()
-    let model = makeModel(service: service)
-    model.titleResults = [.mock(id: 1)]
-    model.castResults = [.mock(id: 2)]
-    model.directorResults = [.mock(id: 3)]
-    
+    let repository = ControlledSearchRepository()
+    let model = makeModel(repository: repository)
+    model.titleResults = [.testItem(id: 1)]
+    model.castResults = [.testItem(id: 2)]
+    model.directorResults = [.testItem(id: 3)]
+
     await model.performSearch(query: "ab")
-    
-    let requestCount = await service.pendingRequestCount()
+
+    let requestCount = await repository.pendingRequestCount()
     XCTAssertTrue(model.allResults.isEmpty)
     XCTAssertFalse(model.searching)
     XCTAssertEqual(requestCount, 0)
   }
-  
+
   func testPaginationAppendsOnlyForCurrentQuery() async {
-    let service = ControlledSearchService()
-    let model = makeModel(service: service)
-    
-    let initial = Task { await model.performFieldSearch(query: "actor", field: "cast") }
-    await service.waitForPendingRequestCount(1)
-    await service.resolve(
-      query: "actor", field: "cast", page: nil, items: [.mock(id: 1)],
-      pagination: Pagination(total: 2, current: 1, perpage: 1)
+    let repository = ControlledSearchRepository()
+    let model = makeModel(repository: repository)
+
+    let initial = Task { await model.performFieldSearch(query: "actor", field: .cast) }
+    await repository.waitForPendingRequestCount(1)
+    await repository.resolve(
+      query: "actor", field: .cast, page: nil, items: [.testItem(id: 1)],
+      total: 2, current: 1, perPage: 1
     )
     await initial.value
-    
+
     model.loadMoreContent(after: model.results[0])
-    await service.waitForPendingRequestCount(1)
-    await service.resolve(
-      query: "actor", field: "cast", page: 2, items: [.mock(id: 2)],
-      pagination: Pagination(total: 2, current: 2, perpage: 1)
+    await repository.waitForPendingRequestCount(1)
+    await repository.resolve(
+      query: "actor", field: .cast, page: 2, items: [.testItem(id: 2)],
+      total: 2, current: 2, perPage: 1
     )
     await eventually { model.results.count == 2 }
-    
+
     XCTAssertEqual(model.results.map(\.id), [1, 2])
   }
-  
-  private func makeModel(service: ControlledSearchService) -> SearchModel {
-    SearchModel(
-      itemsService: service,
-      authState: AuthState(
-        authService: AuthorizationServiceMock(),
-        accessTokenService: AccessTokenServiceMock(),
-        deviceService: DeviceServiceMock()
-      ),
-      errorHandler: ErrorHandler()
-    )
+
+  func testPeopleMiningRecoversCanonicalNamesFromCredits() async {
+    let model = SearchModel(
+      repository: SearchRepositoryStub(),
+      errorHandler: ErrorHandler())
+    model.query = "джеки"
+    model.castResults = [
+      .testItem(id: 1, cast: "Джеки Чан, Джеки Уивер", director: "Джеймс Ганн"),
+      .testItem(id: 2, cast: "Джеки Чан", director: "Джеки Чан")
+    ]
+    model.directorResults = [
+      .testItem(id: 3, cast: "", director: "Джеки Чан")
+    ]
+
+    let people = model.people
+
+    XCTAssertEqual(people.map(\.name), ["Джеки Чан", "Джеки Уивер"])
+    XCTAssertEqual(people[0].isActor, true)
+    XCTAssertEqual(people[0].isDirector, true)
+    XCTAssertEqual(people[0].field, .cast)
+    XCTAssertEqual(people[1].isDirector, false)
   }
-  
+
+  private func makeModel(repository: ControlledSearchRepository) -> SearchModel {
+    SearchModel(repository: repository, errorHandler: ErrorHandler())
+  }
+
   private func eventually(
     timeout: TimeInterval = 1,
     condition: @escaping @MainActor () -> Bool
@@ -137,31 +154,37 @@ final class SearchModelTests: XCTestCase {
   }
 }
 
-private actor ControlledSearchService: VideoContentService {
+private enum TestError: Error {
+  case failed
+}
+
+private actor ControlledSearchRepository: SearchRepository {
   private struct Key: Hashable {
     let query: String
-    let field: String?
+    let field: SearchField
     let page: Int?
   }
-  
-  private var pending: [Key: [CheckedContinuation<PaginatedData<MediaItem>, Error>]] = [:]
-  
+
+  private var pending: [Key: [CheckedContinuation<Page<MediaSummary>, Error>]] = [:]
+
   func waitForPendingRequestCount(_ count: Int) async {
     while pending.values.reduce(0, { $0 + $1.count }) < count {
       await Task.yield()
     }
   }
-  
+
   func pendingRequestCount() -> Int {
     pending.values.reduce(0, { $0 + $1.count })
   }
-  
+
   func resolve(
     query: String,
-    field: String?,
+    field: SearchField,
     page: Int?,
-    items: [MediaItem],
-    pagination: Pagination = Pagination(total: 1, current: 1, perpage: 50)
+    items: [MediaSummary],
+    total: Int = 1,
+    current: Int = 1,
+    perPage: Int = 50
   ) {
     let key = Key(query: query, field: field, page: page)
     guard var values = pending[key], !values.isEmpty else {
@@ -170,10 +193,10 @@ private actor ControlledSearchService: VideoContentService {
     }
     let continuation = values.removeFirst()
     pending[key] = values
-    continuation.resume(returning: PaginatedData(items: items, pagination: pagination))
+    continuation.resume(returning: Page(items: items, total: total, current: current, perPage: perPage))
   }
-  
-  func reject(query: String, field: String?, page: Int?, error: Error) {
+
+  func reject(query: String, field: SearchField, page: Int?, error: Error) {
     let key = Key(query: query, field: field, page: page)
     guard var values = pending[key], !values.isEmpty else {
       XCTFail("No pending search request for \(key)")
@@ -183,34 +206,33 @@ private actor ControlledSearchService: VideoContentService {
     pending[key] = values
     continuation.resume(throwing: error)
   }
-  
-  func search(query: String?, contentType: MediaType?, field: String?, page: Int?) async throws -> PaginatedData<MediaItem> {
-    try await response(query: query ?? "", field: field, page: page)
-  }
-  
-  func itemsByPerson(name: String, field: String, page: Int?) async throws -> PaginatedData<MediaItem> {
-    try await response(query: name, field: field, page: page)
-  }
-  
-  private func response(query: String, field: String?, page: Int?) async throws -> PaginatedData<MediaItem> {
+
+  func search(query: String, field: SearchField, page: Int?) async throws -> Page<MediaSummary> {
     let key = Key(query: query, field: field, page: page)
     return try await withCheckedThrowingContinuation { continuation in
       pending[key, default: []].append(continuation)
     }
   }
-  
-  func fetch(shortcut: MediaShortcut, contentType: MediaType, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> { .mock(data: []) }
-  func filter(filter: MediaItemsFilter, page: Int?, forceRefresh: Bool) async throws -> PaginatedData<MediaItem> { .mock(data: []) }
-  func fetchGenres(type: MediaType?) async throws -> [MediaGenre] { [] }
-  func fetchCountries() async throws -> [Country] { [] }
-  func fetchDetails(for id: String) async throws -> SingleItemData<MediaItem> { .mock(data: .mock()) }
-  func fetchMediaLinks(mediaID: Int) async throws -> MediaLinksData { MediaLinksData(id: mediaID, files: [], subtitles: nil, thumbnail: nil) }
-  func fetchMediaVideoLink(file: String, type: String) async throws -> MediaVideoLinkData { MediaVideoLinkData(url: "") }
-  func fetchBookmarks() async throws -> ArrayData<Bookmark> { .mock(data: []) }
-  func fetchBookmarkItems(id: String) async throws -> ArrayData<MediaItem> { .mock(data: []) }
-  func fetchHistory(page: Int?) async throws -> HistoryData { .mock(data: []) }
-  func fetchWatchingSerials(subscribed: Int?, type: String?) async throws -> ArrayData<WatchingSerial> { .mock(data: []) }
-  func fetchWatchingMovies() async throws -> ArrayData<WatchingSerial> { .mock(data: []) }
-  func fetchTVChannels() async throws -> [TVChannel] { [] }
-  func fetchComments(for id: Int) async throws -> CommentsData { .mock() }
+
+  func filter(_ query: CatalogQuery, page: Int?) async throws -> Page<MediaSummary> {
+    Page(items: [MediaSummary](), total: 0, current: 0, perPage: 0)
+  }
+
+  func genres() async throws -> [Genre] { [] }
+}
+
+private extension MediaSummary {
+  static func testItem(id: Int, cast: String = "", director: String = "") -> MediaSummary {
+    MediaSummary(
+      id: id,
+      title: "Title \(id)",
+      year: 2020,
+      type: "movie",
+      cast: cast,
+      director: director,
+      genres: [],
+      posters: PosterSet(small: "", medium: ""),
+      isSkeleton: false
+    )!
+  }
 }

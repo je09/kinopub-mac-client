@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import KinoPubBackend
+import KinoPubDomain
 import KinoPubUI
 
 protocol NavigationLinkProvider {
@@ -87,11 +88,19 @@ struct RouteDestinationView: View {
           filter: filter),
         title: title,
         linkProvider: RouteLinkProvider())
+    case .filteredCatalogQuery(let query, let title):
+      FilteredCatalogView(
+        catalog: MediaCatalog(
+          itemsService: appContext.contentService,
+          authState: authState,
+          errorHandler: errorHandler,
+          filter: MediaItemsFilter(query: query)),
+        title: title,
+        linkProvider: RouteLinkProvider())
     case .personSearch(let query, let field, let title):
       PersonSearchView(
         model: SearchModel(
-          itemsService: appContext.contentService,
-          authState: authState,
+          repository: appContext.searchRepository,
           errorHandler: errorHandler),
         query: query,
         field: field,
@@ -100,8 +109,7 @@ struct RouteDestinationView: View {
     case .genre(let id, let title):
       GenreResultsView(
         model: SearchModel(
-          itemsService: appContext.contentService,
-          authState: authState,
+          repository: appContext.searchRepository,
           errorHandler: errorHandler),
         genreId: id,
         title: title)
@@ -120,6 +128,8 @@ struct RouteDestinationView: View {
           errorHandler: errorHandler))
     case .mediaList(let items, let title):
       MediaListGridView(items: items, title: title)
+    case .mediaSummaries(let items, let title):
+      SearchMediaGridView(items: items, title: title)
     case .castCrew(let people, let title):
       SearchCastCrewView(people: people, title: title)
     }
@@ -170,10 +180,10 @@ struct GenreResultsView: View {
       ScrollView {
         LazyVGrid(columns: PosterGridLayout.columns(width: width), spacing: 16) {
           ForEach(model.genreResults, id: \.id) { item in
-            if item.skeleton ?? false {
+            if item.isSkeleton {
               PosterCard.placeholder(width: nil)
             } else {
-              NavigationLink(value: Route.details(item)) {
+              NavigationLink(value: Route.detailsByID(item.id)) {
                 PosterCard(imageURL: item.posters.medium, title: item.localizedTitle, width: nil)
               }
               .buttonStyle(.plain)
@@ -188,5 +198,27 @@ struct GenreResultsView: View {
     .task {
       await model.loadGenreResults(genreId: genreId)
     }
+  }
+}
+
+// MARK: - Domain query mapping
+
+extension MediaItemsFilter {
+  /// Maps a domain browse query to the transport filter. Search's browse cards only target the
+  /// movie catalog today, so `.all` falls back to `.movie` (a full catalog would need a filter
+  /// without a content type, which the transport envelope can't express).
+  init(query: CatalogQuery) {
+    let contentType: MediaType
+    switch query.kind {
+    case .all, .movie: contentType = .movie
+    case .serial: contentType = .serial
+    }
+    self.init(
+      contentType: contentType,
+      genres: query.genreID.map { [$0] } ?? [],
+      countries: [],
+      year: nil,
+      age: nil,
+      sort: query.sort?.rawValue)
   }
 }

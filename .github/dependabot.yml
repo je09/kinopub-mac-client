@@ -14,6 +14,8 @@ updates:
   - package-ecosystem: "swift"
     directories:
       - "/Packages/KinoPubBackend"
+      - "/Packages/KinoPubDomain"
+      - "/Packages/KinoPubData"
       - "/Packages/KinoPubKit"
       - "/Packages/KinoPubLogging"
       - "/Packages/KinoPubUI"

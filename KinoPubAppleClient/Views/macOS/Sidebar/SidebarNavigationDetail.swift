@@ -77,8 +77,7 @@ struct SidebarNavigationDetail: View {
     SearchView(
       model: screenCache.model(for: .search) {
         SearchModel(
-          itemsService: appContext.contentService,
-          authState: authState,
+          repository: appContext.searchRepository,
           errorHandler: errorHandler)
       })
   }

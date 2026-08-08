@@ -7,17 +7,16 @@
 
 import SwiftUI
 import KinoPubUI
-import KinoPubBackend
+import KinoPubDomain
 
-/// Wrapper so a `MediaItem` can drive a `.sheet(item:)` (MediaItem isn't Identifiable on its own).
+/// Wrapper so a `MediaSummary` can drive a `.sheet(item:)` (MediaSummary isn't Identifiable on its own).
 private struct BookmarkTarget: Identifiable {
-  let item: MediaItem
+  let item: MediaSummary
   var id: Int { item.id }
 }
 
 struct SearchView: View {
   @EnvironmentObject var navigationState: NavigationState
-  @EnvironmentObject var authState: AuthState
   @EnvironmentObject var errorHandler: ErrorHandler
   @Environment(\.appContext) var appContext
   @StateObject private var model: SearchModel
@@ -131,8 +130,8 @@ struct SearchView: View {
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 180), spacing: 20)], spacing: 20) {
         ForEach(model.genres, id: \.id) { genre in
           NavigationLink(
-            value: Route.filteredCatalog(
-              MediaItemsFilter(contentType: .movie, genres: [genre.id], countries: []),
+            value: Route.filteredCatalogQuery(
+              CatalogQuery(kind: .movie, genreID: genre.id),
               genre.title)
           ) {
             browseCard(genre)
@@ -143,7 +142,7 @@ struct SearchView: View {
     }
   }
   
-  private func browseCard(_ genre: MediaGenre) -> some View {
+  private func browseCard(_ genre: Genre) -> some View {
     ZStack(alignment: .bottomLeading) {
       CachedAsyncImage(url: URL(string: model.genrePosters[genre.id] ?? "")) { image in
         image.resizable().aspectRatio(contentMode: .fill)
@@ -234,9 +233,9 @@ struct SearchView: View {
     }
   }
   
-  private func resultRow(_ item: MediaItem) -> some View {
+  private func resultRow(_ item: MediaSummary) -> some View {
     HStack(spacing: 0) {
-      NavigationLink(value: Route.details(item)) {
+      NavigationLink(value: Route.detailsByID(item.id)) {
         HStack(spacing: 12) {
           CachedAsyncImage(url: URL(string: item.posters.small)) { image in
             image.resizable().aspectRatio(contentMode: .fill)
@@ -260,7 +259,7 @@ struct SearchView: View {
       Menu {
         Button {
           model.recordRecent(item)
-          navigationState.searchRoutes.append(.details(item))
+          navigationState.searchRoutes.append(.detailsByID(item.id))
         } label: {
           Label("Open".localized, systemImage: "info.circle")
         }
@@ -279,10 +278,10 @@ struct SearchView: View {
     .padding(.horizontal, 16).padding(.vertical, 8)
   }
   
-  private func metaLine(_ item: MediaItem) -> String {
+  private func metaLine(_ item: MediaSummary) -> String {
     var parts: [String] = []
-    if let type = MediaType(rawValue: item.type)?.title { parts.append(type) }
-    if let genre = item.genres.first?.title, !genre.isEmpty { parts.append(genre) }
+    if !item.typeTitle.isEmpty { parts.append(item.typeTitle) }
+    if let genre = item.primaryGenreTitle, !genre.isEmpty { parts.append(genre) }
     if item.year > 0 { parts.append("\(item.year)") }
     return parts.joined(separator: " · ")
   }
@@ -291,8 +290,8 @@ struct SearchView: View {
   
   /// Movie/TV shelves ordered by how many results each has (so the dominant type leads, like Apple TV
   /// puts TV Shows first for "Shrinking" and Movies first for "Interstellar").
-  private var orderedShelves: [(title: String, items: [MediaItem])] {
-    var shelves: [(String, [MediaItem])] = []
+  private var orderedShelves: [(title: String, items: [MediaSummary])] {
+    var shelves: [(String, [MediaSummary])] = []
     if !model.movieResults.isEmpty { shelves.append(("Movies".localized, model.movieResults)) }
     if !model.tvResults.isEmpty { shelves.append(("TV Shows".localized, model.tvResults)) }
     return shelves.sorted { $0.1.count > $1.1.count }
@@ -317,10 +316,10 @@ struct SearchView: View {
           MediaShelf(
             title: shelf.title,
             showsChevron: shelf.items.count > 1,
-            onHeaderTap: { navigationState.searchRoutes.append(.mediaList(shelf.items, shelf.title)) }
+            onHeaderTap: { navigationState.searchRoutes.append(.mediaSummaries(shelf.items, shelf.title)) }
           ) {
             ForEach(shelf.items.prefix(18), id: \.id) { item in
-              NavigationLink(value: Route.details(item)) {
+              NavigationLink(value: Route.detailsByID(item.id)) {
                 PosterCard(imageURL: item.posters.medium, title: item.localizedTitle, width: 130)
               }
               .buttonStyle(.plain)
@@ -341,7 +340,7 @@ struct SearchView: View {
       ScrollView(.horizontal, showsIndicators: false) {
         LazyHStack(spacing: 12) {
           ForEach(model.topResults, id: \.id) { item in
-            NavigationLink(value: Route.details(item)) { topResultCard(item) }
+            NavigationLink(value: Route.detailsByID(item.id)) { topResultCard(item) }
               .buttonStyle(.plain)
           }
         }
@@ -350,7 +349,7 @@ struct SearchView: View {
     }
   }
   
-  private func topResultCard(_ item: MediaItem) -> some View {
+  private func topResultCard(_ item: MediaSummary) -> some View {
     HStack(spacing: 12) {
       CachedAsyncImage(url: URL(string: item.posters.small)) { image in
         image.resizable().aspectRatio(contentMode: .fill)
@@ -390,7 +389,7 @@ struct SearchView: View {
       ScrollView(.horizontal, showsIndicators: false) {
         LazyHStack(spacing: 16) {
           ForEach(model.people) { person in
-            NavigationLink(value: Route.personSearch(person.name, person.searchField, person.displayName)) {
+            NavigationLink(value: Route.personSearch(person.name, person.field.rawValue, person.displayName)) {
               CastAvatarView(
                 imageURL: ActorImageProvider.photoURLString(for: person.name),
                 name: person.displayName,
@@ -417,13 +416,25 @@ private extension View {
   }
 }
 
+// MARK: - Display helpers
+
+extension PersonSearchResult {
+  var roleLabel: String {
+    switch (isActor, isDirector) {
+    case (true, true): return "\("Actor".localized) · \("Director".localized)"
+    case (false, true): return "Director".localized
+    default: return "Actor".localized
+    }
+  }
+}
+
 // MARK: - Bookmark action sheet ("Add to bookmarks" from a result row)
 
 private struct BookmarkActionSheet: View {
-  let item: MediaItem
+  let item: MediaSummary
   let actionsService: UserActionsService
   @Environment(\.dismiss) private var dismiss
-  @State private var folders: [Bookmark] = []
+  @State private var folders: [BookmarkFolder] = []
   @State private var inFolders: Set<Int> = []
   @State private var loading = true
   
@@ -472,7 +483,9 @@ private struct BookmarkActionSheet: View {
         ToolbarItem(placement: .confirmationAction) { Button("Done".localized) { dismiss() } }
       }
       .task {
-        folders = (try? await actionsService.fetchBookmarks()) ?? []
+        // The transport's folder type is mapped to a display row so this view stays backend-free.
+        folders = (try? await actionsService.fetchBookmarks())?
+          .map { BookmarkFolder(id: $0.id, title: $0.title) } ?? []
         inFolders = Set((try? await actionsService.foldersContaining(itemId: item.id)) ?? [])
         loading = false
       }
@@ -480,9 +493,15 @@ private struct BookmarkActionSheet: View {
   }
 }
 
+/// Display-only row for a bookmark folder (keeps the bookmark sheet free of transport types).
+private struct BookmarkFolder: Identifiable {
+  let id: Int
+  let title: String
+}
+
 /// A "see all" grid for a search section (Movies / TV Shows), showing the already-loaded results.
-struct MediaListGridView: View {
-  let items: [MediaItem]
+struct SearchMediaGridView: View {
+  let items: [MediaSummary]
   let title: String
   
   var body: some View {
@@ -490,7 +509,7 @@ struct MediaListGridView: View {
       ScrollView {
         LazyVGrid(columns: PosterGridLayout.columns(width: width), spacing: 16) {
           ForEach(items, id: \.id) { item in
-            NavigationLink(value: Route.details(item)) {
+            NavigationLink(value: Route.detailsByID(item.id)) {
               PosterCard(imageURL: item.posters.medium, title: item.localizedTitle, width: nil)
             }
             .buttonStyle(.plain)
@@ -506,7 +525,7 @@ struct MediaListGridView: View {
 /// Full "Cast & Crew" people list opened from a committed search — mirrors the people grid on a film
 /// page / Apple TV. Each person opens their filmography (a person search), not a film-title search.
 struct SearchCastCrewView: View {
-  let people: [SearchPerson]
+  let people: [PersonSearchResult]
   let title: String
   
   private let columns = [GridItem(.adaptive(minimum: 100), spacing: 14, alignment: .top)]
@@ -515,7 +534,7 @@ struct SearchCastCrewView: View {
     ScrollView {
       LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
         ForEach(people) { person in
-          NavigationLink(value: Route.personSearch(person.name, person.searchField, person.displayName)) {
+          NavigationLink(value: Route.personSearch(person.name, person.field.rawValue, person.displayName)) {
             CastAvatarView(
               imageURL: ActorImageProvider.photoURLString(for: person.name),
               name: person.displayName,
@@ -537,10 +556,7 @@ struct SearchView_Previews: PreviewProvider {
   static var previews: some View {
     SearchView(
       model: SearchModel(
-        itemsService: VideoContentServiceMock(),
-        authState: AuthState(
-          authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
-          deviceService: DeviceServiceMock()),
+        repository: SearchRepositoryStub(),
         errorHandler: ErrorHandler())
     )
     .appPreviewEnvironment()
