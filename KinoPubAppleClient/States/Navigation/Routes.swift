@@ -7,6 +7,7 @@
 
 import Foundation
 import KinoPubBackend
+import KinoPubDomain
 
 /// A single navigation route type shared by every section's `NavigationStack`.
 ///
@@ -27,17 +28,22 @@ enum Route: Hashable {
   case trailerPlayer(any PlayableItem)
   /// A filtered catalog (genre/country/year/etc.) opened from a detail page.
   case filteredCatalog(MediaItemsFilter, String)
+  /// A filtered catalog opened from the search browse cards (domain query; the resolver maps it to
+  /// the transport filter so the search feature stays backend-free).
+  case filteredCatalogQuery(CatalogQuery, String)
   /// A person search (actor/director): (query, field, title).
   case personSearch(String, String, String)
   /// A genre browse grid: (genreId, title). genreId 0 means "all of this section".
   case genre(Int, String)
   case bookmark(Bookmark)
   case collection(Collection)
-  /// A "see all" grid of already-loaded items (a search section opened in full): (items, title).
+  /// A "see all" grid of already-loaded transport items (Home shelves, Related): (items, title).
   case mediaList([MediaItem], String)
+  /// A "see all" grid of already-loaded search results (domain summaries): (items, title).
+  case mediaSummaries([MediaSummary], String)
   /// A "see all" grid of people surfaced from a search (Cast & Crew): (people, title). Tapping a
   /// person opens their filmography, like the Cast & Crew on a film page / Apple TV.
-  case castCrew([SearchPerson], String)
+  case castCrew([PersonSearchResult], String)
   
   func hash(into hasher: inout Hasher) {
     switch self {
@@ -57,6 +63,8 @@ enum Route: Hashable {
       hasher.combine(5); hasher.combine(item.id)
     case .filteredCatalog(let filter, let title):
       hasher.combine(6); hasher.combine(filter); hasher.combine(title)
+    case .filteredCatalogQuery(let query, let title):
+      hasher.combine(13); hasher.combine(query); hasher.combine(title)
     case .personSearch(let query, let field, let title):
       hasher.combine(7); hasher.combine(query); hasher.combine(field); hasher.combine(title)
     case .genre(let id, let title):
@@ -67,6 +75,8 @@ enum Route: Hashable {
       hasher.combine(10); hasher.combine(collection)
     case .mediaList(let items, let title):
       hasher.combine(11); hasher.combine(items); hasher.combine(title)
+    case .mediaSummaries(let items, let title):
+      hasher.combine(14); hasher.combine(items); hasher.combine(title)
     case .castCrew(let people, let title):
       hasher.combine(12); hasher.combine(people); hasher.combine(title)
     }

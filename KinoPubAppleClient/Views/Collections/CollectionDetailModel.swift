@@ -7,6 +7,7 @@
 
 import Foundation
 import KinoPubBackend
+import KinoPubDomain
 import OSLog
 import KinoPubLogging
 
@@ -31,6 +32,20 @@ enum MediaItemsSort: CaseIterable, Identifiable {
   
   /// Returns `items` sorted by this option (`.default` keeps the original order).
   func sorted(_ items: [MediaItem]) -> [MediaItem] {
+    switch self {
+    case .default:
+      return items
+    case .title:
+      return items.sorted { $0.localizedTitle.localizedCaseInsensitiveCompare($1.localizedTitle) == .orderedAscending }
+    case .year:
+      return items.sorted { $0.year > $1.year }
+    case .rating:
+      return items.sorted { ($0.kinopoiskRating ?? $0.imdbRating ?? 0) > ($1.kinopoiskRating ?? $1.imdbRating ?? 0) }
+    }
+  }
+
+  /// Domain-summary variant used by the person-search screen (which now works with `MediaSummary`).
+  func sorted(_ items: [MediaSummary]) -> [MediaSummary] {
     switch self {
     case .default:
       return items
