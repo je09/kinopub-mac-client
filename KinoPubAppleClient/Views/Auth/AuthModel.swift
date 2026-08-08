@@ -5,29 +5,11 @@
 //  Created by Kirill Kunst on 27.07.2023.
 //
 
-import AppKit
 import Foundation
 import SwiftUI
 import KinoPubBackend
 import KinoPubLogging
 import OSLog
-
-/// Platform capabilities the activation screen needs (clipboard + opening a URL), injected so the
-/// store stays testable and free of AppKit. Production wiring is `.live`.
-struct AuthPlatformActions {
-  var copyToClipboard: (String) -> Void
-  var openURL: (URL) -> Void
-
-  static let live = AuthPlatformActions(
-    copyToClipboard: { text in
-      NSPasteboard.general.clearContents()
-      NSPasteboard.general.setString(text, forType: .string)
-    },
-    openURL: { url in
-      NSWorkspace.shared.open(url)
-    }
-  )
-}
 
 @MainActor
 class AuthModel: ObservableObject {

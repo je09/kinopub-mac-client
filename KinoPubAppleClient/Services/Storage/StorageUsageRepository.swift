@@ -37,7 +37,9 @@ actor StorageUsageRepository {
     let total = containers.reduce(Int64(0)) { $0 + directorySize(at: $1) }
     var downloads: Int64 = 0
     for url in downloadURLs {
-      downloads += (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0
+      // Use the same bundle-aware path as `byteSize(of:)`: an HLS `.movpkg` download is a
+      // directory, so `attributesOfItem` alone would report only the tiny directory entry.
+      downloads += await byteSize(of: url)
     }
     return StorageUsage(
       total: total,

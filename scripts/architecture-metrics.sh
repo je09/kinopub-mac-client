@@ -22,6 +22,14 @@ ui_backend_imports="$(count_matches '^import KinoPubBackend$' Packages/KinoPubUI
 transport_force_unwraps="$(count_matches '[)!]\!' Packages/KinoPubBackend/Sources -g '*.swift')"
 comments_boundary_violations="$(count_matches '^(import KinoPubBackend|.*AppContext\.shared)' KinoPubAppleClient/Views/Comments -g '*.swift')"
 search_boundary_violations="$(count_matches '^(import KinoPubBackend|.*AppContext\.shared)' KinoPubAppleClient/Views/Search -g '*.swift')"
+# Phase 5: views must not perform persistence/filesystem work. Scope is the Phase-5 features
+# (media detail, search, auth, downloads/storage); PlayerManager (Phase 6) and feature stores
+# (DownloadsCatalog, ProfileModel) are tracked as reports, not blockers.
+phase5_view_storage="$(count_matches '@AppStorage|UserDefaults' KinoPubAppleClient/Views/MediaItem KinoPubAppleClient/Views/Search KinoPubAppleClient/Views/Auth -g '*.swift' -g '!RecentSearchRepository.swift')"
+phase5_view_filesystem="$(count_matches 'FileManager|NSHomeDirectory|attributesOfItem|enumerator' KinoPubAppleClient/Views/MediaItem KinoPubAppleClient/Views/Search KinoPubAppleClient/Views/Auth -g '*.swift')"
+phase5_view_network="$(count_matches 'URLSession|NSWorkspace|NSPasteboard' KinoPubAppleClient/Views/MediaItem KinoPubAppleClient/Views/Search KinoPubAppleClient/Views/Auth -g '*.swift')"
+media_detail_screen_lines="$(wc -l < KinoPubAppleClient/Views/MediaItem/MediaItemView.swift | tr -d ' ')"
+search_screen_lines="$(wc -l < KinoPubAppleClient/Views/Search/SearchView.swift | tr -d ' ')"
 
 large_files="$({ find KinoPubAppleClient Packages \
   -path '*/.build' -prune -o -type f -name '*.swift' -print0 \
@@ -41,6 +49,11 @@ cat <<REPORT
 | Potential force unwraps in transport sources | $transport_force_unwraps |
 | Comments boundary violations (blocking) | $comments_boundary_violations |
 | Search boundary violations (blocking) | $search_boundary_violations |
+| Phase-5 view UserDefaults/@AppStorage (blocking) | $phase5_view_storage |
+| Phase-5 view filesystem calls (blocking) | $phase5_view_filesystem |
+| Phase-5 view network/platform calls (blocking) | $phase5_view_network |
+| Media detail screen lines (target <500) | $media_detail_screen_lines |
+| Search screen lines (target <500) | $search_screen_lines |
 | Swift source files over 500 lines | $large_file_count |
 
 ### Files over 500 lines
@@ -57,5 +70,30 @@ fi
 
 if [[ "$search_boundary_violations" != "0" ]]; then
   echo "Search must not import KinoPubBackend or access AppContext.shared" >&2
+  exit 1
+fi
+
+if [[ "$phase5_view_storage" != "0" ]]; then
+  echo "Phase-5 views must not touch UserDefaults/@AppStorage" >&2
+  exit 1
+fi
+
+if [[ "$phase5_view_filesystem" != "0" ]]; then
+  echo "Phase-5 views must not touch the filesystem" >&2
+  exit 1
+fi
+
+if [[ "$phase5_view_network" != "0" ]]; then
+  echo "Phase-5 views must not perform network/platform calls" >&2
+  exit 1
+fi
+
+if [[ "$media_detail_screen_lines" -gt 500 ]]; then
+  echo "MediaItemView.swift must stay under 500 lines (Phase 5 gate)" >&2
+  exit 1
+fi
+
+if [[ "$search_screen_lines" -gt 500 ]]; then
+  echo "SearchView.swift must stay under 500 lines (Phase 5 gate)" >&2
   exit 1
 fi
