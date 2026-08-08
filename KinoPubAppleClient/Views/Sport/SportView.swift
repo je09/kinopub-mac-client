@@ -13,7 +13,6 @@ struct SportView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var authState: AuthState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
   @StateObject private var model: SportModel
   // Shares the app-wide Route type so the detail column never mismatches path types on switch.
   @State private var path: [Route] = []

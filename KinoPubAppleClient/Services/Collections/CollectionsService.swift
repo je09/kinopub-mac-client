@@ -13,9 +13,6 @@ protocol CollectionsService {
   func fetchCollection(id: Int) async throws -> (Collection, [MediaItem])
 }
 
-protocol CollectionsServiceProvider {
-  var collectionsService: CollectionsService { get set }
-}
 
 struct CollectionsServiceMock: CollectionsService {
   

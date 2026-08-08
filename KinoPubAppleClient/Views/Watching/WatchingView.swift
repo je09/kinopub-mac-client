@@ -13,7 +13,6 @@ struct WatchingView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var authState: AuthState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
   @StateObject private var model: WatchingModel
   // Local path: "New episodes" and "Watching" are two top-level screens — each owns its own
   // navigation stack so they never share one path binding (which would crash on switch).

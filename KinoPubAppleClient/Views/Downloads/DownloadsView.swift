@@ -14,7 +14,6 @@ struct DownloadsView: View {
   
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
   @StateObject private var catalog: DownloadsCatalog
   @Environment(\.sectionEmbedded) private var sectionEmbedded
   @State private var showStorage = false
@@ -174,7 +173,7 @@ struct DownloadsView: View {
 /// Native macOS storage breakdown for downloads, cache, EPG data, and other app files.
 struct StorageBreakdownView: View {
   @Environment(\.dismiss) private var dismiss
-  @Environment(\.appContext) private var appContext
+  @Environment(\.dependencies) private var dependencies
   @State private var breakdown: StorageUsage?
   @State private var busy = false
   @State private var toast: ToastMessage?
@@ -204,7 +203,7 @@ struct StorageBreakdownView: View {
             Button("Clear EPG cache".localized) {
               let freed = breakdown.epg
               Task {
-                await appContext.epgService.clearCache()
+                await dependencies.epgService.clearCache()
                 announce(freed: freed)
                 recompute()
               }
@@ -248,7 +247,7 @@ struct StorageBreakdownView: View {
   
   private func recompute() {
     busy = true
-    let downloadURLs = (AppContext.shared.downloadedFilesDatabase.readData() ?? []).map { $0.localFileURL }
+    let downloadURLs = (dependencies.downloadedFilesDatabase.readData() ?? []).map { $0.localFileURL }
     Task.detached(priority: .utility) {
       let result = StorageUsage.compute(downloadURLs: downloadURLs)
       await MainActor.run {

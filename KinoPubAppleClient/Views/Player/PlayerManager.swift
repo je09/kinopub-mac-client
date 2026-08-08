@@ -180,6 +180,9 @@ class PlayerManager: ObservableObject {
   private var playItem: any PlayableItem
   private var watchMode: WatchMode
   private var downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>
+  private var contentService: VideoContentService
+  private var localProgressStore: LocalWatchProgressStore
+  private var libraryState: MediaLibraryStore
   private var rateObservation: NSKeyValueObservation?
   private var seekObservation: NSKeyValueObservation?
   private var audioObservation: NSKeyValueObservation?
@@ -269,12 +272,18 @@ class PlayerManager: ObservableObject {
     watchMode: WatchMode,
     downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>,
     actionsService: UserActionsService,
+    contentService: VideoContentService,
+    localProgressStore: LocalWatchProgressStore,
+    libraryState: MediaLibraryStore,
     episodeQueue: [Episode] = []
   ) {
     self.playItem = playItem
     self.watchMode = watchMode
     self.actionsService = actionsService
     self.downloadedFilesDatabase = downloadedFilesDatabase
+    self.contentService = contentService
+    self.localProgressStore = localProgressStore
+    self.libraryState = libraryState
     self.episodeQueue = episodeQueue
     // Release silent Home/detail previews before AVPlayer creates the real CDN session. Keeping a
     // trailer alive behind this route can consume the account's concurrent-stream allowance.
@@ -288,7 +297,7 @@ class PlayerManager: ObservableObject {
     // appear the moment the player presents (no race with the async server fetch, which only
     // refines it). Covers the "open from Continue Watching" case that previously started at 0.
     if watchMode == .media,
-       let local = AppContext.shared.localProgressStore.entry(
+       let local = localProgressStore.entry(
         forId: playItem.metadata.id,
         season: playItem.metadata.season,
         episode: playItem.metadata.video),
@@ -530,7 +539,7 @@ class PlayerManager: ObservableObject {
       try await Task.sleep(for: .seconds(delays[min(playbackRecoveryAttempt, delays.count - 1)]))
       if refreshedFiles == nil {
         let mediaID = (playItem as? MediaItem)?.videos?.first?.id ?? playItem.id
-        let links = try await AppContext.shared.contentService.fetchMediaLinks(mediaID: mediaID)
+        let links = try await contentService.fetchMediaLinks(mediaID: mediaID)
         guard !links.files.isEmpty else { throw PlaybackRefreshError.missingFiles }
         refreshedFiles = links.files
       }
@@ -551,7 +560,7 @@ class PlayerManager: ObservableObject {
         remoteStreamSource = .progressive
       }
       
-      let link = try await AppContext.shared.contentService
+      let link = try await contentService
         .fetchMediaVideoLink(file: rawPath, type: streamType)
       guard let freshURL = URL(string: link.url), !link.url.isEmpty else {
         throw PlaybackRefreshError.missingURL
@@ -610,7 +619,7 @@ class PlayerManager: ObservableObject {
     else { return }
     
     let options = group.options
-    let preference = AppContext.shared.libraryState.audioPreference(itemId: playItem.metadata.id)
+    let preference = libraryState.audioPreference(itemId: playItem.metadata.id)
     let desired: AVMediaSelectionOption?
     if let preference {
       desired =
@@ -641,7 +650,7 @@ class PlayerManager: ObservableObject {
           let group = try? await item.asset.loadMediaSelectionGroup(for: .legible)
     else { return }
     
-    let preference = AppContext.shared.libraryState.subtitlePreference(itemId: playItem.metadata.id)
+    let preference = libraryState.subtitlePreference(itemId: playItem.metadata.id)
     let desired: AVMediaSelectionOption?
     if let preference {
       if preference.isEnabled {
@@ -706,7 +715,7 @@ class PlayerManager: ObservableObject {
       displayName: selected.displayName,
       languageTag: selected.extendedLanguageTag,
       index: index)
-    AppContext.shared.libraryState.setAudioPreference(itemId: playItem.metadata.id, preference)
+    libraryState.setAudioPreference(itemId: playItem.metadata.id, preference)
   }
   
   /// Remember the selected subtitle immediately; nil is a meaningful explicit Off selection.
@@ -727,7 +736,7 @@ class PlayerManager: ObservableObject {
     } else {
       preference = .init(isEnabled: false, displayName: nil, languageTag: nil, index: nil)
     }
-    AppContext.shared.libraryState.setSubtitlePreference(itemId: playItem.metadata.id, preference)
+    libraryState.setSubtitlePreference(itemId: playItem.metadata.id, preference)
   }
   
   // MARK: - Watch marks
@@ -737,7 +746,7 @@ class PlayerManager: ObservableObject {
     // started, independent of the backend (skips live/trailers via the non-finite duration).
     if watchMode == .media {
       let duration = player.currentItem?.duration.seconds ?? 0
-      AppContext.shared.localProgressStore.recordProgress(
+      localProgressStore.recordProgress(
         mediaId: playItem.metadata.id,
         position: time,
         duration: duration,
@@ -763,7 +772,7 @@ class PlayerManager: ObservableObject {
     let duration = player.currentItem?.duration.seconds ?? 0
     guard duration.isFinite, duration > 0 else { return }
     let metadata = playItem.metadata
-    AppContext.shared.localProgressStore.clear(id: metadata.id)
+    localProgressStore.clear(id: metadata.id)
     enqueueWatchMark(
       .init(
         id: metadata.id,
@@ -822,7 +831,7 @@ class PlayerManager: ObservableObject {
     // Fall back to the local resume point: a movie/episode watched in-app records its position
     // locally on every tick, so it resumes even when the server mark lags or the fetch fails.
     let localContinueTime =
-    AppContext.shared.localProgressStore
+    localProgressStore
       .entry(forId: playItem.metadata.id, season: playItem.metadata.season, episode: playItem.metadata.video)?
       .position ?? 0
     

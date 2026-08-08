@@ -12,7 +12,6 @@ struct BookmarksView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var authState: AuthState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
   @StateObject private var catalog: BookmarksCatalog
   @Environment(\.sectionEmbedded) private var sectionEmbedded
   
@@ -77,9 +76,11 @@ struct BookmarksView: View {
 
 struct BookmarksView_Previews: PreviewProvider {
   static var previews: some View {
-    BookmarksView(
+    let deps = AppDependencies.preview()
+    return BookmarksView(
       catalog: BookmarksCatalog(
         itemsService: VideoContentServiceMock(),
+        libraryState: deps.libraryState,
         authState: AuthState(
           authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
           deviceService: DeviceServiceMock()),

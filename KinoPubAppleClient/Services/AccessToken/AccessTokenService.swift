@@ -19,9 +19,6 @@ protocol AccessTokenService {
   func clear()
 }
 
-protocol AccessTokenServiceProvider {
-  var accessTokenService: AccessTokenService { get set }
-}
 
 struct AccessTokenServiceMock: AccessTokenService {
   

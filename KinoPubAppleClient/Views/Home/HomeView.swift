@@ -13,7 +13,6 @@ struct HomeView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject var authState: AuthState
-  @Environment(\.appContext) var appContext
   @StateObject private var model: HomeModel
   @ObservedObject private var visibility = SectionVisibilityStore.shared
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -311,9 +310,11 @@ struct HomeView: View {
 
 struct HomeView_Previews: PreviewProvider {
   static var previews: some View {
-    HomeView(
+    let deps = AppDependencies.preview()
+    return HomeView(
       model: HomeModel(
         itemsService: VideoContentServiceMock(),
+        localProgressStore: deps.localProgressStore,
         authState: AuthState(
           authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
           deviceService: DeviceServiceMock()),

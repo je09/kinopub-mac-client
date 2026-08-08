@@ -13,7 +13,7 @@ struct ProfileView: View {
   
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
+  @Environment(\.dependencies) var dependencies
   @StateObject private var model: ProfileModel
   @AppStorage("selectedLanguage") private var selectedLanguage: String =
   (Locale.current.language.languageCode?.identifier ?? "en")
@@ -80,13 +80,13 @@ struct ProfileView: View {
             NavigationLink("Device settings".localized) {
               DeviceSettingsView(
                 model: DeviceSettingsModel(
-                  deviceService: appContext.deviceService,
+                  deviceService: dependencies.deviceService,
                   errorHandler: errorHandler))
             }
             NavigationLink("Devices".localized) {
               DevicesView(
                 model: DevicesListModel(
-                  deviceService: appContext.deviceService,
+                  deviceService: dependencies.deviceService,
                   errorHandler: errorHandler))
             }
           }

@@ -18,7 +18,10 @@ final class PlayerWatchMarkTests: XCTestCase {
       playItem: PlayerTestItem(id: 100, metadata: WatchingMetadata(id: 42, video: 3, season: 2)),
       watchMode: .trailer,
       downloadedFilesDatabase: database,
-      actionsService: service
+      actionsService: service,
+      contentService: VideoContentServiceMock(),
+      localProgressStore: LocalWatchProgressStore(fileURL: directory.appendingPathComponent("progress.json")),
+      libraryState: makePreviewLibrary(saver: saver, database: database, actionsService: service)
     )
     
     manager.saveWatchMark(time: 10)
@@ -38,6 +41,22 @@ final class PlayerWatchMarkTests: XCTestCase {
     XCTAssertEqual(calls.map(\.id), [42, 42])
     XCTAssertEqual(calls.map(\.video), [3, 3])
     XCTAssertEqual(calls.map(\.season), [2, 2])
+  }
+  /// Builds an isolated `MediaLibraryStore` for the player test (temp file, no production state).
+  private func makePreviewLibrary(
+    saver: FileSaving,
+    database: DownloadedFilesDatabase<DownloadMeta>,
+    actionsService: UserActionsService
+  ) -> MediaLibraryStore {
+    let manager = DownloadManager<DownloadMeta>(fileSaver: saver, database: database)
+    return MediaLibraryStore(
+      downloadManager: manager,
+      downloadedFilesDatabase: database,
+      progressStore: LocalWatchProgressStore(fileURL: FileManager.default.temporaryDirectory
+        .appendingPathComponent("PlayerWatchMarkTests-progress-\\(UUID().uuidString).json")),
+      actionsService: actionsService,
+      fileURL: FileManager.default.temporaryDirectory
+        .appendingPathComponent("PlayerWatchMarkTests-library-\\(UUID().uuidString).json"))
   }
 }
 

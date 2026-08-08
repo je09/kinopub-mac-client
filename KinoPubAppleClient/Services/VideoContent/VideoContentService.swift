@@ -34,9 +34,6 @@ protocol VideoContentService {
   func fetchComments(for id: Int) async throws -> CommentsData
 }
 
-protocol VideoContentServiceProvider {
-  var contentService: VideoContentService { get set }
-}
 
 extension VideoContentService {
   // Convenience overloads so call sites that don't care about cache freshness stay unchanged.

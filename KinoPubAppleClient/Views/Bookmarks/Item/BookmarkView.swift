@@ -15,7 +15,6 @@ struct BookmarkView: View {
   @EnvironmentObject var errorHandler: ErrorHandler
   
   @StateObject private var model: BookmarkModel
-  @Environment(\.appContext) var appContext
   @Environment(\.dismiss) private var dismiss
   
   @State private var showDeleteConfirm = false

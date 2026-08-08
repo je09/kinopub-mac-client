@@ -24,6 +24,8 @@ class MediaItemModel: ObservableObject {
   private var actionsService: UserActionsService
   private var downloadManager: DownloadManager<DownloadMeta>
   private var errorHandler: ErrorHandler
+  private var libraryState: MediaLibraryStore
+  private var seasonDownloadManager: SeasonDownloadManager
   public var linkProvider: NavigationLinkProvider
   public var mediaItemId: Int
   
@@ -59,17 +61,17 @@ class MediaItemModel: ObservableObject {
   public var primaryActor: String? { castNames.first }
   /// Effective watched state for an episode (client optimistic override first, then server data).
   public func isEpisodeWatched(_ episode: Episode) -> Bool {
-    AppContext.shared.libraryState.episodeWatched(episodeId: episode.id, serverWatched: episode.isWatched)
+    libraryState.episodeWatched(episodeId: episode.id, serverWatched: episode.isWatched)
   }
   
   /// Effective watched state for a movie (client optimistic override first, then server data).
   public var isMovieWatched: Bool {
-    AppContext.shared.libraryState.movieWatched(
+    libraryState.movieWatched(
       itemId: mediaItemId,
       serverWatched: mediaItem.videos?.first?.isWatched ?? false)
   }
   
-  private let localProgressStore: LocalWatchProgressStore = AppContext.shared.localProgressStore
+  private let localProgressStore: LocalWatchProgressStore
   /// Bumped when the screen reappears (e.g. back from the player) so the local-progress overlay
   /// re-reads the store immediately, before the authoritative server refetch returns.
   @Published private var localProgressTick: Int = 0
@@ -184,7 +186,10 @@ class MediaItemModel: ObservableObject {
     downloadManager: DownloadManager<DownloadMeta>,
     linkProvider: NavigationLinkProvider,
     errorHandler: ErrorHandler,
-    actionsService: UserActionsService = AppContext.shared.actionsService
+    actionsService: UserActionsService,
+    libraryState: MediaLibraryStore,
+    localProgressStore: LocalWatchProgressStore,
+    seasonDownloadManager: SeasonDownloadManager
   ) {
     self.itemsService = itemsService
     self.mediaItemId = mediaItemId
@@ -192,6 +197,9 @@ class MediaItemModel: ObservableObject {
     self.errorHandler = errorHandler
     self.downloadManager = downloadManager
     self.actionsService = actionsService
+    self.libraryState = libraryState
+    self.localProgressStore = localProgressStore
+    self.seasonDownloadManager = seasonDownloadManager
   }
   
   func fetchData(includeSupplementary: Bool = true) {
@@ -206,13 +214,13 @@ class MediaItemModel: ObservableObject {
         seedVoteCounts()
         // Reconcile optimistic watched overrides against fresh server data: drop the ones the
         // server now confirms (keeps any still-in-flight toggle), so the server can drive again.
-        AppContext.shared.libraryState.reconcileWatched(
+        libraryState.reconcileWatched(
           movieItemId: mediaId,
           serverMovieWatched: mediaItem.isSeries ? nil : mediaItem.videos?.first?.isWatched ?? false,
           episodes: mediaItem.orderedEpisodes.map { (id: $0.episode.id, watched: $0.episode.isWatched) })
         // Seed the client library state once (bookmark folders + watchlist) so the UI reflects
         // membership instantly; optimistic toggles thereafter aren't clobbered by refetches.
-        AppContext.shared.libraryState.seedIfAbsent(
+        libraryState.seedIfAbsent(
           itemId: mediaId,
           folderIds: mediaItem.bookmarks?.map { $0.id } ?? [],
           inWatchlist: mediaItem.inWatchlist == true)
@@ -300,7 +308,7 @@ class MediaItemModel: ObservableObject {
   
   /// Enqueues every episode of `season`. `quality` of nil downloads the best available per episode.
   func downloadSeason(_ season: Season, quality: String?) {
-    let count = AppContext.shared.seasonDownloadManager.downloadSeason(
+    let count = seasonDownloadManager.downloadSeason(
       mediaId: mediaItem.id,
       seriesTitle: mediaItem.localizedTitle,
       season: season,
@@ -313,13 +321,13 @@ class MediaItemModel: ObservableObject {
   
   func toggleWatched() {
     let newState = !isMovieWatched
-    AppContext.shared.libraryState.setMovieWatched(itemId: mediaItemId, value: newState)  // optimistic
+    libraryState.setMovieWatched(itemId: mediaItemId, value: newState)  // optimistic
     Task {
       do {
         try await actionsService.toggleWatching(id: mediaItemId, video: nil, season: nil)
         toastMessage = newState ? .success("Marked as watched".localized) : .info("Marked as unwatched".localized)
       } catch {
-        AppContext.shared.libraryState.setMovieWatched(itemId: mediaItemId, value: !newState)  // revert
+        libraryState.setMovieWatched(itemId: mediaItemId, value: !newState)  // revert
         errorHandler.setError(error)
       }
     }
@@ -327,28 +335,28 @@ class MediaItemModel: ObservableObject {
   
   func toggleEpisodeWatched(episode: Episode, season: Int) {
     let newState = !isEpisodeWatched(episode)
-    AppContext.shared.libraryState.setEpisodeWatched(episodeId: episode.id, value: newState)  // optimistic
+    libraryState.setEpisodeWatched(episodeId: episode.id, value: newState)  // optimistic
     Task {
       do {
         try await actionsService.toggleWatching(id: mediaItemId, video: episode.number, season: season)
         toastMessage = newState ? .success("Marked as watched".localized) : .info("Marked as unwatched".localized)
       } catch {
-        AppContext.shared.libraryState.setEpisodeWatched(episodeId: episode.id, value: !newState)  // revert
+        libraryState.setEpisodeWatched(episodeId: episode.id, value: !newState)  // revert
         errorHandler.setError(error)
       }
     }
   }
   
   func toggleWatchlist() {
-    let current = AppContext.shared.libraryState.inWatchlist(itemId: mediaItemId) ?? (mediaItem.inWatchlist == true)
+    let current = libraryState.inWatchlist(itemId: mediaItemId) ?? (mediaItem.inWatchlist == true)
     let newState = !current
-    AppContext.shared.libraryState.setWatchlist(itemId: mediaItemId, value: newState)  // optimistic
+    libraryState.setWatchlist(itemId: mediaItemId, value: newState)  // optimistic
     Task {
       do {
         try await actionsService.toggleWatchlist(id: mediaItemId)
         toastMessage = newState ? .success("Added to watchlist".localized) : .info("Removed from watchlist".localized)
       } catch {
-        AppContext.shared.libraryState.setWatchlist(itemId: mediaItemId, value: current)  // revert
+        libraryState.setWatchlist(itemId: mediaItemId, value: current)  // revert
         errorHandler.setError(error)
       }
     }
@@ -356,11 +364,11 @@ class MediaItemModel: ObservableObject {
   
   func loadBookmarkFolders() {
     // Cached once per session in the library store; no refetch on every detail-screen appearance.
-    Task { await AppContext.shared.libraryState.loadBookmarkFoldersIfNeeded() }
+    Task { await libraryState.loadBookmarkFoldersIfNeeded() }
   }
   
   func toggleBookmark(folderId: Int, folderTitle: String) {
-    let nowIn = AppContext.shared.libraryState.toggleBookmark(itemId: mediaItemId, folderId: folderId)  // optimistic
+    let nowIn = libraryState.toggleBookmark(itemId: mediaItemId, folderId: folderId)  // optimistic
     Task {
       do {
         try await actionsService.toggleBookmark(itemId: mediaItemId, folderId: folderId)
@@ -369,7 +377,7 @@ class MediaItemModel: ObservableObject {
         ? .success(String(format: "Saved to %@".localized, folderTitle))
         : .info(String(format: "Removed from %@".localized, folderTitle))
       } catch {
-        AppContext.shared.libraryState.setBookmark(itemId: mediaItemId, folderId: folderId, isOn: !nowIn)  // revert
+        libraryState.setBookmark(itemId: mediaItemId, folderId: folderId, isOn: !nowIn)  // revert
         errorHandler.setError(error)
       }
     }
@@ -407,7 +415,7 @@ class MediaItemModel: ObservableObject {
   /// separate like/dislike counts, so derive them for the initial display. A real vote refreshes them.
   /// Also restores the user's own remembered vote so their like/dislike stays visible on revisits.
   private func seedVoteCounts() {
-    myVote = AppContext.shared.libraryState.userVote(itemId: mediaItemId).map { $0 ? .up : .down } ?? .none
+    myVote = libraryState.userVote(itemId: mediaItemId).map { $0 ? .up : .down } ?? .none
     let total = mediaItem.ratingVotes
     guard total > 0 else { likeCount = 0; dislikeCount = 0; return }
     let positive = Int((Double(total) * mediaItem.ratingPercentage / 100.0).rounded())
@@ -425,7 +433,7 @@ class MediaItemModel: ObservableObject {
     }
     // First vote for this title: optimistic highlight + count bump, remembered locally so it persists.
     myVote = target
-    AppContext.shared.libraryState.setUserVote(itemId: mediaItemId, up: up)
+    libraryState.setUserVote(itemId: mediaItemId, up: up)
     if up { likeCount += 1 } else { dislikeCount += 1 }
     Task {
       do {
@@ -443,7 +451,7 @@ class MediaItemModel: ObservableObject {
       } catch {
         // Network failure — fully revert (including the remembered vote).
         myVote = .none
-        AppContext.shared.libraryState.clearUserVote(itemId: mediaItemId)
+        libraryState.clearUserVote(itemId: mediaItemId)
         if up { likeCount = max(0, likeCount - 1) } else { dislikeCount = max(0, dislikeCount - 1) }
         errorHandler.setError(error)
       }
@@ -458,8 +466,8 @@ class MediaItemModel: ObservableObject {
       do {
         let folderId = try await actionsService.createBookmarkFolder(title: title)
         try await actionsService.toggleBookmark(itemId: mediaItemId, folderId: folderId)
-        AppContext.shared.libraryState.setBookmark(itemId: mediaItemId, folderId: folderId, isOn: true)
-        await AppContext.shared.libraryState.reloadBookmarkFolders()
+        libraryState.setBookmark(itemId: mediaItemId, folderId: folderId, isOn: true)
+        await libraryState.reloadBookmarkFolders()
         toastMessage = .success(String(format: "Saved to %@".localized, title))
       } catch {
         errorHandler.setError(error)

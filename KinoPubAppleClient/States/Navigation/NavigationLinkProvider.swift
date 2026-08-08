@@ -59,7 +59,7 @@ extension View {
 struct RouteDestinationView: View {
   let route: Route
   
-  @Environment(\.appContext) private var appContext
+  @Environment(\.dependencies) private var dependencies
   @EnvironmentObject private var authState: AuthState
   @EnvironmentObject private var errorHandler: ErrorHandler
   
@@ -72,7 +72,7 @@ struct RouteDestinationView: View {
     case .seasons(let seasons):
       SeasonsView(model: SeasonsModel(seasons: seasons, linkProvider: RouteLinkProvider()))
     case .season(let season):
-      SeasonView(model: SeasonModel(season: season, linkProvider: RouteLinkProvider()))
+      SeasonView(model: SeasonModel(season: season, linkProvider: RouteLinkProvider(), downloadManager: dependencies.downloadManager))
     case .player(let item):
       player(item, mode: .media)
     case .episodePlayer(let episode, let queue):
@@ -82,7 +82,7 @@ struct RouteDestinationView: View {
     case .filteredCatalog(let filter, let title):
       FilteredCatalogView(
         catalog: MediaCatalog(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
           authState: authState,
           errorHandler: errorHandler,
           filter: filter),
@@ -91,7 +91,7 @@ struct RouteDestinationView: View {
     case .filteredCatalogQuery(let query, let title):
       FilteredCatalogView(
         catalog: MediaCatalog(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
           authState: authState,
           errorHandler: errorHandler,
           filter: MediaItemsFilter(query: query)),
@@ -100,7 +100,7 @@ struct RouteDestinationView: View {
     case .personSearch(let query, let field, let title):
       PersonSearchView(
         model: SearchModel(
-          repository: appContext.searchRepository,
+          repository: dependencies.searchRepository,
           errorHandler: errorHandler),
         query: query,
         field: field,
@@ -109,7 +109,7 @@ struct RouteDestinationView: View {
     case .genre(let id, let title):
       GenreResultsView(
         model: SearchModel(
-          repository: appContext.searchRepository,
+          repository: dependencies.searchRepository,
           errorHandler: errorHandler),
         genreId: id,
         title: title)
@@ -117,14 +117,15 @@ struct RouteDestinationView: View {
       BookmarkView(
         model: BookmarkModel(
           bookmark: bookmark,
-          itemsService: appContext.contentService,
-          actionsService: appContext.actionsService,
+          itemsService: dependencies.contentService,
+          actionsService: dependencies.actionsService,
+          libraryState: dependencies.libraryState,
           errorHandler: errorHandler))
     case .collection(let collection):
       CollectionDetailView(
         model: CollectionDetailModel(
           collection: collection,
-          collectionsService: appContext.collectionsService,
+          collectionsService: dependencies.collectionsService,
           errorHandler: errorHandler))
     case .mediaList(let items, let title):
       MediaListGridView(items: items, title: title)
@@ -140,10 +141,14 @@ struct RouteDestinationView: View {
     MediaItemView(
       model: MediaItemModel(
         mediaItemId: id,
-        itemsService: appContext.contentService,
-        downloadManager: appContext.downloadManager,
+        itemsService: dependencies.contentService,
+        downloadManager: dependencies.downloadManager,
         linkProvider: RouteLinkProvider(),
-        errorHandler: errorHandler))
+        errorHandler: errorHandler,
+        actionsService: dependencies.actionsService,
+        libraryState: dependencies.libraryState,
+        localProgressStore: dependencies.localProgressStore,
+        seasonDownloadManager: dependencies.seasonDownloadManager))
   }
   
   @ViewBuilder
@@ -156,8 +161,11 @@ struct RouteDestinationView: View {
       manager: PlayerManager(
         playItem: item,
         watchMode: mode,
-        downloadedFilesDatabase: appContext.downloadedFilesDatabase,
-        actionsService: appContext.actionsService,
+        downloadedFilesDatabase: dependencies.downloadedFilesDatabase,
+        actionsService: dependencies.actionsService,
+        contentService: dependencies.contentService,
+        localProgressStore: dependencies.localProgressStore,
+        libraryState: dependencies.libraryState,
         episodeQueue: episodeQueue))
   }
 }

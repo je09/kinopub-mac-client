@@ -13,7 +13,6 @@ struct CollectionsView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var authState: AuthState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
   @StateObject private var model: CollectionsModel
   @Environment(\.sectionEmbedded) private var sectionEmbedded
   
