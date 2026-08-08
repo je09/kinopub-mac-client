@@ -11,4 +11,10 @@ public struct Trailer: Codable, Hashable {
   public let id: Int
   public let file: String
   public let url: String?
+
+  public init(id: Int = 1, file: String = "", url: String? = nil) {
+    self.id = id
+    self.file = file
+    self.url = url
+  }
 }

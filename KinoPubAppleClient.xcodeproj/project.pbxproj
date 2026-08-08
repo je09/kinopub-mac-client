@@ -7,6 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BBBBBBBB0000000000010024 /* AVPlayerControllerTeardownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000024 /* AVPlayerControllerTeardownTests.swift */; };
+		BBBBBBBB0000000000010023 /* ThreeDVideoCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000023 /* ThreeDVideoCompositionTests.swift */; };
+		BBBBBBBB0000000000010022 /* MediaPreferenceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000022 /* MediaPreferenceStoreTests.swift */; };
+		BBBBBBBB0000000000010021 /* PlaybackSourceRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000021 /* PlaybackSourceRepositoryTests.swift */; };
+		BBBBBBBB0000000000010020 /* PlaybackSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000020 /* PlaybackSessionTests.swift */; };
+		BBBBBBBB000000000001001F /* PlaybackTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000001F /* PlaybackTestSupport.swift */; };
+		BBBBBBBB000000000001001E /* MediaPreferenceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000001E /* MediaPreferenceStore.swift */; };
+		BBBBBBBB000000000001001D /* WatchProgressSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000001D /* WatchProgressSync.swift */; };
+		BBBBBBBB000000000001001C /* PlaybackSourceRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000001C /* PlaybackSourceRepository.swift */; };
+		BBBBBBBB000000000001001B /* PlaybackSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000001B /* PlaybackSource.swift */; };
+		BBBBBBBB000000000001001A /* PlaybackSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB000000000000001A /* PlaybackSession.swift */; };
+		BBBBBBBB0000000000010019 /* PlaybackPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000019 /* PlaybackPhase.swift */; };
+		BBBBBBBB0000000000010018 /* ThreeDVideoComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000018 /* ThreeDVideoComposition.swift */; };
+		BBBBBBBB0000000000010017 /* PlayerChromeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000017 /* PlayerChromeView.swift */; };
+		BBBBBBBB0000000000010016 /* RemoteCommandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000016 /* RemoteCommandController.swift */; };
+		BBBBBBBB0000000000010015 /* AVPlayerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000015 /* AVPlayerController.swift */; };
 		BBBBBBBB0000000000010014 /* AuthPlatformActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000014 /* AuthPlatformActions.swift */; };
 		BBBBBBBB0000000000030002 /* StorageUsageRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000020002 /* StorageUsageRepositoryTests.swift */; };
 		BBBBBBBB0000000000030001 /* MediaDetailHierarchyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000020001 /* MediaDetailHierarchyTests.swift */; };
@@ -172,6 +188,22 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BBBBBBBB0000000000000024 /* AVPlayerControllerTeardownTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlayerControllerTeardownTests.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000023 /* ThreeDVideoCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreeDVideoCompositionTests.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000022 /* MediaPreferenceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreferenceStoreTests.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000021 /* PlaybackSourceRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSourceRepositoryTests.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000020 /* PlaybackSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSessionTests.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000001F /* PlaybackTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackTestSupport.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000001E /* MediaPreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreferenceStore.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000001D /* WatchProgressSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchProgressSync.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000001C /* PlaybackSourceRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSourceRepository.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000001B /* PlaybackSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSource.swift; sourceTree = "<group>"; };
+		BBBBBBBB000000000000001A /* PlaybackSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSession.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000019 /* PlaybackPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackPhase.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000018 /* ThreeDVideoComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreeDVideoComposition.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000017 /* PlayerChromeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerChromeView.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000016 /* RemoteCommandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteCommandController.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000015 /* AVPlayerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlayerController.swift; sourceTree = "<group>"; };
 		BBBBBBBB0000000000000014 /* AuthPlatformActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthPlatformActions.swift; sourceTree = "<group>"; };
 		BBBBBBBB0000000000020002 /* StorageUsageRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageRepositoryTests.swift; sourceTree = "<group>"; };
 		BBBBBBBB0000000000020001 /* MediaDetailHierarchyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailHierarchyTests.swift; sourceTree = "<group>"; };
@@ -662,6 +694,12 @@
 		D00000000000000000000013 /* KinoPubAppleClientTests */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000024 /* AVPlayerControllerTeardownTests.swift */,
+				BBBBBBBB0000000000000023 /* ThreeDVideoCompositionTests.swift */,
+				BBBBBBBB0000000000000022 /* MediaPreferenceStoreTests.swift */,
+				BBBBBBBB0000000000000021 /* PlaybackSourceRepositoryTests.swift */,
+				BBBBBBBB0000000000000020 /* PlaybackSessionTests.swift */,
+				BBBBBBBB000000000000001F /* PlaybackTestSupport.swift */,
 				BBBBBBBB0000000000020002 /* StorageUsageRepositoryTests.swift */,
 				BBBBBBBB0000000000020001 /* MediaDetailHierarchyTests.swift */,
 				D00000000000000000000010 /* AuthModelPollingTests.swift */,
@@ -852,6 +890,9 @@
 		CCF388162A71817300242581 /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000017 /* PlayerChromeView.swift */,
+				BBBBBBBB0000000000000016 /* RemoteCommandController.swift */,
+				BBBBBBBB0000000000000015 /* AVPlayerController.swift */,
 				CC0904802A7C34D200A71F53 /* PlayerView.swift */,
 				CC0904822A7C353200A71F53 /* PlayerManager.swift */,
 				CC87E6382B021E7F0096BDC3 /* PlayerContinueWatchingView.swift */,
@@ -859,6 +900,22 @@
 			path = Player;
 			sourceTree = "<group>";
 		};
+		BBBBBBBB0000000000000100 /* Playback */ = {
+			isa = PBXGroup;
+			children = (
+				BBBBBBBB000000000000001E /* MediaPreferenceStore.swift */,
+				BBBBBBBB000000000000001D /* WatchProgressSync.swift */,
+				BBBBBBBB000000000000001C /* PlaybackSourceRepository.swift */,
+				BBBBBBBB000000000000001B /* PlaybackSource.swift */,
+				BBBBBBBB000000000000001A /* PlaybackSession.swift */,
+				BBBBBBBB0000000000000019 /* PlaybackPhase.swift */,
+				BBBBBBBB0000000000000018 /* ThreeDVideoComposition.swift */,
+
+			);
+			path = Playback;
+			sourceTree = "<group>";
+		};
+
 		CCF388172A7187F900242581 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -874,6 +931,7 @@
 				CC60254B2AFF5480003D8391 /* UserActions */,
 				CCF3881F2A718AD100242581 /* VideoContent */,
 				02342B8CFCBDAC7B94D3C5C3 /* EPG */,
+				BBBBBBBB0000000000000100 /* Playback */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1086,6 +1144,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBBBBBBB0000000000010024 /* AVPlayerControllerTeardownTests.swift in Sources */,
+				BBBBBBBB0000000000010023 /* ThreeDVideoCompositionTests.swift in Sources */,
+				BBBBBBBB0000000000010022 /* MediaPreferenceStoreTests.swift in Sources */,
+				BBBBBBBB0000000000010021 /* PlaybackSourceRepositoryTests.swift in Sources */,
+				BBBBBBBB0000000000010020 /* PlaybackSessionTests.swift in Sources */,
+				BBBBBBBB000000000001001F /* PlaybackTestSupport.swift in Sources */,
 				BBBBBBBB0000000000030002 /* StorageUsageRepositoryTests.swift in Sources */,
 				BBBBBBBB0000000000030001 /* MediaDetailHierarchyTests.swift in Sources */,
 				D00000000000000000000001 /* AuthModelPollingTests.swift in Sources */,
@@ -1104,6 +1168,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBBBBBBB000000000001001E /* MediaPreferenceStore.swift in Sources */,
+				BBBBBBBB000000000001001D /* WatchProgressSync.swift in Sources */,
+				BBBBBBBB000000000001001C /* PlaybackSourceRepository.swift in Sources */,
+				BBBBBBBB000000000001001B /* PlaybackSource.swift in Sources */,
+				BBBBBBBB000000000001001A /* PlaybackSession.swift in Sources */,
+				BBBBBBBB0000000000010019 /* PlaybackPhase.swift in Sources */,
+				BBBBBBBB0000000000010018 /* ThreeDVideoComposition.swift in Sources */,
+				BBBBBBBB0000000000010017 /* PlayerChromeView.swift in Sources */,
+				BBBBBBBB0000000000010016 /* RemoteCommandController.swift in Sources */,
+				BBBBBBBB0000000000010015 /* AVPlayerController.swift in Sources */,
 				BBBBBBBB0000000000010014 /* AuthPlatformActions.swift in Sources */,
 				BBBBBBBB0000000000010013 /* KinopoiskTextSanitizer.swift in Sources */,
 				BBBBBBBB0000000000010012 /* MediaCastCrewSheet.swift in Sources */,

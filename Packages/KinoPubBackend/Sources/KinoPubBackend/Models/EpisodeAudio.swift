@@ -15,4 +15,22 @@ public struct EpisodeAudio: Codable, Hashable {
   public let lang: String
   public let type: TypeClass?
   public let author: Author?
+
+  public init(
+    id: Int,
+    index: Int,
+    codec: String,
+    channels: Int,
+    lang: String,
+    type: TypeClass? = nil,
+    author: Author? = nil
+  ) {
+    self.id = id
+    self.index = index
+    self.codec = codec
+    self.channels = channels
+    self.lang = lang
+    self.type = type
+    self.author = author
+  }
 }
