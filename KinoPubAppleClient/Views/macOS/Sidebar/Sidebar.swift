@@ -17,7 +17,7 @@ struct Sidebar: View {
   @EnvironmentObject private var navigationState: NavigationState
   @EnvironmentObject private var networkMonitor: NetworkMonitor
   @EnvironmentObject private var appearance: AppearanceSettings
-  @EnvironmentObject private var libraryState: MediaLibraryStore
+  @EnvironmentObject private var libraryState: LibraryViewState
   @ObservedObject private var visibility = SectionVisibilityStore.shared
   @State private var isEditingSections = false
   @State private var isHoveringLibraryHeader = false

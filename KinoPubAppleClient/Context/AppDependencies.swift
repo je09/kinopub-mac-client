@@ -9,7 +9,7 @@
 //  silently starting production behavior in a preview or test.
 //
 //  Dependency lifecycle (see plans/refactor.md Phase 3):
-//   - App: `AppDependencies` itself, `MediaLibraryStore`, `DownloadManager`, session caches.
+//   - App: `AppDependencies` itself, `LibraryRepository`/`LibraryViewState`, `DownloadManager`, session caches.
 //   - Session: `AuthState`, `AccessTokenService`, account-scoped caches.
 //   - Feature: each feature model/store, owned by its screen (`@StateObject`) or the sidebar cache.
 //   - Transient: views and presentation-only helpers.
@@ -59,7 +59,7 @@ struct AppDependencies {
   let seasonDownloadManager: SeasonDownloadManager
   let actionsService: UserActionsService
   let localProgressStore: LocalWatchProgressStore
-  let libraryState: MediaLibraryStore
+  let libraryState: LibraryViewState
   let commentsRepository: any CommentsRepository
   let searchRepository: any SearchRepository
 
@@ -107,13 +107,20 @@ struct AppDependencies {
     let actionsService = UserActionsServiceImpl(apiClient: apiClient)
 
     // Single client-side library state: optimistic bookmarks/watchlist/watched + cached bookmark
-    // folders + audio-track prefs + a façade over downloads and watch progress — one source of truth.
+    // folders + audio-track prefs — one source of truth behind the typed command API. Download
+    // status and watch progress stay separate sources joined into the view state's read model.
     let localProgressStore = LocalWatchProgressStore()
-    let libraryState = MediaLibraryStore(
+    let libraryRepository = LibraryRepository(actionsService: actionsService)
+    let libraryDownloadStatus = LibraryDownloadStatusAdapter(
       downloadManager: downloadManager,
-      downloadedFilesDatabase: downloadedFilesDatabase,
-      progressStore: localProgressStore,
-      actionsService: actionsService)
+      downloadedFilesDatabase: downloadedFilesDatabase)
+    // App bootstrap runs on the main thread (App.init / previews / window setup), which is where
+    // the @MainActor UI projection must be built.
+    let libraryState = MainActor.assumeIsolated {
+      LibraryViewState(
+        repository: libraryRepository,
+        downloadStatus: libraryDownloadStatus)
+    }
 
     let authService = AuthorizationServiceImpl(
       apiClient: apiClient,
@@ -159,12 +166,19 @@ struct AppDependencies {
       notifications: downloadNotificationManager)
     let actionsService = UserActionsServiceMock()
     let localProgressStore = LocalWatchProgressStore(fileURL: PreviewURLs.progress)
-    let libraryState = MediaLibraryStore(
-      downloadManager: downloadManager,
-      downloadedFilesDatabase: downloadedFilesDatabase,
-      progressStore: localProgressStore,
+    let libraryRepository = LibraryRepository(
       actionsService: actionsService,
       fileURL: PreviewURLs.library)
+    let libraryDownloadStatus = LibraryDownloadStatusAdapter(
+      downloadManager: downloadManager,
+      downloadedFilesDatabase: downloadedFilesDatabase)
+    // App bootstrap runs on the main thread (App.init / previews / window setup), which is where
+    // the @MainActor UI projection must be built.
+    let libraryState = MainActor.assumeIsolated {
+      LibraryViewState(
+        repository: libraryRepository,
+        downloadStatus: libraryDownloadStatus)
+    }
     return AppDependencies(
       configuration: configuration,
       authService: AuthorizationServiceMock(),

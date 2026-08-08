@@ -15,7 +15,7 @@ struct MediaItemView: View {
   
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject private var navigationState: NavigationState
-  @EnvironmentObject private var libraryState: MediaLibraryStore
+  @EnvironmentObject private var libraryState: LibraryViewState
   @Environment(\.dependencies) private var dependencies
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @StateObject private var itemModel: MediaItemModel

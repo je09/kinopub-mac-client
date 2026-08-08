@@ -36,7 +36,8 @@ struct KinoPubAppleClientApp: App {
       wrappedValue: AuthState(
         authService: dependencies.authService,
         accessTokenService: dependencies.accessTokenService,
-        deviceService: dependencies.deviceService))
+        deviceService: dependencies.deviceService,
+        onLogout: { await dependencies.libraryState.deactivate() }))
   }
 
   var body: some Scene {

@@ -60,7 +60,7 @@ struct SearchView: View {
         DispatchQueue.main.async { searchFocused = true }
       }
       .sheet(item: $bookmarkTarget) { target in
-        BookmarkActionSheet(item: target.item, actionsService: dependencies.actionsService)
+        BookmarkActionSheet(item: target.item)
       }
     }
   }
@@ -432,10 +432,8 @@ extension PersonSearchResult {
 
 private struct BookmarkActionSheet: View {
   let item: MediaSummary
-  let actionsService: UserActionsService
+  @EnvironmentObject private var libraryState: LibraryViewState
   @Environment(\.dismiss) private var dismiss
-  @State private var folders: [BookmarkFolder] = []
-  @State private var inFolders: Set<Int> = []
   @State private var loading = true
   
   var body: some View {
@@ -445,7 +443,8 @@ private struct BookmarkActionSheet: View {
           Section {
             Button {
               Task {
-                try? await actionsService.toggleWatchlist(id: item.id); dismiss()
+                _ = await libraryState.toggleWatchlist(itemId: item.id)
+                dismiss()
               }
             } label: {
               Label("Add to watchlist".localized, systemImage: "plus.rectangle.on.rectangle")
@@ -455,19 +454,19 @@ private struct BookmarkActionSheet: View {
         Section(header: Text("Bookmark folders".localized)) {
           if loading {
             ProgressView()
-          } else if folders.isEmpty {
+          } else if libraryState.bookmarkFolders.isEmpty {
             Text("No bookmark folders yet.".localized).foregroundStyle(Color.KinoPub.subtitle)
           } else {
-            ForEach(folders) { folder in
+            ForEach(libraryState.bookmarkFolders) { folder in
               Button {
-                let isIn = inFolders.contains(folder.id)
-                if isIn { inFolders.remove(folder.id) } else { inFolders.insert(folder.id) }
-                Task { try? await actionsService.toggleBookmark(itemId: item.id, folderId: folder.id) }
+                Task { _ = await libraryState.toggleBookmark(itemId: item.id, folderId: folder.id) }
               } label: {
                 HStack {
                   Text(folder.title).foregroundStyle(Color.KinoPub.text)
                   Spacer()
-                  if inFolders.contains(folder.id) {
+                  // Checkmarks come from the shared library snapshot, so this sheet always renders
+                  // the same membership as the detail screen for the same item.
+                  if libraryState.isBookmarked(itemId: item.id, folderId: folder.id) {
                     Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
                   }
                 }
@@ -483,20 +482,14 @@ private struct BookmarkActionSheet: View {
         ToolbarItem(placement: .confirmationAction) { Button("Done".localized) { dismiss() } }
       }
       .task {
-        // The transport's folder type is mapped to a display row so this view stays backend-free.
-        folders = (try? await actionsService.fetchBookmarks())?
-          .map { BookmarkFolder(id: $0.id, title: $0.title) } ?? []
-        inFolders = Set((try? await actionsService.foldersContaining(itemId: item.id)) ?? [])
+        // Folder list + membership come from the shared library repository (single source of
+        // truth), seeded from the server without clobbering in-flight optimistic toggles.
+        await libraryState.loadBookmarkFoldersIfNeeded()
+        await libraryState.seedBookmarkMembership(itemId: item.id)
         loading = false
       }
     }
   }
-}
-
-/// Display-only row for a bookmark folder (keeps the bookmark sheet free of transport types).
-private struct BookmarkFolder: Identifiable {
-  let id: Int
-  let title: String
 }
 
 /// A "see all" grid for a search section (Movies / TV Shows), showing the already-loaded results.

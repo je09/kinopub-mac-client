@@ -36,9 +36,8 @@ enum BookmarkSort: CaseIterable, Identifiable {
 class BookmarkModel: ObservableObject {
   
   private var contentService: VideoContentService
-  private var actionsService: UserActionsService
   private var errorHandler: ErrorHandler
-  private var libraryState: MediaLibraryStore
+  private var libraryState: LibraryViewState
   
   public var bookmark: Bookmark
   @Published public var items: [MediaItem] = MediaItem.skeletonMock()
@@ -50,12 +49,10 @@ class BookmarkModel: ObservableObject {
   init(
     bookmark: Bookmark,
     itemsService: VideoContentService,
-    actionsService: UserActionsService,
-    libraryState: MediaLibraryStore,
+    libraryState: LibraryViewState,
     errorHandler: ErrorHandler
   ) {
     self.contentService = itemsService
-    self.actionsService = actionsService
     self.libraryState = libraryState
     self.bookmark = bookmark
     self.title = bookmark.title
@@ -97,29 +94,29 @@ class BookmarkModel: ObservableObject {
     }
   }
   
-  /// Remove a single item from this folder (toggle-item against the folder). Optimistically drops
-  /// it from the list and syncs the shared library state so other screens update too.
+  /// Remove a single item from this folder (set-item against the folder). Optimistically drops
+  /// it from the list; the shared library command API syncs the state so other screens update too
+  /// and rolls its own optimistic state back if the remote call fails.
   func removeFromFolder(_ item: MediaItem) async {
     let previous = items
     items.removeAll { $0.id == item.id }  // optimistic
-    libraryState.setBookmark(itemId: item.id, folderId: bookmark.id, isOn: false)
-    do {
-      try await actionsService.toggleBookmark(itemId: item.id, folderId: bookmark.id)
+    let outcome = await libraryState.setBookmark(itemId: item.id, folderId: bookmark.id, isOn: false)
+    switch outcome {
+    case .applied, .coalesced:
       toastMessage = .info(String(format: "Removed from %@".localized, bookmark.title))
-    } catch {
-      items = previous  // revert
-      libraryState.setBookmark(itemId: item.id, folderId: bookmark.id, isOn: true)
+    case .failed(let error):
+      items = previous  // revert the local list; the library state rolled itself back
       Logger.app.debug("remove from folder error: \(error)")
       errorHandler.setError(error)
+    case .cancelled:
+      items = previous
     }
   }
   
   /// Delete the folder. Returns true on success so the view can dismiss back to the folders list.
   func delete() async -> Bool {
     do {
-      try await actionsService.removeBookmarkFolder(id: bookmark.id)
-      // Drop it from the shared cache so the Bookmarks list removes the folder immediately.
-      libraryState.removeCachedBookmarkFolder(id: bookmark.id)
+      try await libraryState.removeBookmarkFolder(id: bookmark.id)
       return true
     } catch {
       Logger.app.debug("remove bookmark folder error: \(error)")

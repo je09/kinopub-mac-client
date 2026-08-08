@@ -182,7 +182,7 @@ class PlayerManager: ObservableObject {
   private var downloadedFilesDatabase: DownloadedFilesDatabase<DownloadMeta>
   private var contentService: VideoContentService
   private var localProgressStore: LocalWatchProgressStore
-  private var libraryState: MediaLibraryStore
+  private var libraryState: LibraryViewState
   private var rateObservation: NSKeyValueObservation?
   private var seekObservation: NSKeyValueObservation?
   private var audioObservation: NSKeyValueObservation?
@@ -274,7 +274,7 @@ class PlayerManager: ObservableObject {
     actionsService: UserActionsService,
     contentService: VideoContentService,
     localProgressStore: LocalWatchProgressStore,
-    libraryState: MediaLibraryStore,
+    libraryState: LibraryViewState,
     episodeQueue: [Episode] = []
   ) {
     self.playItem = playItem
@@ -711,11 +711,11 @@ class PlayerManager: ObservableObject {
           let selected = item.currentMediaSelection.selectedMediaOption(in: group),
           let index = group.options.firstIndex(of: selected)
     else { return }
-    let preference = MediaLibraryStore.AudioPreference(
+    let preference = LibraryAudioPreference(
       displayName: selected.displayName,
       languageTag: selected.extendedLanguageTag,
       index: index)
-    libraryState.setAudioPreference(itemId: playItem.metadata.id, preference)
+    await libraryState.setAudioPreference(itemId: playItem.metadata.id, preference)
   }
   
   /// Remember the selected subtitle immediately; nil is a meaningful explicit Off selection.
@@ -726,7 +726,7 @@ class PlayerManager: ObservableObject {
     else { return }
     
     let selected = item.currentMediaSelection.selectedMediaOption(in: group)
-    let preference: MediaLibraryStore.SubtitlePreference
+    let preference: LibrarySubtitlePreference
     if let selected {
       preference = .init(
         isEnabled: true,
@@ -736,7 +736,7 @@ class PlayerManager: ObservableObject {
     } else {
       preference = .init(isEnabled: false, displayName: nil, languageTag: nil, index: nil)
     }
-    libraryState.setSubtitlePreference(itemId: playItem.metadata.id, preference)
+    await libraryState.setSubtitlePreference(itemId: playItem.metadata.id, preference)
   }
   
   // MARK: - Watch marks
