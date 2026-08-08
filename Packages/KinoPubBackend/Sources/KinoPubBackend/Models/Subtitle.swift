@@ -20,6 +20,15 @@ public struct Subtitle: Codable, Hashable {
 
   private enum CodingKeys: String, CodingKey { case lang, shift, embed, url, forced, file }
 
+  public init(lang: String, shift: Int, embed: Bool, url: String, forced: Bool? = nil, file: String? = nil) {
+    self.lang = lang
+    self.shift = shift
+    self.embed = embed
+    self.url = url
+    self.forced = forced
+    self.file = file
+  }
+
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     lang = try container.decodeIfPresent(String.self, forKey: .lang) ?? ""
