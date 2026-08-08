@@ -25,6 +25,28 @@ final class APIClientRateLimitTests: XCTestCase {
     XCTAssertEqual(clock.sleeps, [7])
   }
 
+  func testExponentialBackoffUsesInjectedJitterWhenRetryAfterIsMissing() async throws {
+    let session = ScriptedURLSession(steps: [
+      .response(status: 429, headers: [:]),
+      .response(status: 429, headers: [:]),
+      .response(status: 200, headers: [:])
+    ])
+    let clock = AdvancingAPIClock()
+    let client = APIClient(
+      baseUrl: "https://api.example.com",
+      session: session,
+      clock: clock,
+      randomSource: FixedRandomSource(value: 0.75)
+    )
+
+    let _: VerificationResponse = try await client.performRequest(
+      with: RequestData(path: "/token", method: .get),
+      decodingType: VerificationResponse.self
+    )
+
+    XCTAssertEqual(clock.sleepIntervals, [1, 1.5])
+  }
+
   func testCancellationDuringRateLimitCooldownStopsRetry() async {
     let session = ScriptedURLSession(steps: [
       .response(status: 429, headers: ["Retry-After": "30"]),
@@ -58,6 +80,7 @@ private final class AdvancingAPIClock: APIClientClock, @unchecked Sendable {
   private var intervals: [TimeInterval] = []
 
   var sleeps: [Int] { lock.withLock { intervals.map(Int.init) } }
+  var sleepIntervals: [TimeInterval] { lock.withLock { intervals } }
   func now() -> Date { lock.withLock { date } }
 
   func sleep(for interval: TimeInterval) async throws {
@@ -67,6 +90,11 @@ private final class AdvancingAPIClock: APIClientClock, @unchecked Sendable {
       date = date.addingTimeInterval(interval)
     }
   }
+}
+
+private struct FixedRandomSource: APIClientRandomSource {
+  let value: Double
+  func nextUnitInterval() -> Double { value }
 }
 
 private final class CancellingAPIClock: APIClientClock, @unchecked Sendable {

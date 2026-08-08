@@ -28,6 +28,57 @@ final class TransportHardeningTests: XCTestCase {
     XCTAssertEqual(refreshCount, 1)
   }
 
+  func testConcurrent401sCollapseRefreshAndResumeEveryWaiter() async throws {
+    let callerCount = 8
+    let session = StatusSession(statuses: Array(repeating: 401, count: callerCount)
+      + Array(repeating: 200, count: callerCount))
+    let refresher = SuspendedRefresher()
+    let client = APIClient(baseUrl: "https://example.com", session: session, credentialRefresher: refresher)
+
+    let requests = Task {
+      try await withThrowingTaskGroup(of: Int.self) { group in
+        for _ in 0..<callerCount {
+          group.addTask {
+            let response: Value = try await client.performRequest(with: Probe(), decodingType: Value.self)
+            return response.value
+          }
+        }
+        return try await group.reduce(into: []) { $0.append($1) }
+      }
+    }
+
+    while await session.requestCount < callerCount { await Task.yield() }
+    while await refresher.count == 0 { await Task.yield() }
+    await refresher.resume()
+
+    let values = try await requests.value
+    let refreshCount = await refresher.count
+    let requestCount = await session.requestCount
+    XCTAssertEqual(values, Array(repeating: 1, count: callerCount))
+    XCTAssertEqual(refreshCount, 1)
+    XCTAssertEqual(requestCount, callerCount * 2)
+  }
+
+  func testCacheIsPartitionedByAuthenticatedAccount() async throws {
+    let session = StatusSession(statuses: [200, 200])
+    let cache = MemoryResponseCache()
+    let partition = MutableCachePartition("account-a")
+    let client = APIClient(
+      baseUrl: "https://example.com",
+      session: session,
+      cache: cache,
+      cachePartitionProvider: partition)
+
+    let first: Value = try await client.performRequest(with: CacheProbe(), decodingType: Value.self)
+    partition.value = "account-b"
+    let second: Value = try await client.performRequest(with: CacheProbe(), decodingType: Value.self)
+
+    let requestCount = await session.requestCount
+    XCTAssertEqual(first.value, second.value)
+    XCTAssertEqual(requestCount, 2)
+    XCTAssertEqual(cache.keys.count, 2)
+  }
+
   func testCurlOutputRedactsHeadersQueryAndFormSecrets() {
     var request = URLRequest(url: URL(string: "https://example.com/token?access_token=query-secret")!)
     request.httpMethod = "POST"
@@ -62,6 +113,52 @@ private actor StatusSession: URLSessionProtocol {
 private actor CountingRefresher: CredentialRefreshing {
   private(set) var count = 0
   func refreshCredentials() async throws { count += 1 }
+}
+
+private actor SuspendedRefresher: CredentialRefreshing {
+  private(set) var count = 0
+  private var continuation: CheckedContinuation<Void, Never>?
+
+  func refreshCredentials() async throws {
+    count += 1
+    await withCheckedContinuation { continuation = $0 }
+  }
+
+  func resume() {
+    continuation?.resume()
+    continuation = nil
+  }
+}
+
+private final class MutableCachePartition: CachePartitionProviding, @unchecked Sendable {
+  private let lock = NSLock()
+  private var storedValue: String
+
+  init(_ value: String) { self.storedValue = value }
+
+  var value: String {
+    get { lock.withLock { storedValue } }
+    set { lock.withLock { storedValue = newValue } }
+  }
+
+  var cachePartition: String { value }
+}
+
+private final class MemoryResponseCache: ResponseCaching {
+  private var values: [String: Data] = [:]
+  var keys: [String] { Array(values.keys) }
+  func data(for key: String) -> Data? { values[key] }
+  func store(_ data: Data, for key: String, ttl: TimeInterval, persist: Bool) { values[key] = data }
+  func remove(for key: String) { values[key] = nil }
+  func clear() { values.removeAll() }
+}
+
+private struct CacheProbe: Endpoint, CacheableRequest {
+  let path = "/cache"
+  let method: HTTPMethod = .get
+  let headers: [String: String]? = nil
+  let parameters: HTTPParameters? = nil
+  let cachePolicy: CachePolicy = .memory(ttl: 60)
 }
 
 private struct Probe: Endpoint {
