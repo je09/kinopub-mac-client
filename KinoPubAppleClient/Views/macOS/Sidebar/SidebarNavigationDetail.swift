@@ -14,7 +14,7 @@ struct SidebarNavigationDetail: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject var authState: AuthState
-  @EnvironmentObject var libraryState: MediaLibraryStore
+  @EnvironmentObject var libraryState: LibraryViewState
   @StateObject private var screenCache = SidebarScreenCache()
   
   @Binding var selection: SidebarItem?
@@ -175,7 +175,6 @@ struct SidebarNavigationDetail: View {
             BookmarkModel(
               bookmark: bookmark,
               itemsService: dependencies.contentService,
-              actionsService: dependencies.actionsService,
               libraryState: dependencies.libraryState,
               errorHandler: errorHandler)
           }

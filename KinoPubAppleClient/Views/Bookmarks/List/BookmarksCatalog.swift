@@ -17,7 +17,7 @@ class BookmarksCatalog: ObservableObject {
   private var authState: AuthState
   private var contentService: VideoContentService
   private var errorHandler: ErrorHandler
-  private var libraryState: MediaLibraryStore
+  private var libraryState: LibraryViewState
   private var bag = Set<AnyCancellable>()
   
   @Published public var items: [Bookmark] = Bookmark.skeletonMock()
@@ -26,7 +26,7 @@ class BookmarksCatalog: ObservableObject {
   
   init(
     itemsService: VideoContentService,
-    libraryState: MediaLibraryStore,
+    libraryState: LibraryViewState,
     authState: AuthState,
     errorHandler: ErrorHandler
   ) {

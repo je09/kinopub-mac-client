@@ -118,7 +118,6 @@ struct RouteDestinationView: View {
         model: BookmarkModel(
           bookmark: bookmark,
           itemsService: dependencies.contentService,
-          actionsService: dependencies.actionsService,
           libraryState: dependencies.libraryState,
           errorHandler: errorHandler))
     case .collection(let collection):

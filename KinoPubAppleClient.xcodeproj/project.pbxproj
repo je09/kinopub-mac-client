@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		D00000000000000000000001 /* AuthModelPollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000010 /* AuthModelPollingTests.swift */; };
 		D00000000000000000000004 /* LocalWatchProgressStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */; };
-		D00000000000000000000005 /* MediaLibraryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000015 /* MediaLibraryStoreTests.swift */; };
+		D00000000000000000000005 /* LibraryRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000015 /* LibraryRepositoryTests.swift */; };
 		D00000000000000000000006 /* KinoPubKit in Frameworks */ = {isa = PBXBuildFile; productRef = CC71E7052A6DD119004AFB3F /* KinoPubKit */; };
 		F00000000000000000000001 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = F00000000000000000000002 /* ViewInspector */; };
 		D00000000000000000000007 /* SearchModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000016 /* SearchModelTests.swift */; };
@@ -53,7 +53,13 @@
 		AAAAAAAA0000000000000032 /* SectionVisibilityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA0000000000000031 /* SectionVisibilityStore.swift */; };
 		AAAAAAAA0000000000000034 /* SectionsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA0000000000000033 /* SectionsSettingsView.swift */; };
 		AB1000000000000000000001 /* StreamQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000002 /* StreamQuality.swift */; };
-		AB1000000000000000000003 /* MediaLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000004 /* MediaLibraryStore.swift */; };
+		AB1000000000000000000003 /* LibraryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00000000000000000000A1 /* LibraryRepository.swift */; };
+		FF00000000000000000000A4 /* LibraryViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00000000000000000000A3 /* LibraryViewState.swift */; };
+		FF00000000000000000000A6 /* LibrarySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00000000000000000000A5 /* LibrarySnapshot.swift */; };
+		FF00000000000000000000A8 /* LibraryCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00000000000000000000A7 /* LibraryCommand.swift */; };
+		FF00000000000000000000AA /* LibraryPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00000000000000000000A9 /* LibraryPersistence.swift */; };
+		FF00000000000000000000AC /* LibraryRepository+Sync.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00000000000000000000AB /* LibraryRepository+Sync.swift */; };
+		FF00000000000000000000AE /* LibraryRepository+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00000000000000000000AD /* LibraryRepository+Lifecycle.swift */; };
 		AB1000000000000000000005 /* MediaCardStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000006 /* MediaCardStatusBadge.swift */; };
 		AB1000000000000000000007 /* DeviceCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000008 /* DeviceCapabilities.swift */; };
 		AB1000000000000000000009 /* DevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB100000000000000000000A /* DevicesView.swift */; };
@@ -146,7 +152,7 @@
 /* Begin PBXFileReference section */
 		D00000000000000000000010 /* AuthModelPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModelPollingTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalWatchProgressStoreTests.swift; sourceTree = "<group>"; };
-		D00000000000000000000015 /* MediaLibraryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaLibraryStoreTests.swift; sourceTree = "<group>"; };
+		D00000000000000000000015 /* LibraryRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRepositoryTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000016 /* SearchModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchModelTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000017 /* PlayerWatchMarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerWatchMarkTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000018 /* FixtureContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureContractTests.swift; sourceTree = "<group>"; };
@@ -178,7 +184,13 @@
 		AAAAAAAA0000000000000031 /* SectionVisibilityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionVisibilityStore.swift; sourceTree = "<group>"; };
 		AAAAAAAA0000000000000033 /* SectionsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionsSettingsView.swift; sourceTree = "<group>"; };
 		AB1000000000000000000002 /* StreamQuality.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreamQuality.swift; sourceTree = "<group>"; };
-		AB1000000000000000000004 /* MediaLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaLibraryStore.swift; path = KinoPubAppleClient/Services/MediaLibrary/MediaLibraryStore.swift; sourceTree = SOURCE_ROOT; };
+		FF00000000000000000000A1 /* LibraryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LibraryRepository.swift; path = KinoPubAppleClient/Services/MediaLibrary/LibraryRepository.swift; sourceTree = SOURCE_ROOT; };
+		FF00000000000000000000A3 /* LibraryViewState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LibraryViewState.swift; path = KinoPubAppleClient/Services/MediaLibrary/LibraryViewState.swift; sourceTree = SOURCE_ROOT; };
+		FF00000000000000000000A5 /* LibrarySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LibrarySnapshot.swift; path = KinoPubAppleClient/Services/MediaLibrary/LibrarySnapshot.swift; sourceTree = SOURCE_ROOT; };
+		FF00000000000000000000A7 /* LibraryCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LibraryCommand.swift; path = KinoPubAppleClient/Services/MediaLibrary/LibraryCommand.swift; sourceTree = SOURCE_ROOT; };
+		FF00000000000000000000A9 /* LibraryPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LibraryPersistence.swift; path = KinoPubAppleClient/Services/MediaLibrary/LibraryPersistence.swift; sourceTree = SOURCE_ROOT; };
+		FF00000000000000000000AB /* LibraryRepository+Sync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LibraryRepository+Sync.swift"; path = "KinoPubAppleClient/Services/MediaLibrary/LibraryRepository+Sync.swift"; sourceTree = SOURCE_ROOT; };
+		FF00000000000000000000AD /* LibraryRepository+Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LibraryRepository+Lifecycle.swift"; path = "KinoPubAppleClient/Services/MediaLibrary/LibraryRepository+Lifecycle.swift"; sourceTree = SOURCE_ROOT; };
 		AB1000000000000000000006 /* MediaCardStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaCardStatusBadge.swift; path = KinoPubAppleClient/Views/Components/MediaCardStatusBadge.swift; sourceTree = SOURCE_ROOT; };
 		AB1000000000000000000008 /* DeviceCapabilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceCapabilities.swift; sourceTree = "<group>"; };
 		AB100000000000000000000A /* DevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DevicesView.swift; path = KinoPubAppleClient/Views/Profile/Device/DevicesView.swift; sourceTree = SOURCE_ROOT; };
@@ -389,7 +401,13 @@
 				B7AEC6DB63ED4E709CBDD412 /* CollectionDetailView.swift */,
 				0147169BF0594D23A485BA23 /* InlinePlayerView.swift */,
 				CE2F22A1E0784EEEA12B9467 /* LocalWatchProgressStore.swift */,
-				AB1000000000000000000004 /* MediaLibraryStore.swift */,
+				FF00000000000000000000A1 /* LibraryRepository.swift */,
+				FF00000000000000000000AB /* LibraryRepository+Sync.swift */,
+				FF00000000000000000000AD /* LibraryRepository+Lifecycle.swift */,
+				FF00000000000000000000A5 /* LibrarySnapshot.swift */,
+				FF00000000000000000000A7 /* LibraryCommand.swift */,
+				FF00000000000000000000A9 /* LibraryPersistence.swift */,
+				FF00000000000000000000A3 /* LibraryViewState.swift */,
 				AB1000000000000000000006 /* MediaCardStatusBadge.swift */,
 				F02162D92FD24B56A6991CD2 /* SportModel.swift */,
 				9D0D55F0BBD71AFB2B0C1DAD /* ChannelEPGRow.swift */,
@@ -601,7 +619,7 @@
 			children = (
 				D00000000000000000000010 /* AuthModelPollingTests.swift */,
 				D00000000000000000000014 /* LocalWatchProgressStoreTests.swift */,
-				D00000000000000000000015 /* MediaLibraryStoreTests.swift */,
+				D00000000000000000000015 /* LibraryRepositoryTests.swift */,
 				D00000000000000000000016 /* SearchModelTests.swift */,
 				D00000000000000000000017 /* PlayerWatchMarkTests.swift */,
 				D00000000000000000000018 /* FixtureContractTests.swift */,
@@ -1004,7 +1022,7 @@
 			files = (
 				D00000000000000000000001 /* AuthModelPollingTests.swift in Sources */,
 				D00000000000000000000004 /* LocalWatchProgressStoreTests.swift in Sources */,
-				D00000000000000000000005 /* MediaLibraryStoreTests.swift in Sources */,
+				D00000000000000000000005 /* LibraryRepositoryTests.swift in Sources */,
 				D00000000000000000000007 /* SearchModelTests.swift in Sources */,
 				D00000000000000000000008 /* PlayerWatchMarkTests.swift in Sources */,
 				D00000000000000000000009 /* FixtureContractTests.swift in Sources */,
@@ -1066,7 +1084,13 @@
 				66B482CE4ED941C781262A4A /* CollectionDetailView.swift in Sources */,
 				004DA870AEAB48D39E765EC5 /* InlinePlayerView.swift in Sources */,
 				DB63D35C0BF448DBBE343B62 /* LocalWatchProgressStore.swift in Sources */,
-				AB1000000000000000000003 /* MediaLibraryStore.swift in Sources */,
+				AB1000000000000000000003 /* LibraryRepository.swift in Sources */,
+				FF00000000000000000000A4 /* LibraryViewState.swift in Sources */,
+				FF00000000000000000000A6 /* LibrarySnapshot.swift in Sources */,
+				FF00000000000000000000A8 /* LibraryCommand.swift in Sources */,
+				FF00000000000000000000AA /* LibraryPersistence.swift in Sources */,
+				FF00000000000000000000AC /* LibraryRepository+Sync.swift in Sources */,
+				FF00000000000000000000AE /* LibraryRepository+Lifecycle.swift in Sources */,
 				AB1000000000000000000005 /* MediaCardStatusBadge.swift in Sources */,
 				9322A36C27DD40CEA6FEB4C7 /* SportModel.swift in Sources */,
 				2CB504188B70457195E95F4C /* HomeView.swift in Sources */,

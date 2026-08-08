@@ -19,16 +19,16 @@ public enum UserVote: Equatable {
 
 @MainActor
 class MediaItemModel: ObservableObject {
-  
+
   private var itemsService: VideoContentService
   private var actionsService: UserActionsService
   private var downloadManager: DownloadManager<DownloadMeta>
   private var errorHandler: ErrorHandler
-  private var libraryState: MediaLibraryStore
+  private var libraryState: LibraryViewState
   private var seasonDownloadManager: SeasonDownloadManager
   public var linkProvider: NavigationLinkProvider
   public var mediaItemId: Int
-  
+
   @Published public var mediaItem: MediaItem = MediaItem.mock()
   @Published public var itemLoaded: Bool = false
   /// The user's like/dislike for this title this session. kino.pub voting is ONE-TIME (you can't
@@ -63,49 +63,49 @@ class MediaItemModel: ObservableObject {
   public func isEpisodeWatched(_ episode: Episode) -> Bool {
     libraryState.episodeWatched(episodeId: episode.id, serverWatched: episode.isWatched)
   }
-  
+
   /// Effective watched state for a movie (client optimistic override first, then server data).
   public var isMovieWatched: Bool {
     libraryState.movieWatched(
       itemId: mediaItemId,
       serverWatched: mediaItem.videos?.first?.isWatched ?? false)
   }
-  
+
   private let localProgressStore: LocalWatchProgressStore
   /// Bumped when the screen reappears (e.g. back from the player) so the local-progress overlay
   /// re-reads the store immediately, before the authoritative server refetch returns.
   @Published private var localProgressTick: Int = 0
-  
+
   // MARK: - Local watch progress overlay (instant resume feedback, "Netflix-style")
-  
+
   /// The locally recorded resume point for THIS item, if any. The store keeps one entry per item
   /// (the most-recently-watched video/episode), keyed by `(season, episode)`.
   private var localEntry: LocalWatchEntry? {
     localProgressStore.allEntries().first { $0.id == mediaItemId }
   }
-  
+
   /// Locally recorded resume position (seconds) for a specific video/episode of this item, or 0.
   /// Movie matches by id (season nil); an episode requires an exact `(season, episode)` match.
   public func localResumeSeconds(season: Int?, episode: Int?) -> Int {
     guard let entry = localProgressStore.entry(forId: mediaItemId, season: season, episode: episode) else { return 0 }
     return Int(entry.position)
   }
-  
+
   /// Local progress fraction [0,1] for a specific video/episode, or nil if nothing recorded.
   public func localProgressFraction(season: Int?, episode: Int?) -> Double? {
     localProgressStore.entry(forId: mediaItemId, season: season, episode: episode)?.progress
   }
-  
+
   /// For a series with no server-side continue point yet, the (season, episode) to resume based on
   /// the local store — so the play button reads "Continue" instantly after watching, pre-refetch.
   public func localSeriesContinue() -> (season: Season, episode: Episode)? {
     guard mediaItem.isSeries, let entry = localEntry,
-          let season = mediaItem.seasons?.first(where: { $0.number == entry.season }),
-          let episode = season.episodes.first(where: { $0.number == entry.episode })
+      let season = mediaItem.seasons?.first(where: { $0.number == entry.season }),
+      let episode = season.episodes.first(where: { $0.number == entry.episode })
     else { return nil }
     return (season, episode)
   }
-  
+
   /// Call when the detail screen reappears (returning from the player). Re-reads local progress for
   /// instant feedback and refetches authoritative server progress. No-op before the first load,
   /// which is handled by `fetchData()` in the view's `.task`.
@@ -114,7 +114,7 @@ class MediaItemModel: ObservableObject {
     localProgressTick &+= 1
     fetchData(includeSupplementary: false)
   }
-  
+
   /// Actor names parsed from the comma-separated `cast` field (trimmed, non-empty).
   public var castNames: [String] {
     mediaItem.cast
@@ -122,7 +122,7 @@ class MediaItemModel: ObservableObject {
       .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
       .filter { !$0.isEmpty }
   }
-  
+
   /// Director names parsed from the comma-separated `director` field.
   public var directorNames: [String] {
     mediaItem.director
@@ -130,13 +130,13 @@ class MediaItemModel: ObservableObject {
       .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
       .filter { !$0.isEmpty }
   }
-  
+
   /// The content type to use for facet filters opened from this item, so a
   /// serial's genre opens serials and a movie's opens movies.
   private var facetContentType: MediaType {
     MediaType(rawValue: mediaItem.type) ?? .movie
   }
-  
+
   private func facetFilter(genres: [Int] = [], countries: [Int] = [], year: String? = nil) -> MediaItemsFilter {
     MediaItemsFilter(
       contentType: facetContentType,
@@ -146,40 +146,40 @@ class MediaItemModel: ObservableObject {
       age: nil,
       sort: nil)
   }
-  
+
   // MARK: - Facet filters (for deep-linking into the section)
-  
+
   func genreFilter(id: Int) -> MediaItemsFilter { facetFilter(genres: [id]) }
   func countryFilter(id: Int) -> MediaItemsFilter { facetFilter(countries: [id]) }
   func yearFilter(_ year: Int) -> MediaItemsFilter { facetFilter(year: "\(year)") }
-  
+
   // MARK: - Tappable metadata routes
-  
+
   /// Route to a catalog filtered by a single genre.
   func genreRoute(id: Int, title: String) -> (any Hashable)? {
     linkProvider.filteredCatalog(filter: facetFilter(genres: [id]), title: title)
   }
-  
+
   /// Route to a catalog filtered by a single country.
   func countryRoute(id: Int, title: String) -> (any Hashable)? {
     linkProvider.filteredCatalog(filter: facetFilter(countries: [id]), title: title)
   }
-  
+
   /// Route to a catalog filtered by a single year.
   func yearRoute(_ year: Int) -> (any Hashable)? {
     linkProvider.filteredCatalog(filter: facetFilter(year: "\(year)"), title: "\(year)")
   }
-  
+
   /// Route to a person search for an actor (kino.pub `field=cast`).
   func actorRoute(_ name: String) -> (any Hashable)? {
     linkProvider.personSearch(query: name, field: "cast", title: name)
   }
-  
+
   /// Route to a person search for a director (kino.pub `field=director`).
   func directorRoute(_ name: String) -> (any Hashable)? {
     linkProvider.personSearch(query: name, field: "director", title: name)
   }
-  
+
   init(
     mediaItemId: Int,
     itemsService: VideoContentService,
@@ -187,7 +187,7 @@ class MediaItemModel: ObservableObject {
     linkProvider: NavigationLinkProvider,
     errorHandler: ErrorHandler,
     actionsService: UserActionsService,
-    libraryState: MediaLibraryStore,
+    libraryState: LibraryViewState,
     localProgressStore: LocalWatchProgressStore,
     seasonDownloadManager: SeasonDownloadManager
   ) {
@@ -201,7 +201,7 @@ class MediaItemModel: ObservableObject {
     self.localProgressStore = localProgressStore
     self.seasonDownloadManager = seasonDownloadManager
   }
-  
+
   func fetchData(includeSupplementary: Bool = true) {
     Task {
       do {
@@ -214,13 +214,13 @@ class MediaItemModel: ObservableObject {
         seedVoteCounts()
         // Reconcile optimistic watched overrides against fresh server data: drop the ones the
         // server now confirms (keeps any still-in-flight toggle), so the server can drive again.
-        libraryState.reconcileWatched(
+        await libraryState.reconcileWatched(
           movieItemId: mediaId,
           serverMovieWatched: mediaItem.isSeries ? nil : mediaItem.videos?.first?.isWatched ?? false,
           episodes: mediaItem.orderedEpisodes.map { (id: $0.episode.id, watched: $0.episode.isWatched) })
         // Seed the client library state once (bookmark folders + watchlist) so the UI reflects
         // membership instantly; optimistic toggles thereafter aren't clobbered by refetches.
-        libraryState.seedIfAbsent(
+        await libraryState.seedIfAbsent(
           itemId: mediaId,
           folderIds: mediaItem.bookmarks?.map { $0.id } ?? [],
           inWatchlist: mediaItem.inWatchlist == true)
@@ -234,7 +234,7 @@ class MediaItemModel: ObservableObject {
       }
     }
   }
-  
+
   /// Loads items similar to the current one (same primary genre & content type)
   /// using the catalog filter endpoint. Errors are surfaced but never fatal.
   func fetchRelated() {
@@ -263,7 +263,7 @@ class MediaItemModel: ObservableObject {
       relatedLoaded = true
     }
   }
-  
+
   /// "More from director" / "More with actor" shelves, mirroring the web detail page. Best-effort:
   /// a failure just leaves the shelf empty (no error banner).
   func fetchPeopleShelves() {
@@ -295,7 +295,7 @@ class MediaItemModel: ObservableObject {
       moreWithLoaded = true
     }
   }
-  
+
   func startDownload(item: DownloadableMediaItem, file: FileInfo) {
     let meta = DownloadMeta.make(from: item, quality: file.quality)
     guard let url = URL(string: file.url.http) else {
@@ -305,7 +305,7 @@ class MediaItemModel: ObservableObject {
     _ = downloadManager.startDownload(url: url, withMetadata: meta)
     toastMessage = .success("Download started".localized)
   }
-  
+
   /// Enqueues every episode of `season`. `quality` of nil downloads the best available per episode.
   func downloadSeason(_ season: Season, quality: String?) {
     let count = seasonDownloadManager.downloadSeason(
@@ -314,75 +314,86 @@ class MediaItemModel: ObservableObject {
       season: season,
       quality: quality)
     toastMessage =
-    count > 0
-    ? .success(String(format: "%d episodes queued".localized, count))
-    : .warning("Nothing to download".localized)
+      count > 0
+      ? .success(String(format: "%d episodes queued".localized, count))
+      : .warning("Nothing to download".localized)
   }
-  
+
+  /// Common handling of a library command outcome: run `onApplied` only when the remote effect
+  /// actually landed (`.applied`); surface failures; ignore net-no-op and cancelled outcomes.
+  private func handleCommandOutcome(_ outcome: LibraryCommandOutcome, onApplied: () -> Void) {
+    switch outcome {
+    case .applied:
+      onApplied()
+    case .failed(let error):
+      errorHandler.setError(error)
+    case .coalesced, .cancelled:
+      break
+    }
+  }
+
   func toggleWatched() {
     let newState = !isMovieWatched
-    libraryState.setMovieWatched(itemId: mediaItemId, value: newState)  // optimistic
     Task {
-      do {
-        try await actionsService.toggleWatching(id: mediaItemId, video: nil, season: nil)
-        toastMessage = newState ? .success("Marked as watched".localized) : .info("Marked as unwatched".localized)
-      } catch {
-        libraryState.setMovieWatched(itemId: mediaItemId, value: !newState)  // revert
-        errorHandler.setError(error)
+      let outcome = await libraryState.toggleMovieWatched(itemId: mediaItemId)
+      handleCommandOutcome(outcome) {
+        toastMessage =
+          newState
+          ? .success("Marked as watched".localized)
+          : .info("Marked as unwatched".localized)
       }
     }
   }
-  
+
   func toggleEpisodeWatched(episode: Episode, season: Int) {
     let newState = !isEpisodeWatched(episode)
-    libraryState.setEpisodeWatched(episodeId: episode.id, value: newState)  // optimistic
     Task {
-      do {
-        try await actionsService.toggleWatching(id: mediaItemId, video: episode.number, season: season)
-        toastMessage = newState ? .success("Marked as watched".localized) : .info("Marked as unwatched".localized)
-      } catch {
-        libraryState.setEpisodeWatched(episodeId: episode.id, value: !newState)  // revert
-        errorHandler.setError(error)
+      let outcome = await libraryState.toggleEpisodeWatched(
+        itemId: mediaItemId,
+        episodeId: episode.id,
+        video: episode.number,
+        season: season)
+      handleCommandOutcome(outcome) {
+        toastMessage =
+          newState
+          ? .success("Marked as watched".localized)
+          : .info("Marked as unwatched".localized)
       }
     }
   }
-  
+
   func toggleWatchlist() {
     let current = libraryState.inWatchlist(itemId: mediaItemId) ?? (mediaItem.inWatchlist == true)
     let newState = !current
-    libraryState.setWatchlist(itemId: mediaItemId, value: newState)  // optimistic
     Task {
-      do {
-        try await actionsService.toggleWatchlist(id: mediaItemId)
-        toastMessage = newState ? .success("Added to watchlist".localized) : .info("Removed from watchlist".localized)
-      } catch {
-        libraryState.setWatchlist(itemId: mediaItemId, value: current)  // revert
-        errorHandler.setError(error)
+      let outcome = await libraryState.toggleWatchlist(itemId: mediaItemId)
+      handleCommandOutcome(outcome) {
+        toastMessage =
+          newState
+          ? .success("Added to watchlist".localized)
+          : .info("Removed from watchlist".localized)
       }
     }
   }
-  
+
   func loadBookmarkFolders() {
-    // Cached once per session in the library store; no refetch on every detail-screen appearance.
+    // Cached once per session in the library repository; no refetch on every detail-screen appearance.
     Task { await libraryState.loadBookmarkFoldersIfNeeded() }
   }
-  
+
   func toggleBookmark(folderId: Int, folderTitle: String) {
-    let nowIn = libraryState.toggleBookmark(itemId: mediaItemId, folderId: folderId)  // optimistic
+    let wasOn = libraryState.isBookmarked(itemId: mediaItemId, folderId: folderId)
     Task {
-      do {
-        try await actionsService.toggleBookmark(itemId: mediaItemId, folderId: folderId)
+      let outcome = await libraryState.toggleBookmark(itemId: mediaItemId, folderId: folderId)
+      handleCommandOutcome(outcome) {
         toastMessage =
-        nowIn
-        ? .success(String(format: "Saved to %@".localized, folderTitle))
-        : .info(String(format: "Removed from %@".localized, folderTitle))
-      } catch {
-        libraryState.setBookmark(itemId: mediaItemId, folderId: folderId, isOn: !nowIn)  // revert
-        errorHandler.setError(error)
+          wasOn
+          ? .info(String(format: "Removed from %@".localized, folderTitle))
+          : .success(String(format: "Saved to %@".localized, folderTitle))
       }
     }
   }
-  
+
   /// Cast a like (`up: true` → `like=1`) or dislike (`up: false` → `like=0`). kino.pub votes are
   /// one-time: the API answers `voted: true` when counted, or `voted: false` when the user already
   /// voted (it can't be changed). We optimistically highlight + update the count, reverting if the
@@ -410,7 +421,7 @@ class MediaItemModel: ObservableObject {
       extrasLoaded = true
     }
   }
-  
+
   /// kino.pub gives the aggregate as `rating_votes` (total) + `rating_percentage` (% positive), not
   /// separate like/dislike counts, so derive them for the initial display. A real vote refreshes them.
   /// Also restores the user's own remembered vote so their like/dislike stays visible on revisits.
@@ -422,7 +433,7 @@ class MediaItemModel: ObservableObject {
     likeCount = min(max(positive, 0), total)
     dislikeCount = total - likeCount
   }
-  
+
   func vote(up: Bool) {
     let target: UserVote = up ? .up : .down
     // kino.pub votes are permanent: you can't switch a like to a dislike (or re-cast).
@@ -433,10 +444,10 @@ class MediaItemModel: ObservableObject {
     }
     // First vote for this title: optimistic highlight + count bump, remembered locally so it persists.
     myVote = target
-    libraryState.setUserVote(itemId: mediaItemId, up: up)
     if up { likeCount += 1 } else { dislikeCount += 1 }
     Task {
       do {
+        await libraryState.setUserVote(itemId: mediaItemId, up: up)
         let result = try await actionsService.vote(id: mediaItemId, like: up ? 1 : 0)
         if result.voted {
           // Server counted it — trust its fresh totals.
@@ -451,28 +462,26 @@ class MediaItemModel: ObservableObject {
       } catch {
         // Network failure — fully revert (including the remembered vote).
         myVote = .none
-        libraryState.clearUserVote(itemId: mediaItemId)
+        await libraryState.clearUserVote(itemId: mediaItemId)
         if up { likeCount = max(0, likeCount - 1) } else { dislikeCount = max(0, dislikeCount - 1) }
         errorHandler.setError(error)
       }
     }
   }
-  
+
   /// Create a new bookmark folder and put this item in it, then refresh the shared folder list.
   func createFolderAndAdd(named name: String) {
     let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !title.isEmpty else { return }
     Task {
       do {
-        let folderId = try await actionsService.createBookmarkFolder(title: title)
-        try await actionsService.toggleBookmark(itemId: mediaItemId, folderId: folderId)
-        libraryState.setBookmark(itemId: mediaItemId, folderId: folderId, isOn: true)
-        await libraryState.reloadBookmarkFolders()
+        let folderId = try await libraryState.createBookmarkFolder(title: title)
+        _ = await libraryState.setBookmark(itemId: mediaItemId, folderId: folderId, isOn: true)
         toastMessage = .success(String(format: "Saved to %@".localized, title))
       } catch {
         errorHandler.setError(error)
       }
     }
   }
-  
+
 }

@@ -5,7 +5,7 @@
 //  Unified status corner-badges for a media card (poster/landscape) sourced from the single client
 //  library state, so watched / downloaded / downloading reads are identical on every screen. Layered
 //  as an overlay at call sites because the card components live in KinoPubUI (which can't see the
-//  app's MediaLibraryStore) — this keeps the dependency direction clean.
+//  app's LibraryViewState) — this keeps the dependency direction clean.
 //
 
 import SwiftUI
@@ -13,7 +13,7 @@ import KinoPubBackend
 import KinoPubUI
 
 struct MediaCardStatusBadge: View {
-  @EnvironmentObject private var libraryState: MediaLibraryStore
+  @EnvironmentObject private var libraryState: LibraryViewState
   let item: MediaItem
   /// Whether to show the "watched" check (hidden on Continue Watching, where it's redundant).
   var showsWatched: Bool = true

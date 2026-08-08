@@ -25,20 +25,26 @@ final class AuthState: ObservableObject {
   private var authService: AuthorizationService
   private var accessTokenService: AccessTokenService
   private var deviceService: DeviceService
+  /// Called once logout has fully completed (session cleared), e.g. to discard user-specific
+  /// library state so a different account never inherits it.
+  private var onLogout: (() async -> Void)?
   
   /// Initializes the `AuthState` with the provided services.
   /// - Parameters:
   ///   - authService: The authorization service used for authentication.
   ///   - accessTokenService: The access token service used for managing access tokens.
   ///   - deviceService: Used to deregister this device from the account on logout.
+  ///   - onLogout: Invoked after the session is cleared; use it to reset account-scoped caches.
   init(
     authService: AuthorizationService,
     accessTokenService: AccessTokenService,
-    deviceService: DeviceService
+    deviceService: DeviceService,
+    onLogout: (() async -> Void)? = nil
   ) {
     self.authService = authService
     self.accessTokenService = accessTokenService
     self.deviceService = deviceService
+    self.onLogout = onLogout
   }
   
   /// Checks the authentication state of the user.
@@ -103,5 +109,6 @@ final class AuthState: ObservableObject {
     authService.logout()
     userState = .unauthorized
     shouldShowAuthentication = true
+    await onLogout?()
   }
 }
