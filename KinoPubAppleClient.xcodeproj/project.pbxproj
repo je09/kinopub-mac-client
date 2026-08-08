@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BBBBBBBB0000000000010009 /* BookmarkActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000009 /* BookmarkActionSheet.swift */; };
+		BBBBBBBB0000000000010008 /* SearchDisplayHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000008 /* SearchDisplayHelpers.swift */; };
+		BBBBBBBB0000000000010007 /* SearchSectionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000007 /* SearchSectionsSection.swift */; };
+		BBBBBBBB0000000000010006 /* SearchLiveResultsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000006 /* SearchLiveResultsSection.swift */; };
+		BBBBBBBB0000000000010005 /* SearchDiscoverySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000005 /* SearchDiscoverySection.swift */; };
+		BBBBBBBB0000000000010004 /* RecentSearchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000004 /* RecentSearchRepository.swift */; };
 		BBBBBBBB0000000000010003 /* StorageBreakdownStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000003 /* StorageBreakdownStore.swift */; };
 		BBBBBBBB0000000000010002 /* StorageUsageRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000002 /* StorageUsageRepository.swift */; };
 		BBBBBBBB0000000000010001 /* DeviceAuthorizationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBB0000000000000001 /* DeviceAuthorizationCoordinator.swift */; };
@@ -153,6 +159,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BBBBBBBB0000000000000009 /* BookmarkActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/BookmarkActionSheet.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000008 /* SearchDisplayHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchDisplayHelpers.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000007 /* SearchSectionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchSectionsSection.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000006 /* SearchLiveResultsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchLiveResultsSection.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000005 /* SearchDiscoverySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subviews/SearchDiscoverySection.swift; sourceTree = "<group>"; };
+		BBBBBBBB0000000000000004 /* RecentSearchRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchRepository.swift; sourceTree = "<group>"; };
 		BBBBBBBB0000000000000003 /* StorageBreakdownStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageBreakdownStore.swift; sourceTree = "<group>"; };
 		BBBBBBBB0000000000000002 /* StorageUsageRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage/StorageUsageRepository.swift; sourceTree = "<group>"; };
 		BBBBBBBB0000000000000001 /* DeviceAuthorizationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthorizationCoordinator.swift; sourceTree = "<group>"; };
@@ -886,6 +898,12 @@
 		F562CAB1C511441EB31BA078 /* Search */ = {
 			isa = PBXGroup;
 			children = (
+				BBBBBBBB0000000000000009 /* BookmarkActionSheet.swift */,
+				BBBBBBBB0000000000000008 /* SearchDisplayHelpers.swift */,
+				BBBBBBBB0000000000000007 /* SearchSectionsSection.swift */,
+				BBBBBBBB0000000000000006 /* SearchLiveResultsSection.swift */,
+				BBBBBBBB0000000000000005 /* SearchDiscoverySection.swift */,
+				BBBBBBBB0000000000000004 /* RecentSearchRepository.swift */,
 				C3B23261BD364C4AB70324D7 /* SearchView.swift */,
 				666F16BFE884475FA5F41A69 /* SearchModel.swift */,
 			);
@@ -1045,6 +1063,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBBBBBBB0000000000010009 /* BookmarkActionSheet.swift in Sources */,
+				BBBBBBBB0000000000010008 /* SearchDisplayHelpers.swift in Sources */,
+				BBBBBBBB0000000000010007 /* SearchSectionsSection.swift in Sources */,
+				BBBBBBBB0000000000010006 /* SearchLiveResultsSection.swift in Sources */,
+				BBBBBBBB0000000000010005 /* SearchDiscoverySection.swift in Sources */,
+				BBBBBBBB0000000000010004 /* RecentSearchRepository.swift in Sources */,
 				BBBBBBBB0000000000010003 /* StorageBreakdownStore.swift in Sources */,
 				BBBBBBBB0000000000010002 /* StorageUsageRepository.swift in Sources */,
 				BBBBBBBB0000000000010001 /* DeviceAuthorizationCoordinator.swift in Sources */,

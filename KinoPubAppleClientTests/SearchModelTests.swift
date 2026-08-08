@@ -50,7 +50,7 @@ final class SearchModelTests: XCTestCase {
   func testFieldSearchFailurePublishesEmptyErrorState() async {
     let repository = ControlledSearchRepository()
     let errorHandler = ErrorHandler()
-    let model = SearchModel(repository: repository, errorHandler: errorHandler)
+    let model = SearchModel(repository: repository, recentsRepository: InMemoryRecentSearchRepository(), errorHandler: errorHandler)
 
     let search = Task { await model.performFieldSearch(query: "failure", field: nil) }
     await repository.waitForPendingRequestCount(1)
@@ -116,9 +116,73 @@ final class SearchModelTests: XCTestCase {
     XCTAssertEqual(model.results.map(\.id), [1, 2])
   }
 
+
+  func testPartialScopeFailureIsRecordedNotFatal() async {
+    let repository = ControlledSearchRepository()
+    let model = makeModel(repository: repository)
+
+    let search = Task { await model.performSearch(query: "mixed") }
+    await repository.waitForPendingRequestCount(3)
+
+    await repository.reject(query: "mixed", field: .title, page: nil, error: TestError.failed)
+    await repository.resolve(query: "mixed", field: .cast, page: nil, items: [.testItem(id: 21)])
+    await repository.resolve(query: "mixed", field: .director, page: nil, items: [.testItem(id: 22)])
+    await search.value
+
+    // The failing scope is recorded and stays empty; the others still render.
+    XCTAssertEqual(model.failedScopes, [.title])
+    XCTAssertTrue(model.titleResults.isEmpty)
+    XCTAssertEqual(model.castResults.map(\.id), [21])
+    XCTAssertEqual(model.directorResults.map(\.id), [22])
+    XCTAssertFalse(model.searching)
+  }
+
+  func testAllScopesFailedPublishesFailureWithoutSkeleton() async {
+    let repository = ControlledSearchRepository()
+    let model = makeModel(repository: repository)
+
+    let search = Task { await model.performSearch(query: "down") }
+    await repository.waitForPendingRequestCount(3)
+
+    await repository.reject(query: "down", field: .title, page: nil, error: TestError.failed)
+    await repository.reject(query: "down", field: .cast, page: nil, error: TestError.failed)
+    await repository.reject(query: "down", field: .director, page: nil, error: TestError.failed)
+    await search.value
+
+    XCTAssertEqual(model.failedScopes, [.title, .cast, .director])
+    XCTAssertTrue(model.allResults.isEmpty)
+    XCTAssertFalse(model.searching)
+  }
+
+  func testRecentsPersistThroughRepositoryAndClear() {
+    let repository = InMemoryRecentSearchRepository()
+    let model = SearchModel(
+      repository: SearchRepositoryStub(),
+      recentsRepository: repository,
+      errorHandler: ErrorHandler())
+
+    model.recordRecent(.testItem(id: 7))
+    model.recordRecent(.testItem(id: 9))
+
+    XCTAssertEqual(model.recentItems.map(\.id), [9, 7])
+    XCTAssertEqual(repository.load().map(\.id), [9, 7])
+
+    // A fresh model loads the persisted recents from the same repository.
+    let reloaded = SearchModel(
+      repository: SearchRepositoryStub(),
+      recentsRepository: repository,
+      errorHandler: ErrorHandler())
+    XCTAssertEqual(reloaded.recentItems.map(\.id), [9, 7])
+
+    model.clearRecents()
+    XCTAssertTrue(model.recentItems.isEmpty)
+    XCTAssertTrue(repository.load().isEmpty)
+  }
+
   func testPeopleMiningRecoversCanonicalNamesFromCredits() async {
     let model = SearchModel(
       repository: SearchRepositoryStub(),
+      recentsRepository: InMemoryRecentSearchRepository(),
       errorHandler: ErrorHandler())
     model.query = "джеки"
     model.castResults = [
@@ -139,7 +203,7 @@ final class SearchModelTests: XCTestCase {
   }
 
   private func makeModel(repository: ControlledSearchRepository) -> SearchModel {
-    SearchModel(repository: repository, errorHandler: ErrorHandler())
+    SearchModel(repository: repository, recentsRepository: InMemoryRecentSearchRepository(), errorHandler: ErrorHandler())
   }
 
   private func eventually(

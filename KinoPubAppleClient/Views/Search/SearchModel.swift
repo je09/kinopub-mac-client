@@ -9,7 +9,6 @@ import Foundation
 import KinoPubDomain
 import OSLog
 import KinoPubLogging
-import Combine
 
 /// Search result scope, mirroring the kino.pub web tabs: All / Titles / Actors / Directors.
 enum SearchScope: String, CaseIterable, Identifiable {
@@ -31,24 +30,18 @@ enum SearchScope: String, CaseIterable, Identifiable {
 }
 
 /// A recently opened search result, shown as a card in the "Recent" section.
-struct RecentSearchItem: Codable, Identifiable, Hashable {
-  let id: Int
-  let title: String
-  let subtitle: String
-  let poster: String
-}
+// (Type moved to RecentSearchRepository.swift — kept as a typealias for source compatibility.)
 
 @MainActor
 class SearchModel: ObservableObject {
 
-  private static let recentSearchesKey = "recentSearchItems"
-  private static let recentSearchesLimit = 12
-
   private var errorHandler: ErrorHandler
   private let repository: any SearchRepository
-  private var bag = Set<AnyCancellable>()
+  private let recentsRepository: any RecentSearchRepository
 
-  @Published public var query: String = ""
+  @Published public var query: String = "" {
+    didSet { scheduleDebouncedSearch() }
+  }
   /// Single-field result list used by the person-search screen (paginated). The main search bar
   /// uses the per-scope buckets below instead.
   @Published public var results: [MediaSummary] = []
@@ -149,6 +142,10 @@ class SearchModel: ObservableObject {
     return order.sorted { (counts[$0] ?? 0) > (counts[$1] ?? 0) }.map { canonical[$0] ?? $0 }
   }
 
+  /// Scopes whose latest request failed while others succeeded. The UI shows a subtle
+  /// partial-failure hint instead of silently dropping a whole tab (Phase 5: partial scope failures).
+  @Published private(set) public var failedScopes: Set<SearchScope> = []
+
   @Published public var genres: [Genre] = []
   @Published public var genrePosters: [Int: String] = [:]
   @Published public var genreResults: [MediaSummary] = []
@@ -164,36 +161,49 @@ class SearchModel: ObservableObject {
   /// distinguish a programmatic preset from a manual edit of the search bar.
   private var presetQuery: String?
   private var searchTask: Task<Void, Never>?
+  /// Debounce generation for manual query edits; cancelled on preset/teardown so only one
+  /// debounce+search pipeline exists at a time.
+  private var debounceTask: Task<Void, Never>?
   private var isLoadingMore = false
 
-  init(repository: any SearchRepository, errorHandler: ErrorHandler) {
+  init(
+    repository: any SearchRepository,
+    recentsRepository: any RecentSearchRepository,
+    errorHandler: ErrorHandler
+  ) {
     self.repository = repository
+    self.recentsRepository = recentsRepository
     self.errorHandler = errorHandler
-    self.recentItems = Self.loadRecentItems()
-    subscribe()
+    self.recentItems = recentsRepository.load()
+  }
+
+  deinit {
+    debounceTask?.cancel()
+    searchTask?.cancel()
   }
 
   // MARK: - Search
 
-  private func subscribe() {
-    $query
-      .dropFirst()
-      .removeDuplicates()
-      .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
-      .sink { [weak self] value in
-        guard let self else { return }
-        // The programmatic preset (person search) already ran the search in preset();
-        // skip here to avoid a second skeleton flash.
-        if value == self.presetQuery {
-          return
-        }
-        // A manual edit of the search bar resets any preset person-search field
-        // (so typing a regular title query searches by title again).
-        self.searchField = nil
-        self.presetQuery = nil
-        self.searchTask?.cancel()
-        self.searchTask = Task { await self.performSearch(query: value) }
-      }.store(in: &bag)
+  /// Single debounce + task-owned search pipeline for manual query edits. Combine-free: the view
+  /// writes `query`, the store owns the debounce and the search task, and cancels the previous
+  /// generation before starting a new one.
+  private func scheduleDebouncedSearch() {
+    debounceTask?.cancel()
+    debounceTask = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(0.5))
+      guard !Task.isCancelled, let self else { return }
+      // The programmatic preset (person search) already ran the search in preset();
+      // skip here to avoid a second skeleton flash.
+      if self.query == self.presetQuery {
+        return
+      }
+      // A manual edit of the search bar resets any preset person-search field
+      // (so typing a regular title query searches by title again).
+      self.searchField = nil
+      self.presetQuery = nil
+      self.searchTask?.cancel()
+      self.searchTask = Task { await self.performSearch(query: self.query) }
+    }
   }
 
   /// Presets a person search (actor/director). The query runs immediately against the given
@@ -201,6 +211,7 @@ class SearchModel: ObservableObject {
   func preset(query: String, field: SearchField?) {
     presetQuery = query
     self.query = query
+    debounceTask?.cancel()
     searchTask?.cancel()
     searchTask = Task { await performFieldSearch(query: query, field: field) }
   }
@@ -222,6 +233,7 @@ class SearchModel: ObservableObject {
 
     searching = true
     pagedQuery = trimmed
+    failedScopes = []
     titleResults = MediaSummary.skeletonMock()
     castResults = []
     directorResults = []
@@ -232,15 +244,37 @@ class SearchModel: ObservableObject {
     async let cast = repository.search(query: trimmed, field: .cast, page: nil)
     async let directors = repository.search(query: trimmed, field: .director, page: nil)
 
-    let t = (try? await titles)?.items ?? []
-    let c = (try? await cast)?.items ?? []
-    let d = (try? await directors)?.items ?? []
+    // Each scope resolves independently: a failing scope becomes a recorded partial failure
+    // instead of silently collapsing into an empty tab.
+    var failures: Set<SearchScope> = []
+    let t: [MediaSummary]
+    let c: [MediaSummary]
+    let d: [MediaSummary]
+    do {
+      t = try await titles.items
+    } catch {
+      failures.insert(.title)
+      t = []
+    }
+    do {
+      c = try await cast.items
+    } catch {
+      failures.insert(.cast)
+      c = []
+    }
+    do {
+      d = try await directors.items
+    } catch {
+      failures.insert(.director)
+      d = []
+    }
 
     // Ignore stale/cancelled responses if the query changed while requests were in flight.
     guard !Task.isCancelled, trimmed == pagedQuery else { return }
     titleResults = t
     castResults = c
     directorResults = d
+    failedScopes = failures
 
     // If the current tab has nothing but another does, jump to the richest one (e.g. a pure actor
     // name has 0 titles but many "Actors" hits — show that tab, as the web does).
@@ -324,31 +358,13 @@ class SearchModel: ObservableObject {
       poster: item.posters.medium)
     var updated = recentItems.filter { $0.id != recent.id }
     updated.insert(recent, at: 0)
-    if updated.count > Self.recentSearchesLimit {
-      updated = Array(updated.prefix(Self.recentSearchesLimit))
-    }
     recentItems = updated
-    persistRecents()
+    recentsRepository.save(updated)
   }
 
   func clearRecents() {
     recentItems = []
-    UserDefaults.standard.removeObject(forKey: Self.recentSearchesKey)
-  }
-
-  private func persistRecents() {
-    if let data = try? JSONEncoder().encode(recentItems) {
-      UserDefaults.standard.set(data, forKey: Self.recentSearchesKey)
-    }
-  }
-
-  private static func loadRecentItems() -> [RecentSearchItem] {
-    guard let data = UserDefaults.standard.data(forKey: recentSearchesKey),
-          let items = try? JSONDecoder().decode([RecentSearchItem].self, from: data)
-    else {
-      return []
-    }
-    return items
+    recentsRepository.clear()
   }
 
   // MARK: - Browse / genres

@@ -63,6 +63,7 @@ struct AppDependencies {
   let storageUsageRepository: StorageUsageRepository
   let commentsRepository: any CommentsRepository
   let searchRepository: any SearchRepository
+  let recentsRepository: any RecentSearchRepository
 
   // MARK: - Production factory
 
@@ -149,7 +150,8 @@ struct AppDependencies {
       libraryState: libraryState,
       storageUsageRepository: StorageUsageRepository(epgService: epgService),
       commentsRepository: CommentsRepositoryAdapter(client: apiClient),
-      searchRepository: SearchRepositoryAdapter(client: apiClient))
+      searchRepository: SearchRepositoryAdapter(client: apiClient),
+      recentsRepository: UserDefaultsRecentSearchRepository())
   }
 
   // MARK: - Preview fixture factory
@@ -202,7 +204,8 @@ struct AppDependencies {
       libraryState: libraryState,
       storageUsageRepository: StorageUsageRepository(epgService: EPGServiceMock()),
       commentsRepository: PreviewCommentsRepository(),
-      searchRepository: SearchRepositoryStub())
+      searchRepository: SearchRepositoryStub(),
+      recentsRepository: InMemoryRecentSearchRepository())
   }
 
   // MARK: - API Client building

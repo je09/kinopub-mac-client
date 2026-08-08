@@ -78,6 +78,7 @@ struct SidebarNavigationDetail: View {
       model: screenCache.model(for: .search) {
         SearchModel(
           repository: dependencies.searchRepository,
+          recentsRepository: dependencies.recentsRepository,
           errorHandler: errorHandler)
       })
   }
