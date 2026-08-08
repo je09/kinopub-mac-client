@@ -37,6 +37,8 @@ jobs:
       matrix:
         package:
           - Packages/KinoPubBackend
+          - Packages/KinoPubDomain
+          - Packages/KinoPubData
           - Packages/KinoPubKit
           - Packages/KinoPubLogging
           - Packages/KinoPubUI

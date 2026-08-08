@@ -20,6 +20,8 @@ app_context_refs="$(count_matches 'AppContext\.shared' KinoPubAppleClient -g '*.
 view_backend_imports="$(count_matches '^import KinoPubBackend$' KinoPubAppleClient/Views -g '*.swift')"
 ui_backend_imports="$(count_matches '^import KinoPubBackend$' Packages/KinoPubUI/Sources -g '*.swift')"
 transport_force_unwraps="$(count_matches '[)!]\!' Packages/KinoPubBackend/Sources -g '*.swift')"
+comments_boundary_violations="$(count_matches '^(import KinoPubBackend|.*AppContext\.shared)' KinoPubAppleClient/Views/Comments -g '*.swift')"
+search_boundary_violations="$(count_matches '^(import KinoPubBackend|.*AppContext\.shared)' KinoPubAppleClient/Views/Search -g '*.swift')"
 
 large_files="$({ find KinoPubAppleClient Packages \
   -path '*/.build' -prune -o -type f -name '*.swift' -print0 \
@@ -37,6 +39,8 @@ cat <<REPORT
 | Views importing \`KinoPubBackend\` | $view_backend_imports |
 | KinoPubUI files importing \`KinoPubBackend\` | $ui_backend_imports |
 | Potential force unwraps in transport sources | $transport_force_unwraps |
+| Comments boundary violations (blocking) | $comments_boundary_violations |
+| Search boundary violations (blocking) | $search_boundary_violations |
 | Swift source files over 500 lines | $large_file_count |
 
 ### Files over 500 lines
@@ -45,3 +49,13 @@ cat <<REPORT
 ${large_files:-None}
 \`\`\`
 REPORT
+
+if [[ "$comments_boundary_violations" != "0" ]]; then
+  echo "Comments must not import KinoPubBackend or access AppContext.shared" >&2
+  exit 1
+fi
+
+if [[ "$search_boundary_violations" != "0" ]]; then
+  echo "Search must not import KinoPubBackend or access AppContext.shared" >&2
+  exit 1
+fi
