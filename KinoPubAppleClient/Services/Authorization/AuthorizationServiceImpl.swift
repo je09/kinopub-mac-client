@@ -10,14 +10,19 @@ import KinoPubBackend
 
 final class AuthorizationServiceImpl: AuthorizationService {
   
-  private var apiClient: APIClient
-  private var configuration: Configuration
-  private var accessTokenService: AccessTokenService
+  private let apiClient: APIClient
+  private let configuration: Configuration
+  private let accessTokenService: AccessTokenService
+  private let credentialRefresher: any CredentialRefreshing
   
-  init(apiClient: APIClient, configuration: Configuration, accessTokenService: AccessTokenService) {
+  init(apiClient: APIClient,
+       configuration: Configuration,
+       accessTokenService: AccessTokenService,
+       credentialRefresher: any CredentialRefreshing) {
     self.apiClient = apiClient
     self.configuration = configuration
     self.accessTokenService = accessTokenService
+    self.credentialRefresher = credentialRefresher
   }
   
   func fetchDeviceCode() async throws -> VerificationResponse {
@@ -35,16 +40,8 @@ final class AuthorizationServiceImpl: AuthorizationService {
   }
   
   func refreshToken() async throws {
-    guard let token: AccessToken = accessTokenService.token() else {
-      return
-    }
-    
-    let request = RefreshTokenRequest(
-      clientID: configuration.clientID,
-      clientSecret: configuration.clientSecret,
-      refreshToken: token.refreshToken)
-    let newToken = try await apiClient.performRequest(with: request, decodingType: AccessToken.self)
-    accessTokenService.set(token: newToken)
+    guard let _: AccessToken = accessTokenService.token() else { return }
+    try await credentialRefresher.refreshCredentials()
   }
   
   func logout() {

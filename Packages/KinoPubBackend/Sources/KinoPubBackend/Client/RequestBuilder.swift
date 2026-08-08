@@ -37,7 +37,8 @@ internal struct RequestBuilder {
 
   private func appendingQuery(to request: URLRequest, parameters: HTTPParameters) throws -> URLRequest {
     var result = request
-    guard var components = URLComponents(url: request.url!, resolvingAgainstBaseURL: true) else {
+    guard let requestURL = request.url,
+          var components = URLComponents(url: requestURL, resolvingAgainstBaseURL: true) else {
       throw APIClientError.invalidRequest("The endpoint URL cannot be represented as components.")
     }
     components.queryItems = (components.queryItems ?? []) + parameters.sorted { $0.key < $1.key }.map {

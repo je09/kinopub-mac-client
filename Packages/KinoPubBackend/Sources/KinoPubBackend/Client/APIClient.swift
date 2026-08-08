@@ -11,6 +11,20 @@ public struct SystemAPIClientClock: APIClientClock {
   public func sleep(for interval: TimeInterval) async throws { try await Task.sleep(for: .seconds(interval)) }
 }
 
+public protocol APIClientRandomSource: Sendable {
+  func nextUnitInterval() -> Double
+}
+
+public struct SystemAPIClientRandomSource: APIClientRandomSource {
+  public init() {}
+  public func nextUnitInterval() -> Double { Double.random(in: 0...1) }
+}
+
+/// Supplies a stable, non-secret partition for authenticated response-cache entries.
+public protocol CachePartitionProviding: Sendable {
+  var cachePartition: String { get }
+}
+
 /// A narrow seam for services. Existing services can continue accepting `APIClient` until they are
 /// migrated to this protocol.
 public protocol HTTPClient {
@@ -77,6 +91,8 @@ public final class APIClient: HTTPClient {
   private let requestGate: APIRequestGate
   private let decoder: JSONDecoder
   private let clock: any APIClientClock
+  private let randomSource: any APIClientRandomSource
+  private let cachePartitionProvider: (any CachePartitionProviding)?
   private let credentialRefresh: CredentialRefreshCoordinator?
 
   /// Invalid URLs are retained as an initialization state so legacy synchronous construction stays
@@ -87,13 +103,17 @@ public final class APIClient: HTTPClient {
               cache: ResponseCaching? = nil,
               minimumRequestInterval: TimeInterval = 0,
               clock: any APIClientClock = SystemAPIClientClock(),
+              randomSource: any APIClientRandomSource = SystemAPIClientRandomSource(),
               decoder: JSONDecoder = JSONDecoder(),
-              credentialRefresher: (any CredentialRefreshing)? = nil) {
+              credentialRefresher: (any CredentialRefreshing)? = nil,
+              cachePartitionProvider: (any CachePartitionProviding)? = nil) {
     self.plugins = plugins
     self.session = session
     self.cache = cache
     self.decoder = decoder
     self.clock = clock
+    self.randomSource = randomSource
+    self.cachePartitionProvider = cachePartitionProvider
     self.requestGate = APIRequestGate(minimumInterval: minimumRequestInterval, clock: clock)
     self.credentialRefresh = credentialRefresher.map(CredentialRefreshCoordinator.init)
     if let url = URL(string: baseUrl) { self.requestBuilder = try? RequestBuilder(validating: url) } else { self.requestBuilder = nil }
@@ -104,8 +124,9 @@ public final class APIClient: HTTPClient {
                                            forceRefresh: Bool = false) async throws -> T {
     let cacheable = requestData as? CacheableRequest
     let policy = cacheable?.cachePolicy ?? .noCache
-    if !forceRefresh, let cacheable, policy.ttl != nil,
-       let data = cache?.data(for: cacheable.cacheKey), let cached = try? decoder.decode(T.self, from: data) {
+    let cacheKey = cacheable.map { partitionedCacheKey($0.cacheKey) }
+    if !forceRefresh, let cacheKey, policy.ttl != nil,
+       let data = cache?.data(for: cacheKey), let cached = try? decoder.decode(T.self, from: data) {
       return cached
     }
     guard let requestBuilder else { throw APIClientError.invalidRequest("The base URL is invalid.") }
@@ -124,7 +145,8 @@ public final class APIClient: HTTPClient {
         // URLSession always supplies HTTPURLResponse in production. Retain compatibility with
         // existing custom test transports that return a plain URLResponse.
         guard let http = response as? HTTPURLResponse else {
-          return try decodeResponse(T.self, from: data, cacheable: cacheable, policy: policy)
+          let responseCacheKey = cacheable.map { partitionedCacheKey($0.cacheKey) }
+          return try decodeResponse(T.self, from: data, cacheKey: responseCacheKey, policy: policy)
         }
 
         if !(200..<300).contains(http.statusCode) {
@@ -140,14 +162,18 @@ public final class APIClient: HTTPClient {
           }
           if http.statusCode == 429, rateLimitAttempt < 2 {
             rateLimitAttempt += 1
-            await requestGate.pause(for: min(max(retryAfter ?? pow(2, Double(rateLimitAttempt - 1)), 1), 60))
+            let delay = retryAfter ?? jitteredBackoff(forAttempt: rateLimitAttempt)
+            await requestGate.pause(for: min(max(delay, 1), 60))
             continue
           }
           if let backendError = try? decoder.decode(BackendError.self, from: data) { throw APIClientError.networkError(backendError) }
           throw APIClientError.httpError(statusCode: http.statusCode, retryAfter: retryAfter)
         }
 
-        return try decodeResponse(T.self, from: data, cacheable: cacheable, policy: policy)
+        // Credentials may have rotated during a 401 replay; partition the stored response with the
+        // current credential rather than the one used for the initial cache lookup.
+        let responseCacheKey = cacheable.map { partitionedCacheKey($0.cacheKey) }
+        return try decodeResponse(T.self, from: data, cacheKey: responseCacheKey, policy: policy)
       } catch is CancellationError {
         throw CancellationError()
       } catch let error as APIClientError {
@@ -162,12 +188,12 @@ public final class APIClient: HTTPClient {
 
   private func decodeResponse<T: Decodable>(_ type: T.Type,
                                             from data: Data,
-                                            cacheable: CacheableRequest?,
+                                            cacheKey: String?,
                                             policy: CachePolicy) throws -> T {
     do {
       let result = try decoder.decode(T.self, from: data)
-      if let cacheable, let ttl = policy.ttl {
-        cache?.store(data, for: cacheable.cacheKey, ttl: ttl, persist: policy.persistsToDisk)
+      if let cacheKey, let ttl = policy.ttl {
+        cache?.store(data, for: cacheKey, ttl: ttl, persist: policy.persistsToDisk)
       }
       return result
     } catch {
@@ -176,6 +202,16 @@ public final class APIClient: HTTPClient {
       }
       throw APIClientError.decodingError(error)
     }
+  }
+
+  private func partitionedCacheKey(_ key: String) -> String {
+    "account=\(cachePartitionProvider?.cachePartition ?? "anonymous") \(key)"
+  }
+
+  /// Full jitter prevents clients released from the same outage from retrying in lockstep.
+  private func jitteredBackoff(forAttempt attempt: Int) -> TimeInterval {
+    let ceiling = pow(2, Double(max(0, attempt - 1)))
+    return min(max(randomSource.nextUnitInterval(), 0), 1) * ceiling
   }
 
   private static func retryAfter(from response: HTTPURLResponse, now: Date) -> TimeInterval? {

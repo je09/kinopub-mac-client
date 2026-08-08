@@ -50,7 +50,7 @@ public extension CacheableRequest where Self: Endpoint {
   /// Stable key derived from the path and sorted parameters (order-independent).
   var cacheKey: String {
     let query = parameters?
-      .map { "\($0.key)=\($0.value)" }
+      .map { "\($0.key)=\($0.value.encodedValue)" }
       .sorted()
       .joined(separator: "&") ?? ""
     return "schema=1 \(method.rawValue) \(path)?\(query)"

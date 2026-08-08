@@ -92,8 +92,16 @@ struct AppContext: AppContextProtocol {
     downloadManager.onDownloadFailed = { [weak downloadNotificationManager] _, meta, _ in
       downloadNotificationManager?.notifyFailed(title: meta.notificationTitle, identifier: "\(meta.id)")
     }
-    // Api Client
-    let apiClient = makeApiClient(with: configuration.baseURL, accessTokenService: accessTokenService)
+    // API client. Token refresh uses a separate unauthenticated transport to avoid replay loops;
+    // both startup refresh and 401 recovery share the same single-flight refresher.
+    let credentialRefresher = AccessTokenCredentialRefresher(
+      baseURL: configuration.baseURL,
+      configuration: configuration,
+      accessTokenService: accessTokenService)
+    let apiClient = makeApiClient(
+      with: configuration.baseURL,
+      accessTokenService: accessTokenService,
+      credentialRefresher: credentialRefresher)
     let actionsService = UserActionsServiceImpl(apiClient: apiClient)
     
     // Single client-side library state: optimistic bookmarks/watchlist/watched + cached bookmark
@@ -108,7 +116,8 @@ struct AppContext: AppContextProtocol {
     let authService = AuthorizationServiceImpl(
       apiClient: apiClient,
       configuration: configuration,
-      accessTokenService: accessTokenService)
+      accessTokenService: accessTokenService,
+      credentialRefresher: credentialRefresher)
     return AppContext(
       configuration: configuration,
       authService: authService,
@@ -131,12 +140,16 @@ struct AppContext: AppContextProtocol {
   
   // MARK: - API Client building
   
-  private static func makeApiClient(with baseURL: String, accessTokenService: AccessTokenService) -> APIClient {
+  private static func makeApiClient(with baseURL: String,
+                                    accessTokenService: AccessTokenService,
+                                    credentialRefresher: any CredentialRefreshing) -> APIClient {
     APIClient(
       baseUrl: baseURL,
       // Never install the cURL/response debug plugins here: they include bearer tokens,
       // OAuth responses, and account data in unified logs.
       plugins: [AccessTokenPlugin(accessTokenService: accessTokenService)],
-      cache: ResponseCache())
+      cache: ResponseCache(),
+      credentialRefresher: credentialRefresher,
+      cachePartitionProvider: AccessTokenCachePartitionProvider(accessTokenService: accessTokenService))
   }
 }
