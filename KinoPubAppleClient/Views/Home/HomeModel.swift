@@ -74,6 +74,7 @@ class HomeModel: ObservableObject {
   private var authState: AuthState
   private var errorHandler: ErrorHandler
   private var itemsService: VideoContentService
+  private var localProgressStore: LocalWatchProgressStore
   private var bag = Set<AnyCancellable>()
   
   @Published public var shelves: [Shelf] = HomeModel.skeletonShelves()
@@ -87,8 +88,14 @@ class HomeModel: ObservableObject {
   private var lastContinueWatchingRefresh: Date?
   private var isFetchingData = false
   
-  init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
+  init(
+    itemsService: VideoContentService,
+    localProgressStore: LocalWatchProgressStore,
+    authState: AuthState,
+    errorHandler: ErrorHandler
+  ) {
     self.itemsService = itemsService
+    self.localProgressStore = localProgressStore
     self.authState = authState
     self.errorHandler = errorHandler
     // Load when the model is created, not on the view's `.task` (which doesn't reliably fire in a
@@ -211,7 +218,7 @@ class HomeModel: ObservableObject {
     
     // Locally-started titles (> 10s) the backend doesn't list yet, with their own update time.
     let backendIds = Set(enriched.map { $0.item.id })
-    let localOnly: [(item: ContinueItem, watchedAt: TimeInterval)] = AppContext.shared.localProgressStore.allEntries()
+    let localOnly: [(item: ContinueItem, watchedAt: TimeInterval)] = localProgressStore.allEntries()
       .filter { !backendIds.contains($0.id) }
       .map { entry in
         let subtitle: String?

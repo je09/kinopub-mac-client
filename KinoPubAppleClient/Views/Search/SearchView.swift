@@ -18,7 +18,7 @@ private struct BookmarkTarget: Identifiable {
 struct SearchView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
+  @Environment(\.dependencies) var dependencies
   @StateObject private var model: SearchModel
   
   @State private var bookmarkTarget: BookmarkTarget?
@@ -60,7 +60,7 @@ struct SearchView: View {
         DispatchQueue.main.async { searchFocused = true }
       }
       .sheet(item: $bookmarkTarget) { target in
-        BookmarkActionSheet(item: target.item, actionsService: appContext.actionsService)
+        BookmarkActionSheet(item: target.item, actionsService: dependencies.actionsService)
       }
     }
   }

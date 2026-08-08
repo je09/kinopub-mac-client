@@ -12,9 +12,6 @@ protocol UserService {
   func fetchUserData() async throws -> UserData
 }
 
-protocol UserServiceProvider {
-  var userService: UserService { get set }
-}
 
 struct UserServiceMock: UserService {
   func fetchUserData() async throws -> UserData {

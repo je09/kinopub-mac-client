@@ -26,10 +26,6 @@ public struct LocalWatchEntry: Codable, Identifiable {
   public var finished: Bool { watch.isFinished }
 }
 
-protocol LocalWatchProgressProvider {
-  var localProgressStore: LocalWatchProgressStore { get }
-}
-
 /// Thread-safe, file-backed store of local resume points.
 final class LocalWatchProgressStore {
   

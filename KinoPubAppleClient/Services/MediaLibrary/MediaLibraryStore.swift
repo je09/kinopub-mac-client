@@ -19,7 +19,7 @@ import Combine
 import KinoPubBackend
 import KinoPubKit
 
-/// Not `@MainActor` so it can be built inside `AppContext.shared`'s nonisolated initializer; all
+/// Not `@MainActor` so it can be built inside `AppDependencies`' nonisolated initializer; all
 /// mutations are invoked from the main thread (views / @MainActor models) and the download republish
 /// sinks deliver on main, so `@Published` updates stay main-thread.
 final class MediaLibraryStore: ObservableObject {
@@ -381,10 +381,4 @@ final class MediaLibraryStore: ObservableObject {
     guard let data = try? JSONEncoder().encode(snapshot) else { return }
     try? data.write(to: fileURL, options: .atomic)
   }
-}
-
-// MARK: - AppContext access
-
-protocol MediaLibraryProvider {
-  var libraryState: MediaLibraryStore { get }
 }

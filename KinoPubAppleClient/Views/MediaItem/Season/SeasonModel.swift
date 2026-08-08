@@ -20,7 +20,7 @@ class SeasonModel: ObservableObject {
   init(
     season: Season,
     linkProvider: NavigationLinkProvider,
-    downloadManager: DownloadManager<DownloadMeta> = AppContext.shared.downloadManager
+    downloadManager: DownloadManager<DownloadMeta>
   ) {
     self.season = season
     self.linkProvider = linkProvider

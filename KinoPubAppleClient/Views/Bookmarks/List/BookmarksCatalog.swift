@@ -17,14 +17,21 @@ class BookmarksCatalog: ObservableObject {
   private var authState: AuthState
   private var contentService: VideoContentService
   private var errorHandler: ErrorHandler
+  private var libraryState: MediaLibraryStore
   private var bag = Set<AnyCancellable>()
   
   @Published public var items: [Bookmark] = Bookmark.skeletonMock()
   /// Items per bookmark folder (by folder id), powering the Home-style shelves.
   @Published public var folderItems: [Int: [MediaItem]] = [:]
   
-  init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
+  init(
+    itemsService: VideoContentService,
+    libraryState: MediaLibraryStore,
+    authState: AuthState,
+    errorHandler: ErrorHandler
+  ) {
     self.contentService = itemsService
+    self.libraryState = libraryState
     self.authState = authState
     self.errorHandler = errorHandler
     observeFolderCache()
@@ -35,7 +42,7 @@ class BookmarksCatalog: ObservableObject {
   /// Keep the folder list in sync with the shared cache so a folder deleted on its detail screen
   /// disappears here too (without a manual refresh).
   private func observeFolderCache() {
-    AppContext.shared.libraryState.$bookmarkFolders
+    libraryState.$bookmarkFolders
       .dropFirst()
       .receive(on: RunLoop.main)
       .sink { [weak self] folders in
@@ -55,8 +62,8 @@ class BookmarksCatalog: ObservableObject {
     
     // Folder list comes from the shared session cache (single source of truth across the app);
     // only each folder's contents are fetched here.
-    await AppContext.shared.libraryState.loadBookmarkFoldersIfNeeded()
-    let bookmarks = AppContext.shared.libraryState.bookmarkFolders
+    await libraryState.loadBookmarkFoldersIfNeeded()
+    let bookmarks = libraryState.bookmarkFolders
     items = bookmarks
     await loadFolderItems(bookmarks)
   }
@@ -83,7 +90,7 @@ class BookmarksCatalog: ObservableObject {
     folderItems = [:]
     Logger.app.debug("refetch bookmarks")
     // Pull-to-refresh forces a fresh folder list (e.g. after creating/renaming a folder).
-    await AppContext.shared.libraryState.reloadBookmarkFolders()
+    await libraryState.reloadBookmarkFolders()
     await fetchItems()
   }
   

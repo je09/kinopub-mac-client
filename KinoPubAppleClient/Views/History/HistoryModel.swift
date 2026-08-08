@@ -18,6 +18,8 @@ class HistoryModel: ObservableObject {
   private var authState: AuthState
   private var errorHandler: ErrorHandler
   private var contentService: VideoContentService
+  private var actionsService: UserActionsService
+  private var localProgressStore: LocalWatchProgressStore
   private var bag = Set<AnyCancellable>()
   private var loadGeneration = 0
   private var pagesInFlight = Set<String>()
@@ -28,8 +30,16 @@ class HistoryModel: ObservableObject {
   @Published public var selectedType: MediaType?
   @Published public var toastMessage: ToastMessage?
   
-  init(itemsService: VideoContentService, authState: AuthState, errorHandler: ErrorHandler) {
+  init(
+    itemsService: VideoContentService,
+    actionsService: UserActionsService,
+    localProgressStore: LocalWatchProgressStore,
+    authState: AuthState,
+    errorHandler: ErrorHandler
+  ) {
     self.contentService = itemsService
+    self.actionsService = actionsService
+    self.localProgressStore = localProgressStore
     self.authState = authState
     self.errorHandler = errorHandler
     // Load on creation, not via the view's `.task` (unreliable in a compact split view / nested stack).
@@ -134,13 +144,13 @@ class HistoryModel: ObservableObject {
     historyItems.removeAll { $0.item.id == itemId }
     items.removeAll { $0.id == itemId }
     // Also drop any locally-tracked progress so the title disappears from Continue Watching too.
-    AppContext.shared.localProgressStore.clear(id: itemId)
+    localProgressStore.clear(id: itemId)
     Task {
       do {
         // `clear-for-item` takes the ITEM id (the whole title). The old `clear-for-media` call passed
         // the item id to an endpoint that expects a media id, so it silently cleared nothing and the
         // entry came back on refresh.
-        try await AppContext.shared.actionsService.clearHistory(forItem: itemId)
+        try await actionsService.clearHistory(forItem: itemId)
         toastMessage = .info("Removed from history".localized)
       } catch {
         Logger.app.debug("clear history error: \(error)")

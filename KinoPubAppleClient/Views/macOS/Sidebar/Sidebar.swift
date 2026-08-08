@@ -329,7 +329,7 @@ struct Sidebar_Previews: PreviewProvider {
         .environmentObject(NavigationState())
         .environmentObject(NetworkMonitor())
         .environmentObject(AppearanceSettings())
-        .environmentObject(AppContext.shared.libraryState)
+        .environmentObject(AppDependencies.preview().libraryState)
     }
   }
   

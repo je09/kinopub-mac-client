@@ -16,7 +16,7 @@ struct MediaItemView: View {
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject private var navigationState: NavigationState
   @EnvironmentObject private var libraryState: MediaLibraryStore
-  @Environment(\.appContext) private var appContext
+  @Environment(\.dependencies) private var dependencies
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @StateObject private var itemModel: MediaItemModel
   
@@ -117,7 +117,7 @@ struct MediaItemView: View {
       CommentsView(
         store: CommentsStore(
           mediaID: mediaItem.id,
-          repository: appContext.commentsRepository
+          repository: dependencies.commentsRepository
         )
       )
     }
@@ -174,7 +174,7 @@ struct MediaItemView: View {
     // Cache artwork/title locally so a started title can resume in Continue Watching.
     .onChange(of: itemModel.itemLoaded) { loaded in
       if loaded {
-        appContext.localProgressStore.cacheItem(itemModel.mediaItem)
+        dependencies.localProgressStore.cacheItem(itemModel.mediaItem)
       }
     }
     .handleError(state: $errorHandler.state)
@@ -2007,15 +2007,18 @@ enum KinopoiskText {
 struct MediaItemView_Previews: PreviewProvider {
   struct Preview: View {
     var body: some View {
-      MediaItemView(
+      let deps = AppDependencies.preview()
+      return MediaItemView(
         model: MediaItemModel(
           mediaItemId: MediaItem.mock().id,
           itemsService: VideoContentServiceMock(),
-          downloadManager: DownloadManager<DownloadMeta>(
-            fileSaver: FileSaver(),
-            database: DownloadedFilesDatabase<DownloadMeta>(fileSaver: FileSaver())),
+          downloadManager: deps.downloadManager,
           linkProvider: RouteLinkProvider(),
-          errorHandler: ErrorHandler()))
+          errorHandler: ErrorHandler(),
+          actionsService: deps.actionsService,
+          libraryState: deps.libraryState,
+          localProgressStore: deps.localProgressStore,
+          seasonDownloadManager: deps.seasonDownloadManager))
     }
   }
   static var previews: some View {

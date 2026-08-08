@@ -23,9 +23,6 @@ protocol DeviceService {
   func removeDevice(id: Int) async throws
 }
 
-protocol DeviceServiceProvider {
-  var deviceService: DeviceService { get set }
-}
 
 struct DeviceServiceMock: DeviceService {
   

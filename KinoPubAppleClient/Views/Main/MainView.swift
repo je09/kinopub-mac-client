@@ -13,7 +13,7 @@ struct MainView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject var authState: AuthState
-  @Environment(\.appContext) var appContext
+  @Environment(\.dependencies) var dependencies
   
   @StateObject private var catalog: MediaCatalog
   @State private var showShortCutPicker: Bool = false
@@ -72,7 +72,7 @@ struct MainView: View {
           FilterView(
             model: FilterModel(
               contentType: catalog.contentType,
-              filterDataService: appContext.contentService,
+              filterDataService: dependencies.contentService,
               initialFilter: catalog.activeFilter),
             onApply: { filter in
               catalog.apply(filter: filter)
@@ -138,7 +138,7 @@ struct MainView_Previews: PreviewProvider {
 /// via the supplied `linkProvider`.
 struct FilteredCatalogView: View {
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
+  @Environment(\.dependencies) var dependencies
   @StateObject private var catalog: MediaCatalog
   private let title: String
   private let linkProvider: NavigationLinkProvider
@@ -203,7 +203,7 @@ struct FilteredCatalogView: View {
       FilterView(
         model: FilterModel(
           contentType: catalog.contentType,
-          filterDataService: appContext.contentService,
+          filterDataService: dependencies.contentService,
           initialFilter: catalog.activeFilter),
         onApply: { filter in
           catalog.apply(filter: filter)

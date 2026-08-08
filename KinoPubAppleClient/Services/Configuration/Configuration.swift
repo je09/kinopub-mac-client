@@ -13,6 +13,3 @@ protocol Configuration {
   var baseURL: String { get }
 }
 
-protocol ConfigurationProvider {
-  var configuration: Configuration { get set }
-}

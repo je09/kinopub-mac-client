@@ -24,6 +24,3 @@ protocol KeychainStorage {
   func clear()
 }
 
-protocol KeychainStorageProvider {
-  var keychainStorage: KeychainStorage { get set }
-}

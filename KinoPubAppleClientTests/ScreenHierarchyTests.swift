@@ -20,7 +20,10 @@ final class ScreenHierarchyTests: XCTestCase {
       accessTokenService: AccessTokenServiceMock(),
       deviceService: DeviceServiceMock()
     )
+    let progressURL = FileManager.default.temporaryDirectory
+      .appendingPathComponent("ScreenHierarchyTests-progress-\\(UUID().uuidString).json")
     let view = HomeView(model: HomeModel(itemsService: VideoContentServiceMock(),
+                                         localProgressStore: LocalWatchProgressStore(fileURL: progressURL),
                                          authState: authState,
                                          errorHandler: errorHandler))
       .environmentObject(NavigationState())

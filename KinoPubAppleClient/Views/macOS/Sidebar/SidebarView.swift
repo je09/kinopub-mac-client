@@ -14,7 +14,7 @@ import KinoPubKit
 
 struct SidebarView: View {
   
-  @Environment(\.appContext) var appContext
+  @Environment(\.dependencies) var dependencies
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject var authState: AuthState
@@ -211,7 +211,7 @@ struct SidebarView: View {
   var authSheet: some View {
     AuthView(
       model: AuthModel(
-        authService: appContext.authService,
+        authService: dependencies.authService,
         authState: authState,
         errorHandler: errorHandler))
   }

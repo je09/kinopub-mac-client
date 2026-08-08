@@ -38,6 +38,7 @@ class BookmarkModel: ObservableObject {
   private var contentService: VideoContentService
   private var actionsService: UserActionsService
   private var errorHandler: ErrorHandler
+  private var libraryState: MediaLibraryStore
   
   public var bookmark: Bookmark
   @Published public var items: [MediaItem] = MediaItem.skeletonMock()
@@ -50,10 +51,12 @@ class BookmarkModel: ObservableObject {
     bookmark: Bookmark,
     itemsService: VideoContentService,
     actionsService: UserActionsService,
+    libraryState: MediaLibraryStore,
     errorHandler: ErrorHandler
   ) {
     self.contentService = itemsService
     self.actionsService = actionsService
+    self.libraryState = libraryState
     self.bookmark = bookmark
     self.title = bookmark.title
     self.errorHandler = errorHandler
@@ -99,13 +102,13 @@ class BookmarkModel: ObservableObject {
   func removeFromFolder(_ item: MediaItem) async {
     let previous = items
     items.removeAll { $0.id == item.id }  // optimistic
-    AppContext.shared.libraryState.setBookmark(itemId: item.id, folderId: bookmark.id, isOn: false)
+    libraryState.setBookmark(itemId: item.id, folderId: bookmark.id, isOn: false)
     do {
       try await actionsService.toggleBookmark(itemId: item.id, folderId: bookmark.id)
       toastMessage = .info(String(format: "Removed from %@".localized, bookmark.title))
     } catch {
       items = previous  // revert
-      AppContext.shared.libraryState.setBookmark(itemId: item.id, folderId: bookmark.id, isOn: true)
+      libraryState.setBookmark(itemId: item.id, folderId: bookmark.id, isOn: true)
       Logger.app.debug("remove from folder error: \(error)")
       errorHandler.setError(error)
     }
@@ -116,7 +119,7 @@ class BookmarkModel: ObservableObject {
     do {
       try await actionsService.removeBookmarkFolder(id: bookmark.id)
       // Drop it from the shared cache so the Bookmarks list removes the folder immediately.
-      AppContext.shared.libraryState.removeCachedBookmarkFolder(id: bookmark.id)
+      libraryState.removeCachedBookmarkFolder(id: bookmark.id)
       return true
     } catch {
       Logger.app.debug("remove bookmark folder error: \(error)")

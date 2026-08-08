@@ -127,7 +127,7 @@
 		CCF3881E2A71885900242581 /* AuthorizationServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF3881D2A71885900242581 /* AuthorizationServiceImpl.swift */; };
 		CCF388212A718ADE00242581 /* VideoContentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF388202A718ADE00242581 /* VideoContentService.swift */; };
 		CCF388252A718AF300242581 /* VideoContentServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF388242A718AF300242581 /* VideoContentServiceImpl.swift */; };
-		CCF388282A718BB600242581 /* AppContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF388272A718BB600242581 /* AppContext.swift */; };
+		CCF388282A718BB600242581 /* AppDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF388272A718BB600242581 /* AppDependencies.swift */; };
 		CCF3882B2A718E6300242581 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF3882A2A718E6300242581 /* Configuration.swift */; };
 		CCF3882F2A718EAA00242581 /* BundleConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF3882E2A718EAA00242581 /* BundleConfiguration.swift */; };
 		CCF388322A71C13900242581 /* MediaCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF388312A71C13900242581 /* MediaCatalog.swift */; };
@@ -258,7 +258,7 @@
 		CCF3881D2A71885900242581 /* AuthorizationServiceImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationServiceImpl.swift; sourceTree = "<group>"; };
 		CCF388202A718ADE00242581 /* VideoContentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoContentService.swift; sourceTree = "<group>"; };
 		CCF388242A718AF300242581 /* VideoContentServiceImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoContentServiceImpl.swift; sourceTree = "<group>"; };
-		CCF388272A718BB600242581 /* AppContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContext.swift; sourceTree = "<group>"; };
+		CCF388272A718BB600242581 /* AppDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
 		CCF3882A2A718E6300242581 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		CCF3882E2A718EAA00242581 /* BundleConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleConfiguration.swift; sourceTree = "<group>"; };
 		CCF388302A718FED00242581 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -823,7 +823,7 @@
 		CCF388262A718BAA00242581 /* Context */ = {
 			isa = PBXGroup;
 			children = (
-				CCF388272A718BB600242581 /* AppContext.swift */,
+				CCF388272A718BB600242581 /* AppDependencies.swift */,
 			);
 			path = Context;
 			sourceTree = "<group>";
@@ -1018,7 +1018,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CCF388282A718BB600242581 /* AppContext.swift in Sources */,
+				CCF388282A718BB600242581 /* AppDependencies.swift in Sources */,
 				CCF388212A718ADE00242581 /* VideoContentService.swift in Sources */,
 				CCF3881A2A71882300242581 /* AuthorizationService.swift in Sources */,
 				CC09047F2A7BE95D00A71F53 /* AuthState.swift in Sources */,

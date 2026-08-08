@@ -13,6 +13,3 @@ protocol FilterDataService {
   func fetchCountries() async throws -> [Country]
 }
 
-protocol FilterDataServiceProvider {
-  var filterDataService: FilterDataService { get set }
-}

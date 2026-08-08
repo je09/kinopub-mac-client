@@ -10,7 +10,7 @@ import SwiftUI
 import KinoPubBackend
 
 struct SidebarNavigationDetail: View {
-  @Environment(\.appContext) var appContext
+  @Environment(\.dependencies) var dependencies
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var errorHandler: ErrorHandler
   @EnvironmentObject var authState: AuthState
@@ -41,7 +41,7 @@ struct SidebarNavigationDetail: View {
       FilteredCatalogView(
         catalog: screenCache.model(for: .preset(preset)) {
           MediaCatalog(
-            itemsService: appContext.contentService,
+            itemsService: dependencies.contentService,
             authState: authState,
             errorHandler: errorHandler,
             filter: preset.filter)
@@ -77,7 +77,7 @@ struct SidebarNavigationDetail: View {
     SearchView(
       model: screenCache.model(for: .search) {
         SearchModel(
-          repository: appContext.searchRepository,
+          repository: dependencies.searchRepository,
           errorHandler: errorHandler)
       })
   }
@@ -86,7 +86,8 @@ struct SidebarNavigationDetail: View {
     HomeView(
       model: screenCache.model(for: .new) {
         HomeModel(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
+          localProgressStore: dependencies.localProgressStore,
           authState: authState,
           errorHandler: errorHandler)
       })
@@ -102,7 +103,7 @@ struct SidebarNavigationDetail: View {
     return MainView(
       catalog: screenCache.model(for: key) {
         MediaCatalog(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
           authState: authState,
           errorHandler: errorHandler,
           contentType: contentType,
@@ -115,8 +116,8 @@ struct SidebarNavigationDetail: View {
     SportView(
       model: screenCache.model(for: .sport) {
         SportModel(
-          itemsService: appContext.contentService,
-          epgService: appContext.epgService,
+          itemsService: dependencies.contentService,
+          epgService: dependencies.epgService,
           authState: authState,
           errorHandler: errorHandler)
       })
@@ -126,7 +127,7 @@ struct SidebarNavigationDetail: View {
     CollectionsView(
       model: screenCache.model(for: .collections) {
         CollectionsModel(
-          collectionsService: appContext.collectionsService,
+          collectionsService: dependencies.collectionsService,
           authState: authState,
           errorHandler: errorHandler)
       })
@@ -136,7 +137,7 @@ struct SidebarNavigationDetail: View {
     WatchingView(
       model: screenCache.model(for: .newEpisodes) {
         WatchingModel(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
           authState: authState,
           errorHandler: errorHandler,
           tab: .newEpisodes)
@@ -147,7 +148,7 @@ struct SidebarNavigationDetail: View {
     WatchingView(
       model: screenCache.model(for: .watching) {
         WatchingModel(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
           authState: authState,
           errorHandler: errorHandler,
           tab: .watchlist)
@@ -158,7 +159,8 @@ struct SidebarNavigationDetail: View {
     BookmarksView(
       catalog: screenCache.model(for: .bookmarks) {
         BookmarksCatalog(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
+          libraryState: dependencies.libraryState,
           authState: authState,
           errorHandler: errorHandler)
       })
@@ -172,8 +174,9 @@ struct SidebarNavigationDetail: View {
           model: screenCache.model(for: .bookmarkFolder(id)) {
             BookmarkModel(
               bookmark: bookmark,
-              itemsService: appContext.contentService,
-              actionsService: appContext.actionsService,
+              itemsService: dependencies.contentService,
+              actionsService: dependencies.actionsService,
+              libraryState: dependencies.libraryState,
               errorHandler: errorHandler)
           }
         )
@@ -189,7 +192,9 @@ struct SidebarNavigationDetail: View {
     HistoryView(
       catalog: screenCache.model(for: .history) {
         HistoryModel(
-          itemsService: appContext.contentService,
+          itemsService: dependencies.contentService,
+          actionsService: dependencies.actionsService,
+          localProgressStore: dependencies.localProgressStore,
           authState: authState,
           errorHandler: errorHandler)
       })
@@ -199,8 +204,8 @@ struct SidebarNavigationDetail: View {
     DownloadsView(
       catalog: screenCache.model(for: .downloads) {
         DownloadsCatalog(
-          downloadsDatabase: appContext.downloadedFilesDatabase,
-          downloadManager: appContext.downloadManager)
+          downloadsDatabase: dependencies.downloadedFilesDatabase,
+          downloadManager: dependencies.downloadManager)
       })
   }
   
@@ -208,7 +213,7 @@ struct SidebarNavigationDetail: View {
     ProfileView(
       model: screenCache.model(for: .profile) {
         ProfileModel(
-          userService: appContext.userService,
+          userService: dependencies.userService,
           errorHandler: errorHandler,
           authState: authState)
       })

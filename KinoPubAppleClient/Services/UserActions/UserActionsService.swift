@@ -26,9 +26,6 @@ protocol UserActionsService {
   func clearHistory(forItem id: Int) async throws
 }
 
-protocol UserActionsServiceProvider {
-  var actionsService: UserActionsService { get set }
-}
 
 struct UserActionsServiceMock: UserActionsService {
   func markWatch(id: Int, time: Int, video: Int?, season: Int?) async throws {

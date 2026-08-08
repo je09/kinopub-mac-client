@@ -58,8 +58,11 @@ extension View {
   
   /// Supplies every app-wide observable dependency for previews. The preview runner evaluates all
   /// providers in one process, so a missing object aborts that process before Canvas can render.
+  /// Uses in-memory fixtures (never the production composition root), so previews cannot make a
+  /// production network request.
   func appPreviewEnvironment() -> some View {
-    environmentObject(NavigationState())
+    let dependencies = AppDependencies.preview()
+    return environmentObject(NavigationState())
       .environmentObject(
         AuthState(
           authService: AuthorizationServiceMock(),
@@ -69,7 +72,8 @@ extension View {
       .environmentObject(ErrorHandler())
       .environmentObject(NetworkMonitor())
       .environmentObject(AppearanceSettings())
-      .environmentObject(AppContext.shared.libraryState)
+      .environment(\.dependencies, dependencies)
+      .environmentObject(dependencies.libraryState)
   }
 }
 

@@ -13,7 +13,6 @@ struct HistoryView: View {
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var authState: AuthState
   @EnvironmentObject var errorHandler: ErrorHandler
-  @Environment(\.appContext) var appContext
   @StateObject private var catalog: HistoryModel
   
   init(catalog: @autoclosure @escaping () -> HistoryModel) {
@@ -189,9 +188,12 @@ struct HistoryItemCell: View {
 
 struct HistoryView_Previews: PreviewProvider {
   static var previews: some View {
-    HistoryView(
+    let deps = AppDependencies.preview()
+    return HistoryView(
       catalog: HistoryModel(
         itemsService: VideoContentServiceMock(),
+        actionsService: deps.actionsService,
+        localProgressStore: deps.localProgressStore,
         authState: AuthState(
           authService: AuthorizationServiceMock(), accessTokenService: AccessTokenServiceMock(),
           deviceService: DeviceServiceMock()),

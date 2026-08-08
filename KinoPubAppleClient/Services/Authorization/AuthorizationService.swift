@@ -19,9 +19,6 @@ protocol AuthorizationService {
   func logout()
 }
 
-protocol AuthorizationServiceProvider {
-  var authService: AuthorizationService { get set }
-}
 
 struct AuthorizationServiceMock: AuthorizationService {
   

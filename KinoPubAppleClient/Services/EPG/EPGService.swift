@@ -22,9 +22,6 @@ protocol EPGService {
   func clearCache() async
 }
 
-protocol EPGServiceProvider {
-  var epgService: EPGService { get set }
-}
 
 /// No-op guide for previews and tests (channels still list/play, just without programme info).
 struct EPGServiceMock: EPGService {
